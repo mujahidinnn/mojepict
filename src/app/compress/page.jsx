@@ -192,25 +192,26 @@ export default function Compress() {
           </div>
         </>
       )}
-
-      <div className="mt-5 flex flex-col sm:flex-row gap-4 justify-center">
-        <button
-          onClick={handleCompress}
-          disabled={loading || !!compressedImage || !originalImage}
-          className="px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
-        >
-          {loading ? "Compressing..." : "Compress Image"}
-        </button>
-
-        {compressedImage && (
+      {originalImage && (
+        <div className="mt-5 flex flex-col sm:flex-row gap-4 justify-center">
           <button
-            onClick={handleReset}
-            className="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            onClick={handleCompress}
+            disabled={loading || !!compressedImage}
+            className="px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
           >
-            Reset & Try Again
+            {loading ? "Compressing..." : "Compress Image"}
           </button>
-        )}
-      </div>
+
+          {compressedImage && (
+            <button
+              onClick={handleReset}
+              className="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            >
+              Reset & Try Again
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
