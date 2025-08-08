@@ -201,7 +201,7 @@ export default function WatermarkPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <TitlePage backUrl="/" title="Watermark Tool" />
+      <TitlePage backUrl="/" title="Watermark" />
 
       {!bgImage && (
         <div

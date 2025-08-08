@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import MojapictLogo from "@/assets/mojapict-logo.png";
+import MojepictLogo from "@/assets/mojepict-logo.png";
 
 const tools = [
   {
@@ -40,13 +40,13 @@ const tools = [
     href: "/draw",
   },
   {
-    title: "Watermark Tool",
+    title: "Watermark",
     description:
       "Tambahkan watermark berupa teks atau logo untuk melindungi dan mem-branding gambar.",
     href: "/watermark",
   },
   {
-    title: "Twibbon Editor",
+    title: "Twibbon",
     description:
       "Tambahkan foto ke dalam twibbon transparan dengan posisi dan ukuran yang bisa diatur.",
     href: "/twibbon",
@@ -59,12 +59,12 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <Image
-        src={MojapictLogo}
+        src={MojepictLogo}
         alt="Mojapict Logo"
         priority
         className="h-40 w-max m-auto"
       />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto mt-5">
         {tools.map((tool) => (
           <Link
             key={tool.title}

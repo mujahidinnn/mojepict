@@ -4,7 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import { DownloadIcon } from "lucide-react";
 import TitlePage from "@/components/TitlePage";
 
-export default function TwibbonTool() {
+export default function TwibbonPage() {
   const canvasRef = useRef(null);
   const [photoElement, setPhotoElement] = useState(null);
   const [twibbonElement, setTwibbonElement] = useState(null);
@@ -124,7 +124,7 @@ export default function TwibbonTool() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      <TitlePage backUrl="/" title="Twibbon Editor" />
+      <TitlePage backUrl="/" title="Twibbon" />
 
       <div className="flex flex-col md:flex-row gap-6 mb-6">
         <div className="flex-1 space-y-4">
