@@ -6,10 +6,10 @@ const TitlePage = ({ title, subtitle, backUrl }) => {
     <div className="flex items-center gap-3 mb-6">
       {backUrl && (
         <Link href={backUrl}>
-          <ChevronLeftIcon size={32} className="text-indigo-700" />
+          <ChevronLeftIcon size={32} className="text-gray-700" />
         </Link>
       )}
-      <h3 className="text-3xl font-bold text-indigo-700">{title}</h3>
+      <h3 className="text-3xl font-bold text-gray-700">{title}</h3>
     </div>
   );
 };

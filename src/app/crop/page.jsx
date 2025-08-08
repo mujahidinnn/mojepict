@@ -1,6 +1,7 @@
 "use client";
 
 import TitlePage from "@/components/TitlePage";
+import { DownloadIcon, ScanSearchIcon, TrashIcon } from "lucide-react";
 import React, { useState, useRef, useCallback } from "react";
 import ReactCrop from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
@@ -97,7 +98,7 @@ export default function ImageCropper() {
       <TitlePage backUrl={"/"} title={"Image Cropper"} />
 
       <div
-        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-white cursor-pointer hover:border-indigo-500 transition"
+        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-white cursor-pointer hover:border-gray-500 transition"
         onClick={() => inputRef.current?.click()}
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}
@@ -126,7 +127,7 @@ export default function ImageCropper() {
                 <select
                   onChange={onAspectChange}
                   defaultValue="custom"
-                  className="mt-1 w-40 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="mt-1 w-40 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
                 >
                   <option value="custom">Custom</option>
                   <option value="1">1:1 (Square)</option>
@@ -165,21 +166,21 @@ export default function ImageCropper() {
           <div className="mt-5 flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={generateCrop}
-              className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+              className="flex items-center gap-[2px] px-3 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
             >
-              Crop & Preview
+              <ScanSearchIcon /> Crop & Preview
             </button>
             <button
               onClick={downloadCroppedImage}
-              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              className="flex items-center gap-[2px] px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700"
             >
-              Download
+              <DownloadIcon size={18} /> Download
             </button>
             <button
               onClick={handleReset}
-              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              className="flex items-center gap-[2px] px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600"
             >
-              Reset
+              <TrashIcon size={18} /> Reset
             </button>
           </div>
         </>

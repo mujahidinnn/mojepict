@@ -1,6 +1,7 @@
 "use client";
 
 import TitlePage from "@/components/TitlePage";
+import { DownloadIcon, ScalingIcon, TrashIcon } from "lucide-react";
 import { useState, useRef } from "react";
 
 export default function ImageResize() {
@@ -90,7 +91,7 @@ export default function ImageResize() {
       <TitlePage backUrl={"/"} title={"Image Resizer"} />
 
       <div
-        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-white cursor-pointer hover:border-indigo-500 transition"
+        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-white cursor-pointer hover:border-gray-500 transition"
         onClick={() => inputRef.current?.click()}
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}
@@ -124,7 +125,7 @@ export default function ImageResize() {
                   onChange={(e) =>
                     setWidth(Math.min(Number(e.target.value), MAX_WIDTH))
                   }
-                  className="mt-1 w-24 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="mt-1 w-24 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
                 />
                 {width > MAX_WIDTH && (
                   <p className="text-sm text-red-500">
@@ -144,7 +145,7 @@ export default function ImageResize() {
                   onChange={(e) =>
                     setHeight(Math.min(Number(e.target.value), MAX_HEIGHT))
                   }
-                  className="mt-1 w-24 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="mt-1 w-24 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
                 />
                 {height > MAX_HEIGHT && (
                   <p className="text-sm text-red-500">
@@ -179,9 +180,9 @@ export default function ImageResize() {
                 <a
                   href={resizedImageUrl}
                   download="resized-image.jpg"
-                  className="inline-block mt-2 px-3 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-700"
+                  className="inline-block mt-2 px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
                 >
-                  Download
+                  <DownloadIcon size={18} /> Download
                 </a>
               </div>
             )}
@@ -191,17 +192,18 @@ export default function ImageResize() {
             <button
               onClick={resizeImage}
               disabled={loading || !originalImage}
-              className="px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
+              className="flex items-center gap-[2px] ppx-3 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50"
             >
+              <ScalingIcon size={18} />{" "}
               {loading ? "Resizing..." : "Resize Image"}
             </button>
 
             {(resizedImageUrl || originalImage) && (
               <button
                 onClick={handleReset}
-                className="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                className="flex items-center gap-[2px] px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600"
               >
-                Reset
+                <TrashIcon size={18} /> Reset
               </button>
             )}
           </div>

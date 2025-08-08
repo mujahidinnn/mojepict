@@ -3,6 +3,7 @@
 import TitlePage from "@/components/TitlePage";
 import React, { useRef, useState } from "react";
 import * as exifr from "exifr";
+import { CopyIcon, DownloadIcon, TrashIcon } from "lucide-react";
 
 export default function ImageMetadataViewer() {
   const [imageFile, setImageFile] = useState(null);
@@ -67,7 +68,7 @@ export default function ImageMetadataViewer() {
       <TitlePage backUrl="/" title="Metadata Viewer" />
 
       <div
-        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-white cursor-pointer hover:border-indigo-500 transition"
+        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-white cursor-pointer hover:border-gray-500 transition"
         onClick={() => inputRef.current?.click()}
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}
@@ -117,21 +118,21 @@ export default function ImageMetadataViewer() {
           <div className="mt-5 flex flex-wrap justify-center gap-4">
             <button
               onClick={handleReset}
-              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              className="flex items-center gap-[2px] px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600"
             >
-              Reset
+              <TrashIcon size={18} /> Reset
             </button>
             <button
               onClick={handleCopy}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              className="flex items-center gap-[2px] px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
-              Salin Metadata
+              <CopyIcon size={18} /> Salin Metadata
             </button>
             <button
               onClick={handleDownload}
-              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              className="flex items-center gap-[2px] px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700"
             >
-              Download Metadata
+              <DownloadIcon size={18} /> Download Metadata
             </button>
           </div>
         </>

@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import imageCompression from "browser-image-compression";
 import { fallbackImage, formatFileSize } from "@/utils/helper";
 import TitlePage from "@/components/TitlePage";
+import { DownloadIcon, GavelIcon, TrashIcon } from "lucide-react";
 
 const getCompressionDescription = (percent) => {
   if (percent <= 20) return `${percent}% – Low Quality (More Compression)`;
@@ -74,14 +75,14 @@ export default function Compress() {
       <TitlePage backUrl={"/"} title={"Image Compressor"} />
 
       <div
-        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-white cursor-pointer hover:border-indigo-500 transition"
+        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-white cursor-pointer hover:border-gray-500 transition"
         onClick={() => inputRef.current?.click()}
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}
       >
         <input
           type="file"
-          accept="image/*"
+          accept=".jpg,.jpeg,.png,.webp,.svg"
           onChange={handleImageUpload}
           className="hidden"
           ref={inputRef}
@@ -129,7 +130,7 @@ export default function Compress() {
                 const val = Math.max(Number(e.target.value), 10);
                 setCompressionPercent(val);
               }}
-              className="w-full accent-indigo-600"
+              className="w-full accent-gray-600"
               disabled={!!compressedImage}
             />
 
@@ -176,9 +177,9 @@ export default function Compress() {
                   <a
                     href={URL.createObjectURL(compressedImage)}
                     download="compressed.jpg"
-                    className="inline-block mt-2 px-3 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-700"
+                    className="inline-block mt-2 px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
                   >
-                    Download
+                    <DownloadIcon size={18} /> Download
                   </a>
                 </>
               ) : (
@@ -197,17 +198,18 @@ export default function Compress() {
           <button
             onClick={handleCompress}
             disabled={loading || !!compressedImage}
-            className="px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
+            className="flex items-center gap-[2px] px-3 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50"
           >
+            <GavelIcon size={18} />{" "}
             {loading ? "Compressing..." : "Compress Image"}
           </button>
 
           {compressedImage && (
             <button
               onClick={handleReset}
-              className="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              className="flex items-center gap-[2px] px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600"
             >
-              Reset & Try Again
+              <TrashIcon size={18} /> Reset & Try Again
             </button>
           )}
         </div>

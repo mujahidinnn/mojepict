@@ -1,41 +1,69 @@
+import Image from "next/image";
 import Link from "next/link";
+import MojapictLogo from "@/assets/mojapict-logo.png";
 
 const tools = [
   {
     title: "Compress Image",
-    description: "Perkecil ukuran gambar tanpa mengurangi kualitas.",
+    description:
+      "Kompres ukuran file gambar tanpa mengurangi kualitas secara signifikan.",
     href: "/compress",
   },
   {
     title: "Convert Format",
-    description: "Ubah format gambar (JPG, PNG, WebP, dll).",
+    description:
+      "Ubah format gambar ke JPG, PNG, WebP, atau lainnya dengan mudah.",
     href: "/convert",
   },
   {
     title: "Resize",
-    description: "Ubah dimensi gambar sesuai kebutuhan.",
+    description:
+      "Ubah dimensi gambar sesuai kebutuhan tanpa mengorbankan proporsi.",
     href: "/resize",
   },
   {
-    title: "Crop",
-    description: "Potong gambar sesuai area yang diinginkan.",
+    title: "Crop Image",
+    description:
+      "Potong bagian gambar sesuai area yang diinginkan secara presisi.",
     href: "/crop",
   },
   {
-    title: "Metadata viewer",
-    description: "Lihat data EXIF seperti kamera, lokasi, dll dari gambar.",
+    title: "Metadata Viewer",
+    description:
+      "Lihat informasi EXIF gambar seperti jenis kamera, lokasi, dan detail teknis lainnya.",
     href: "/metadata",
   },
+  {
+    title: "Draw on Image",
+    description:
+      "Tambahkan coretan, teks, atau gambar bebas langsung di atas gambar.",
+    href: "/draw",
+  },
+  {
+    title: "Watermark Tool",
+    description:
+      "Tambahkan watermark berupa teks atau logo untuk melindungi dan mem-branding gambar.",
+    href: "/watermark",
+  },
+  {
+    title: "Twibbon Editor",
+    description:
+      "Tambahkan foto ke dalam twibbon transparan dengan posisi dan ukuran yang bisa diatur.",
+    href: "/twibbon",
+  },
+
   // Tambahkan lebih banyak tools jika perlu
 ];
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      <h1 className="text-4xl font-bold text-center text-indigo-700 mb-12">
-        Selamat Datang di Mojepict 🎨
-      </h1>
-
+      <Image
+        src={MojapictLogo}
+        alt="Mojapict Logo"
+        priority
+        className="h-40 w-max m-auto"
+      />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
         {tools.map((tool) => (
           <Link
@@ -43,7 +71,7 @@ export default function Home() {
             href={tool.href}
             className="block p-6 bg-white shadow-sm hover:shadow-md rounded-xl transition"
           >
-            <h2 className="text-xl font-semibold text-indigo-700 mb-2">
+            <h2 className="text-xl font-semibold text-gray-700 mb-2">
               {tool.title}
             </h2>
             <p className="text-gray-600">{tool.description}</p>
