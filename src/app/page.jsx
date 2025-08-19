@@ -51,6 +51,18 @@ const tools = [
       "Tambahkan foto ke dalam twibbon transparan dengan posisi dan ukuran yang bisa diatur.",
     href: "/twibbon",
   },
+  {
+    title: "Color Picker from Image",
+    description:
+      "Klik pada gambar untuk mengambil kode warna HEX, RGB, atau HSL.",
+    href: "/color-picker",
+  },
+  {
+    title: "QR Generator",
+    description:
+      "Buat QR Code dari teks, link, atau gambar dengan opsi warna, latar, ukuran, dan logo.",
+    href: "/qr-generator",
+  },
 
   // Tambahkan lebih banyak tools jika perlu
 ];
