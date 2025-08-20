@@ -118,7 +118,7 @@ export default function TwibbonPage() {
     const canvas = canvasRef.current;
     const link = document.createElement("a");
     link.href = canvas.toDataURL("image/png");
-    link.download = "twibboned.png";
+    link.download = "mojepict-twibboned.png";
     link.click();
   };
 
@@ -186,6 +186,20 @@ export default function TwibbonPage() {
                 Midnight
               </option>
               <option value="invert(100%)">Inverted</option>
+              <option value="saturate(160%)">Saturate+</option>
+              <option value="contrast(140%) brightness(105%)">Punchy</option>
+              <option value="brightness(115%) contrast(90%) saturate(120%)">
+                Soft
+              </option>
+              <option value="brightness(105%) contrast(95%) saturate(120%) sepia(0.5) hue-rotate(-10deg)">
+                Retro 70s
+              </option>
+              <option value="brightness(110%) contrast(90%) saturate(85%) sepia(0.3) blur(0.4px)">
+                Retro 80s
+              </option>
+              <option value="brightness(95%) contrast(110%) saturate(110%) hue-rotate(10deg)">
+                Retro 90s
+              </option>
             </select>
           </div>
 

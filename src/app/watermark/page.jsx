@@ -187,7 +187,7 @@ export default function WatermarkPage() {
     const canvas = canvasRef.current;
     const link = document.createElement("a");
     link.href = canvas.toDataURL("image/png");
-    link.download = "watermarked.png";
+    link.download = "mojepict-watermarked.png";
     link.click();
   };
 

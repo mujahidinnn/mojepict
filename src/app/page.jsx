@@ -63,7 +63,12 @@ const tools = [
       "Buat QR Code dari teks, link, atau gambar dengan opsi warna, latar, ukuran, dan logo.",
     href: "/qr-generator",
   },
-
+  {
+    title: "Photobox",
+    description:
+      "Buat photobox digital dengan bingkai lucu, pilihan filter dan tata letak yang bisa dipilih.",
+    href: "/photobox",
+  },
   // Tambahkan lebih banyak tools jika perlu
 ];
 
