@@ -1,0 +1,416 @@
+"use client";
+
+import { ToolShell } from "@/components/tools/ToolShell";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
+import { useToast } from "@/hooks/use-toast";
+import { useI18n } from "@/lib/i18n/context";
+import { Download, ImageIcon, Trash2, Type, Upload, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+export default function WatermarkPage() {
+  const { t } = useI18n();
+  const { toast } = useToast();
+
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const watermarkInputRef = useRef<HTMLInputElement>(null);
+
+  const [bgImage, setBgImage] = useState<string | null>(null);
+  const [imageElement, setImageElement] = useState<HTMLImageElement | null>(
+    null,
+  );
+
+  const [watermarkText, setWatermarkText] = useState("© mojepict");
+  const [textColor, setTextColor] = useState("#000000");
+  const [fontSize, setFontSize] = useState(24);
+  const [opacity, setOpacity] = useState(0.9);
+  const [fontFamily, setFontFamily] = useState("sans-serif");
+
+  const [textPos, setTextPos] = useState({ x: 50, y: 50 });
+  const [isDraggingText, setIsDraggingText] = useState(false);
+
+  const [watermarkImage, setWatermarkImage] = useState<string | null>(null);
+  const [watermarkImgElement, setWatermarkImgElement] =
+    useState<HTMLImageElement | null>(null);
+
+  const [imgPos, setImgPos] = useState({ x: 50, y: 50 });
+  const [imgSize, setImgSize] = useState({ width: 100, height: 100 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragOffset = useRef({ x: 0, y: 0 });
+
+  const [confirmClear, setConfirmClear] = useState(false);
+
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && allowedTypes.includes(file.type)) {
+      const url = URL.createObjectURL(file);
+      setBgImage(url);
+      const img = new Image();
+      img.onload = () => setImageElement(img);
+      img.src = url;
+    } else if (file) {
+      toast({
+        variant: "destructive",
+        description: t("toast.error.unsupported"),
+      });
+    }
+  };
+
+  const handleWatermarkImageUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setWatermarkImage(url);
+    const img = new Image();
+    img.onload = () => {
+      setWatermarkImgElement(img);
+      setImgSize({ width: img.width * 0.2, height: img.height * 0.2 });
+    };
+    img.src = url;
+  };
+
+  const redrawCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx || !imageElement) return;
+
+    canvas.width = imageElement.width;
+    canvas.height = imageElement.height;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(imageElement, 0, 0);
+
+    if (watermarkImgElement) {
+      ctx.globalAlpha = opacity;
+      ctx.drawImage(
+        watermarkImgElement,
+        imgPos.x,
+        imgPos.y,
+        imgSize.width,
+        imgSize.height,
+      );
+      ctx.globalAlpha = 1;
+    }
+
+    if (watermarkText.trim() !== "") {
+      ctx.globalAlpha = opacity;
+      ctx.fillStyle = textColor;
+      ctx.font = `${fontSize}px ${fontFamily}`;
+      ctx.fillText(watermarkText, textPos.x, textPos.y);
+      ctx.globalAlpha = 1;
+    }
+  }, [
+    imageElement,
+    watermarkImgElement,
+    imgPos,
+    imgSize,
+    watermarkText,
+    textColor,
+    fontSize,
+    opacity,
+    fontFamily,
+    textPos,
+  ]);
+
+  useEffect(() => {
+    redrawCanvas();
+  }, [redrawCanvas]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!canvasRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const scaleX = canvasRef.current.width / rect.width;
+    const scaleY = canvasRef.current.height / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+
+    if (
+      watermarkImgElement &&
+      x >= imgPos.x &&
+      x <= imgPos.x + imgSize.width &&
+      y >= imgPos.y &&
+      y <= imgPos.y + imgSize.height
+    ) {
+      setIsDragging(true);
+      dragOffset.current = { x: x - imgPos.x, y: y - imgPos.y };
+      return;
+    }
+
+    const ctx = canvasRef.current.getContext("2d");
+    if (ctx) {
+      ctx.font = `${fontSize}px ${fontFamily}`;
+      const textWidth = ctx.measureText(watermarkText).width;
+      if (
+        x >= textPos.x &&
+        x <= textPos.x + textWidth &&
+        y >= textPos.y - fontSize &&
+        y <= textPos.y
+      ) {
+        setIsDraggingText(true);
+        dragOffset.current = { x: x - textPos.x, y: y - textPos.y };
+      }
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!canvasRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const scaleX = canvasRef.current.width / rect.width;
+    const scaleY = canvasRef.current.height / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+
+    if (isDragging)
+      setImgPos({ x: x - dragOffset.current.x, y: y - dragOffset.current.y });
+    else if (isDraggingText)
+      setTextPos({ x: x - dragOffset.current.x, y: y - dragOffset.current.y });
+  };
+
+  const handleDownload = () => {
+    if (!canvasRef.current) return;
+    const link = document.createElement("a");
+    link.href = canvasRef.current.toDataURL("image/png");
+    link.download = "mojepict-watermark.png";
+    link.click();
+    toast({
+      title: t("common.success"),
+      description: t("toast.success.downloaded"),
+    });
+  };
+
+  const handleReset = () => {
+    setBgImage(null);
+    setImageElement(null);
+    setWatermarkImage(null);
+    setWatermarkImgElement(null);
+    setConfirmClear(false);
+  };
+
+  return (
+    <>
+      <ToolShell
+        title={t("tool.watermark.name") || "Watermark"}
+        description={
+          t("tool.watermark.description") ||
+          "Add text or logo watermarks to your images locally."
+        }
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+          <div className="flex flex-col gap-4">
+            {!bgImage ? (
+              <Card
+                className="border-dashed cursor-pointer hover:bg-accent/50 transition-colors group"
+                onClick={() => inputRef.current?.click()}
+              >
+                <CardContent className="flex flex-col items-center justify-center py-20 text-center">
+                  <input
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.webp"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    ref={inputRef}
+                  />
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Upload className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="font-medium">{t("common.upload-click")}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {t("common.upload-drag")}
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="relative border rounded-xl overflow-hidden bg-muted/20 shadow-inner flex justify-center p-4 min-h-[400px]">
+                <canvas
+                  ref={canvasRef}
+                  className="shadow-2xl border bg-white max-w-full h-auto cursor-move"
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={() => {
+                    setIsDragging(false);
+                    setIsDraggingText(false);
+                  }}
+                  onMouseLeave={() => {
+                    setIsDragging(false);
+                    setIsDraggingText(false);
+                  }}
+                />
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="absolute top-6 right-6 h-8 w-8 bg-background/80 backdrop-blur hover:bg-destructive hover:text-white"
+                  onClick={() => setConfirmClear(true)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  <Type className="h-3 w-3" /> Text Watermark
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={watermarkText}
+                    onChange={(e) => setWatermarkText(e.target.value)}
+                    placeholder="Enter text..."
+                  />
+                  <Input
+                    type="color"
+                    value={textColor}
+                    onChange={(e) => setTextColor(e.target.value)}
+                    className="w-12 p-1 h-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  <ImageIcon className="h-3 w-3" /> Logo Watermark
+                </Label>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2"
+                    onClick={() => watermarkInputRef.current?.click()}
+                  >
+                    <Upload className="h-3 w-3" />{" "}
+                    {watermarkImage ? "Change Logo" : "Upload Logo"}
+                  </Button>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    ref={watermarkInputRef}
+                    onChange={handleWatermarkImageUpload}
+                  />
+                  {watermarkImage && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs text-destructive"
+                      onClick={() => {
+                        setWatermarkImage(null);
+                        setWatermarkImgElement(null);
+                      }}
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" /> Remove Logo
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <Label className="text-xs font-medium">Font Size</Label>
+                    <span className="text-xs font-mono">{fontSize}px</span>
+                  </div>
+                  <Slider
+                    value={[fontSize]}
+                    min={10}
+                    max={150}
+                    step={1}
+                    onValueChange={(val: number[]) => setFontSize(val[0])}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <Label className="text-xs font-medium">Opacity</Label>
+                    <span className="text-xs font-mono">
+                      {Math.round(opacity * 100)}%
+                    </span>
+                  </div>
+                  <Slider
+                    value={[opacity]}
+                    min={0.1}
+                    max={1}
+                    step={0.05}
+                    onValueChange={(val: number[]) => setOpacity(val[0])}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium">Font Family</Label>
+                  <Select value={fontFamily} onValueChange={setFontFamily}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sans-serif">Sans-serif</SelectItem>
+                      <SelectItem value="serif">Serif</SelectItem>
+                      <SelectItem value="monospace">Monospace</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            <Button
+              className="w-full gap-2 mt-4"
+              onClick={handleDownload}
+              disabled={!bgImage}
+            >
+              <Download className="h-4 w-4" /> {t("action.download")}
+            </Button>
+
+            <p className="text-[10px] text-muted-foreground text-center bg-muted/50 p-2 rounded border italic">
+              * Tip: Drag text or logo on the canvas to reposition.
+            </p>
+          </div>
+        </div>
+      </ToolShell>
+
+      <AlertDialog open={confirmClear} onOpenChange={setConfirmClear}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("common.confirm-title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("dialog.confirm.description")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleReset}
+              className="bg-destructive text-white"
+            >
+              {t("action.reset")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
