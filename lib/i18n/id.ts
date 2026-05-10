@@ -47,6 +47,10 @@ export const id = {
   "tool.image-cropper.name": "Potong Gambar",
   "tool.image-cropper.description":
     "Potong dan sesuaikan area gambar ke rasio aspek tertentu atau ukuran bebas.",
+  "tool.image-cropper.preview": "Hasil Potongan",
+  "tool.image-cropper.aspect": "Rasio Aspek",
+  "tool.image-cropper.free": "Bebas (Kustom)",
+  "tool.image-cropper.square": "1:1 (Persegi)",
 
   "tool.remove-bg.name": "Hapus Latar Belakang",
   "tool.remove-bg.description":

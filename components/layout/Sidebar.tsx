@@ -84,7 +84,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "hidden lg:flex flex-col h-screen border-r",
+        "flex flex-col h-screen border-r",
         "bg-[hsl(var(--sidebar-bg))] border-[hsl(var(--sidebar-border))]",
         "w-[var(--sidebar-width)] shrink-0",
       )}
@@ -103,7 +103,7 @@ export function Sidebar() {
           {t("site.name")}
         </span>
 
-        <small className="ml-auto">v2.0</small>
+        <small className="sm:ml-auto">v2.0</small>
       </div>
 
       <ScrollArea className="flex-1 px-3 py-3 scrollbar-none">
@@ -137,7 +137,7 @@ export function Sidebar() {
               </div>
 
               {tools.map((tool) => {
-                const href = `/tools/${tool.slug}`;
+                const href = tool.slug;
                 const active = pathname === href;
                 return (
                   <Link

@@ -37,7 +37,9 @@ export default function RootLayout({
         >
           <I18nProvider>
             <div className="flex h-screen overflow-hidden bg-background">
-              <Sidebar />
+              <div className="hidden lg:block">
+                <Sidebar />
+              </div>
 
               <div className="flex flex-1 flex-col overflow-hidden">
                 <Navbar />

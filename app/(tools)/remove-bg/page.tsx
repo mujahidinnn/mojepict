@@ -38,7 +38,7 @@ export default function RemoveBgPage() {
   const processImage = async () => {
     if (!inputImage) return;
     setIsProcessing(true);
-    setProgress(5);
+    setProgress(1);
 
     try {
       const imgly = await import("@imgly/background-removal");

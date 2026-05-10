@@ -56,10 +56,10 @@ export function Navbar() {
       <Link href="/" className="flex items-center gap-1.5 lg:hidden">
         <div className="flex h-5 w-5 items-center justify-center rounded bg-foreground">
           <Image
-            src="/mojepict-logo.png"
+            src="/mj.png"
             alt="M"
-            width={20}
-            height={20}
+            width={30}
+            height={30}
             className="object-contain"
           />
         </div>

@@ -107,10 +107,10 @@ export default function ImageSplitterPage() {
     >
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-8">
         <div className="space-y-4 order-1">
-          <Card className="relative border-dashed border-2 min-h-[550px] flex items-center justify-center bg-muted/20 overflow-hidden p-6 shadow-inner">
+          <Card className="relative border-dashed border-2 min-h-[550px] flex items-center justify-center bg-muted/20 overflow-hidden p-6 shadow-inner hover:border-foreground/30 hover:bg-muted/20 cursor-pointer">
             {!image ? (
               <label className="flex flex-col items-center gap-4 cursor-pointer text-center group w-full py-20">
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                   <Upload className="h-6 w-6 text-primary" />
                 </div>
                 <div className="space-y-1">

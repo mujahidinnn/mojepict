@@ -51,6 +51,10 @@ export const en = {
   "tool.image-cropper.name": "Image Cropper",
   "tool.image-cropper.description":
     "Crop and trim your images to specific aspect ratios or custom sizes.",
+  "tool.image-cropper.preview": "Cropped Result",
+  "tool.image-cropper.aspect": "Aspect Ratio",
+  "tool.image-cropper.free": "Free (Custom)",
+  "tool.image-cropper.square": "1:1 (Square)",
 
   "tool.remove-bg.name": "Remove Background",
   "tool.remove-bg.description":

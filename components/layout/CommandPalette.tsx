@@ -96,7 +96,7 @@ export function CommandPalette() {
   const navigate = useCallback(
     (slug: string) => {
       setOpen(false);
-      router.push(`/tools/${slug}`);
+      router.push(slug);
     },
     [router],
   );

@@ -33,7 +33,7 @@ import {
   X,
 } from "lucide-react";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
 import ReactCrop, {
   type Crop,
   type PixelCrop,
@@ -61,7 +61,9 @@ export default function ImageCropperPage() {
   const [fileDetails, setFileDetails] = useState<{
     name: string;
     size: number;
+    type: string;
   } | null>(null);
+
   const imgRef = useRef<HTMLImageElement>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -70,25 +72,22 @@ export default function ImageCropperPage() {
   const [aspect, setAspect] = useState<number | undefined>(undefined);
   const [confirmClear, setConfirmClear] = useState(false);
 
-  const onSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const processFile = useCallback((file: File | undefined) => {
     if (file) {
-      setFileDetails({ name: file.name, size: file.size });
+      setFileDetails({ name: file.name, size: file.size, type: file.type });
       const reader = new FileReader();
       reader.onload = () => setUpImg(reader.result as string);
       reader.readAsDataURL(file);
     }
+  }, []);
+
+  const onSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    processFile(e.target.files?.[0]);
   };
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    const file = e.dataTransfer.files?.[0];
-    if (file) {
-      setFileDetails({ name: file.name, size: file.size });
-      const reader = new FileReader();
-      reader.onload = () => setUpImg(reader.result as string);
-      reader.readAsDataURL(file);
-    }
+    processFile(e.dataTransfer.files?.[0]);
   };
 
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -103,7 +102,7 @@ export default function ImageCropperPage() {
     if (!completedCrop || !canvas || !image) {
       toast({
         title: "Error",
-        description: "Lakukan seleksi area terlebih dahulu",
+        description: "Please select an area first",
         variant: "destructive",
       });
       return;
@@ -131,25 +130,25 @@ export default function ImageCropperPage() {
       canvas.height,
     );
     toast({
-      title: "Preview Updated",
-      description: "Hasil crop sudah siap diunduh.",
+      title: t("common.success"),
+      description: "Preview generated successfully.",
     });
   };
 
   const downloadCroppedImage = () => {
     const canvas = previewCanvasRef.current;
-    if (!canvas || canvas.width === 0) {
-      toast({
-        title: "Gagal",
-        description: "Klik 'Crop & Preview' terlebih dahulu",
-        variant: "destructive",
-      });
-      return;
+    if (!canvas || canvas.width === 0) return;
+
+    let mimeType = fileDetails?.type || "image/png";
+
+    if (mimeType === "image/svg+xml") {
+      mimeType = "image/png";
     }
 
+    const extension = mimeType.split("/")[1].replace("+xml", "");
     const link = document.createElement("a");
-    link.download = `cropped-${fileDetails?.name || "image"}.png`;
-    link.href = canvas.toDataURL("image/png");
+    link.download = `cropped-${fileDetails?.name.split(".")[0] || "image"}.${extension}`;
+    link.href = canvas.toDataURL(mimeType, 0.92);
     link.click();
   };
 
@@ -158,22 +157,13 @@ export default function ImageCropperPage() {
     setFileDetails(null);
     setCompletedCrop(null);
     setConfirmClear(false);
-    if (previewCanvasRef.current) {
-      const ctx = previewCanvasRef.current.getContext("2d");
-      ctx?.clearRect(
-        0,
-        0,
-        previewCanvasRef.current.width,
-        previewCanvasRef.current.height,
-      );
-    }
   };
 
   return (
     <>
       <ToolShell
-        title="Image Cropper"
-        description="Potong dan sesuaikan ukuran gambar Anda secara lokal di browser."
+        title={t("tool.image-cropper.name")}
+        description={t("tool.image-cropper.description")}
       >
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
           <div
@@ -202,10 +192,9 @@ export default function ImageCropperPage() {
               <div className="p-4 w-full flex flex-col items-center">
                 <ReactCrop
                   crop={crop}
-                  onChange={(c: Crop) => setCrop(c)}
-                  onComplete={(c: PixelCrop) => setCompletedCrop(c)}
+                  onChange={(c) => setCrop(c)}
+                  onComplete={(c) => setCompletedCrop(c)}
                   aspect={aspect}
-                  className="max-h-[500px]"
                 >
                   <Image
                     ref={imgRef}
@@ -215,23 +204,13 @@ export default function ImageCropperPage() {
                     height={500}
                     unoptimized
                     onLoad={onImageLoad}
-                    className="max-h-[500px] w-auto object-contain rounded-md shadow-lg"
+                    className="max-h-[500px] w-auto object-contain rounded-md"
                   />
                 </ReactCrop>
-
-                <div className="mt-4 flex flex-col items-center gap-1">
-                  <p className="text-xs font-medium text-foreground">
-                    {fileDetails?.name}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                    {(fileDetails!.size / 1024).toFixed(1)} KB
-                  </p>
-                </div>
-
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="absolute top-3 right-3 h-8 w-8 bg-background/80 backdrop-blur hover:bg-destructive hover:text-white transition-all"
+                  className="absolute top-3 right-3 bg-background/80 backdrop-blur"
                   onClick={(e) => {
                     e.stopPropagation();
                     setConfirmClear(true);
@@ -242,111 +221,92 @@ export default function ImageCropperPage() {
               </div>
             ) : (
               <div className="flex flex-col items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted shadow-inner">
-                  <Upload className="h-6 w-6 text-muted-foreground" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                  <Upload className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium">
-                    Klik atau drop gambar di sini
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Mendukung format gambar standar
-                  </p>
-                </div>
+                <p className="text-sm font-medium">{t("action.dropzone")}</p>
               </div>
             )}
           </div>
 
-          <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-3">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Aspect Ratio
+          <div className="flex flex-col gap-6 text-left">
+            <div className="space-y-3">
+              <Label className="text-xs font-bold uppercase tracking-wider">
+                {t("tool.image-cropper.aspect")}
               </Label>
               <Select
-                onValueChange={(v) => {
-                  const val = v === "custom" ? undefined : Number(v);
-                  setAspect(val);
-                }}
+                onValueChange={(v) =>
+                  setAspect(v === "custom" ? undefined : Number(v))
+                }
                 defaultValue="custom"
               >
-                <SelectTrigger className="bg-background">
-                  <SelectValue placeholder="Pilih Ratio" />
+                <SelectTrigger>
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="custom">Bebas (Custom)</SelectItem>
-                  <SelectItem value="1">1:1 (Persegi)</SelectItem>
+                  <SelectItem value="custom">
+                    {t("tool.image-cropper.free")}
+                  </SelectItem>
+                  <SelectItem value="1">
+                    {t("tool.image-cropper.square")}
+                  </SelectItem>
                   <SelectItem value={(4 / 3).toString()}>4:3</SelectItem>
                   <SelectItem value={(16 / 9).toString()}>16:9</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <Separator className="my-2" />
+            <Separator />
 
             <div className="space-y-3">
               <Button
-                className="w-full gap-2 shadow-sm"
+                className="w-full gap-2"
                 onClick={generateCrop}
                 disabled={!upImg}
               >
-                <ScanSearch className="h-4 w-4" />
-                Preview Crop
+                <ScanSearch className="h-4 w-4" /> {t("action.capture")}
               </Button>
-
               <Button
                 variant="outline"
-                className={cn(
-                  "w-full gap-2 bg-green-600/10 text-green-600 hover:bg-green-600 hover:text-white border-green-600/20",
-                )}
+                className="w-full gap-2"
                 onClick={downloadCroppedImage}
                 disabled={!completedCrop}
               >
-                <Download className="h-4 w-4" />
-                Download PNG
+                <Download className="h-4 w-4" /> {t("action.download")}
               </Button>
             </div>
-
-            <p className="text-[11px] text-muted-foreground text-center bg-muted/30 p-3 rounded-lg border">
-              Pemrosesan dilakukan 100% di browser Anda. Keamanan data terjamin.
-            </p>
           </div>
         </div>
 
         {upImg && (
-          <div className="mt-12 animate-in fade-in slide-in-from-bottom-6 duration-700">
-            <Card className="overflow-hidden border-none shadow-xl bg-muted/5">
-              <CardHeader className="bg-muted/20 border-b py-3">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <CropIcon className="h-4 w-4" /> Cropped Result
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 flex justify-center items-center min-h-[200px]">
-                <canvas
-                  ref={previewCanvasRef}
-                  className="max-w-full h-auto rounded-lg shadow-md border bg-white"
-                />
-              </CardContent>
-            </Card>
-          </div>
+          <Card className="mt-8 overflow-hidden text-left">
+            <CardHeader className="py-3 bg-muted/20">
+              <CardTitle className="text-sm font-medium">
+                {t("tool.image-cropper.preview")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 flex justify-center">
+              <canvas
+                ref={previewCanvasRef}
+                className="max-w-full h-auto border rounded-md shadow-sm"
+              />
+            </CardContent>
+          </Card>
         )}
       </ToolShell>
 
       <AlertDialog open={confirmClear} onOpenChange={setConfirmClear}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Hapus Gambar?</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialog.confirm.title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Tindakan ini akan menghapus gambar saat ini dan semua progres
-              cropping Anda.
+              {t("dialog.confirm.description")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleReset}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Ya, Hapus
+            <AlertDialogCancel>{t("action.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleReset}>
+              {t("action.confirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

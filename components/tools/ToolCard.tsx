@@ -74,7 +74,7 @@ export function ToolCard({ tool, featured }: ToolCardProps) {
 
   return (
     <Link
-      href={`/tools/${tool.slug}`}
+      href={tool.slug}
       className={cn(
         "group relative flex flex-col gap-3 rounded-xl border bg-card p-5",
         "hover:border-foreground/20 hover:shadow-sm transition-all duration-150",
