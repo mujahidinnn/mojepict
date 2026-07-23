@@ -10,6 +10,7 @@ export const id = {
   "nav.theme.light": "Terang",
   "nav.theme.dark": "Gelap",
   "nav.language": "Bahasa",
+  "nav.support": "Dukung",
 
   "category.image": "Gambar",
   "category.unit": "Konverter Satuan",

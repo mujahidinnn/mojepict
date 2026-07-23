@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useI18n } from "@/lib/i18n/context";
-import { Globe, Menu, Moon, Search, Sun, Zap } from "lucide-react";
+import { Globe, Heart, Menu, Moon, Search, Sun, Zap } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -79,6 +79,20 @@ export function Navbar() {
       )}
 
       <div className="flex-1" />
+      <Button
+        asChild
+        variant="outline"
+        className="h-7 gap-1.5 px-2.5 text-xs text-pink-600 dark:text-pink-400 border-pink-200 dark:border-pink-900 hover:bg-pink-50 dark:hover:bg-pink-950 hover:text-pink-700 dark:hover:text-pink-300"
+      >
+        <a
+          href="https://trakteer.id/mujahidinnn/tip"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Heart className="h-3.5 w-3.5 fill-current" />
+          <span className="hidden sm:inline">{t("nav.support")}</span>
+        </a>
+      </Button>
       <Button
         variant="outline"
         className="h-7 gap-2 px-2.5 text-xs text-muted-foreground hover:text-foreground"

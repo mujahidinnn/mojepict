@@ -12,6 +12,7 @@ export const en = {
   "nav.theme.light": "Light",
   "nav.theme.dark": "Dark",
   "nav.language": "Language",
+  "nav.support": "Support",
 
   // --- Categories ---
   "category.image": "Image",
