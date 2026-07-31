@@ -7,16 +7,69 @@ import { Toaster } from "@/components/ui/toaster";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Navbar } from "@/components/layout/Navbar";
 import { CommandPalette } from "@/components/layout/CommandPalette";
+import { JsonLd } from "@/components/seo/JsonLd";
+import {
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_URL,
+  getOrganizationJsonLd,
+  getWebsiteJsonLd,
+} from "@/lib/seo";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Mojepict - Free Web Tools",
-    template: "%s · Mojepict",
+    default: `${SITE_NAME} - Free Web Tools`,
+    template: `%s · ${SITE_NAME}`,
   },
-  description:
-    "A collection of free, browser-only web tools. Image converters, unit tools, and more — no uploads, no accounts.",
-  metadataBase: new URL("https://mojepict.vercel.app"),
+  description: SITE_DESCRIPTION,
+  keywords: [
+    "free online tools",
+    "browser-based tools",
+    "image converter",
+    "image compressor",
+    "unit converter",
+    "qr code generator",
+    "background remover",
+    "no upload tools",
+    SITE_NAME,
+  ],
+  metadataBase: new URL(SITE_URL),
+  alternates: { canonical: SITE_URL },
+  applicationName: SITE_NAME,
+  authors: [{ name: SITE_NAME }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/mojepict-logo.png",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+    },
+  },
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} - Free Web Tools`,
+    description: SITE_DESCRIPTION,
+    images: [
+      { url: "/mojepict-logo.png", width: 253, height: 253, alt: SITE_NAME },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: `${SITE_NAME} - Free Web Tools`,
+    description: SITE_DESCRIPTION,
+    images: ["/mojepict-logo.png"],
+  },
 };
 
 export default function RootLayout({
@@ -29,6 +82,8 @@ export default function RootLayout({
       <body
         className={`${GeistSans.variable} ${GeistMono.variable} font-sans antialiased`}
       >
+        <JsonLd data={getWebsiteJsonLd()} />
+        <JsonLd data={getOrganizationJsonLd()} />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
