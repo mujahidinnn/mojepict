@@ -61,14 +61,19 @@ export const metadata: Metadata = {
     title: `${SITE_NAME} - Free Web Tools`,
     description: SITE_DESCRIPTION,
     images: [
-      { url: "/mojepict-logo.png", width: 253, height: 253, alt: SITE_NAME },
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: `${SITE_NAME} - Free Web Tools`,
+      },
     ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: `${SITE_NAME} - Free Web Tools`,
     description: SITE_DESCRIPTION,
-    images: ["/mojepict-logo.png"],
+    images: ["/og-image.png"],
   },
 };
 

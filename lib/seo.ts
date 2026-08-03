@@ -5,7 +5,8 @@ import { en } from "@/lib/i18n/en";
 export const SITE_URL = "https://mojepict.vercel.app";
 export const SITE_NAME = "Mojepict";
 export const SITE_DESCRIPTION = en["site.description"];
-const OG_IMAGE = "/mojepict-logo.png";
+const OG_IMAGE = "/og-image.png";
+const OG_LOGO = "/mojepict-logo.png";
 
 type EnKey = keyof typeof en;
 
@@ -45,10 +46,10 @@ export function getToolMetadata(slug: string): Metadata {
       url,
       siteName: SITE_NAME,
       type: "website",
-      images: [{ url: OG_IMAGE, width: 253, height: 253, alt: name }],
+      images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: name }],
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title: `${name} | ${SITE_NAME}`,
       description,
       images: [OG_IMAGE],
@@ -106,6 +107,6 @@ export function getOrganizationJsonLd() {
     "@type": "Organization",
     name: SITE_NAME,
     url: SITE_URL,
-    logo: `${SITE_URL}${OG_IMAGE}`,
+    logo: `${SITE_URL}${OG_LOGO}`,
   };
 }
