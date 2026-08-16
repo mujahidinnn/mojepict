@@ -1,18 +1,11 @@
 "use client";
 
 import { ToolShell } from "@/components/tools/ToolShell";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ToolWorkspace } from "@/components/tools/ToolWorkspace";
+import { Dropzone } from "@/components/tools/Dropzone";
+import { ImageZoomPreview } from "@/components/tools/ImageZoomPreview";
+import { ToolActionBar } from "@/components/tools/ToolActionBar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -26,7 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
-import { Download, ImageIcon, Trash2, Type, Upload, X } from "lucide-react";
+import { Download, ImageIcon, Trash2, Type } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export default function WatermarkPage() {
@@ -34,8 +27,6 @@ export default function WatermarkPage() {
   const { toast } = useToast();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const watermarkInputRef = useRef<HTMLInputElement>(null);
 
   const [bgImage, setBgImage] = useState<string | null>(null);
   const [imageElement, setImageElement] = useState<HTMLImageElement | null>(
@@ -60,19 +51,16 @@ export default function WatermarkPage() {
   const [isDragging, setIsDragging] = useState(false);
   const dragOffset = useRef({ x: 0, y: 0 });
 
-  const [confirmClear, setConfirmClear] = useState(false);
-
   const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && allowedTypes.includes(file.type)) {
+  const handleImageUpload = (file: File) => {
+    if (allowedTypes.includes(file.type)) {
       const url = URL.createObjectURL(file);
       setBgImage(url);
       const img = new Image();
       img.onload = () => setImageElement(img);
       img.src = url;
-    } else if (file) {
+    } else {
       toast({
         variant: "destructive",
         description: t("toast.error.unsupported"),
@@ -80,11 +68,7 @@ export default function WatermarkPage() {
     }
   };
 
-  const handleWatermarkImageUpload = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleWatermarkImageUpload = (file: File) => {
     const url = URL.createObjectURL(file);
     setWatermarkImage(url);
     const img = new Image();
@@ -208,71 +192,19 @@ export default function WatermarkPage() {
     setImageElement(null);
     setWatermarkImage(null);
     setWatermarkImgElement(null);
-    setConfirmClear(false);
   };
 
   return (
-    <>
-      <ToolShell
-        title={t("tool.watermark.name") || "Watermark"}
-        description={
-          t("tool.watermark.description") ||
-          "Add text or logo watermarks to your images locally."
-        }
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
-          <div className="flex flex-col gap-4">
-            {!bgImage ? (
-              <Card
-                className="border-dashed cursor-pointer hover:bg-accent/50 transition-colors group"
-                onClick={() => inputRef.current?.click()}
-              >
-                <CardContent className="flex flex-col items-center justify-center py-20 text-center">
-                  <input
-                    type="file"
-                    accept=".jpg,.jpeg,.png,.webp"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                    ref={inputRef}
-                  />
-                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Upload className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="font-medium">{t("common.upload-click")}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {t("common.upload-drag")}
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="relative border rounded-xl overflow-hidden bg-muted/20 shadow-inner flex justify-center p-4 min-h-[400px]">
-                <canvas
-                  ref={canvasRef}
-                  className="shadow-2xl border bg-white max-w-full h-auto cursor-move"
-                  onMouseDown={handleMouseDown}
-                  onMouseMove={handleMouseMove}
-                  onMouseUp={() => {
-                    setIsDragging(false);
-                    setIsDraggingText(false);
-                  }}
-                  onMouseLeave={() => {
-                    setIsDragging(false);
-                    setIsDraggingText(false);
-                  }}
-                />
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="absolute top-6 right-6 h-8 w-8 bg-background/80 backdrop-blur hover:bg-destructive hover:text-white"
-                  onClick={() => setConfirmClear(true)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-6">
+    <ToolShell
+      title={t("tool.watermark.name") || "Watermark"}
+      description={
+        t("tool.watermark.description") ||
+        "Add text or logo watermarks to your images locally."
+      }
+    >
+      <ToolWorkspace
+        sidebar={
+          <>
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
@@ -297,37 +229,11 @@ export default function WatermarkPage() {
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                   <ImageIcon className="h-3 w-3" /> Logo Watermark
                 </Label>
-                <div className="flex flex-col gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full gap-2"
-                    onClick={() => watermarkInputRef.current?.click()}
-                  >
-                    <Upload className="h-3 w-3" />{" "}
-                    {watermarkImage ? "Change Logo" : "Upload Logo"}
-                  </Button>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    ref={watermarkInputRef}
-                    onChange={handleWatermarkImageUpload}
-                  />
-                  {watermarkImage && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 text-xs text-destructive"
-                      onClick={() => {
-                        setWatermarkImage(null);
-                        setWatermarkImgElement(null);
-                      }}
-                    >
-                      <Trash2 className="h-3 w-3 mr-1" /> Remove Logo
-                    </Button>
-                  )}
-                </div>
+                <Dropzone
+                  onFile={handleWatermarkImageUpload}
+                  title={watermarkImage ? "Change Logo" : "Upload Logo"}
+                  className="min-h-[100px] p-4"
+                />
               </div>
 
               <Separator />
@@ -377,40 +283,61 @@ export default function WatermarkPage() {
               </div>
             </div>
 
-            <Button
-              className="w-full gap-2 mt-4"
-              onClick={handleDownload}
-              disabled={!bgImage}
+            <ToolActionBar
+              primaryLabel={t("action.download")}
+              primaryIcon={<Download className="h-4 w-4" />}
+              onPrimary={handleDownload}
+              primaryDisabled={!bgImage}
+              onReset={bgImage ? handleReset : undefined}
             >
-              <Download className="h-4 w-4" /> {t("action.download")}
-            </Button>
+              {watermarkImage && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full h-7 gap-1 text-xs text-destructive"
+                  onClick={() => {
+                    setWatermarkImage(null);
+                    setWatermarkImgElement(null);
+                  }}
+                >
+                  <Trash2 className="h-3 w-3" />
+                  {t("common.remove-logo")}
+                </Button>
+              )}
+            </ToolActionBar>
 
             <p className="text-[10px] text-muted-foreground text-center bg-muted/50 p-2 rounded border italic">
               * Tip: Drag text or logo on the canvas to reposition.
             </p>
-          </div>
-        </div>
-      </ToolShell>
-
-      <AlertDialog open={confirmClear} onOpenChange={setConfirmClear}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("common.confirm-title")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("dialog.confirm.description")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleReset}
-              className="bg-destructive text-white"
-            >
-              {t("action.reset")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+          </>
+        }
+      >
+        {bgImage ? (
+          <ImageZoomPreview>
+            <canvas
+              ref={canvasRef}
+              className="shadow-2xl border bg-white max-w-full h-auto cursor-move"
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={() => {
+                setIsDragging(false);
+                setIsDraggingText(false);
+              }}
+              onMouseLeave={() => {
+                setIsDragging(false);
+                setIsDraggingText(false);
+              }}
+            />
+          </ImageZoomPreview>
+        ) : (
+          <Dropzone
+            onFile={handleImageUpload}
+            accept=".jpg,.jpeg,.png,.webp"
+            title={t("common.upload-click")}
+            subtitle={t("common.upload-drag")}
+          />
+        )}
+      </ToolWorkspace>
+    </ToolShell>
   );
 }

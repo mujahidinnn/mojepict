@@ -4,6 +4,7 @@ import { ToolShell } from "@/components/tools/ToolShell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
 import { Braces, Code2, Copy, Minimize2, Trash2 } from "lucide-react";
@@ -50,7 +51,7 @@ export default function JsonFormatterPage() {
       title={t("tool.json-formatter.name")}
       description={t("tool.json-formatter.description")}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4 text-left">
           <div className="flex items-center justify-between">
             <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
@@ -66,9 +67,9 @@ export default function JsonFormatterPage() {
               <Trash2 className="h-4 w-4 mr-2" /> {t("common.clear")}
             </Button>
           </div>
-          <textarea
+          <Textarea
             placeholder={t("tool.json-formatter.placeholder")}
-            className="flex min-h-[500px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none p-4"
+            className="min-h-[500px] font-mono text-sm resize-none p-4"
             value={input}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
               setInput(e.target.value)
@@ -110,9 +111,9 @@ export default function JsonFormatterPage() {
             </Button>
           </div>
           <Card className="min-h-[500px] bg-muted/10 border-2 overflow-hidden relative">
-            <textarea
+            <Textarea
               readOnly
-              className="w-full h-full min-h-[500px] bg-transparent p-4 font-mono text-sm resize-none outline-none"
+              className="min-h-[500px] h-full border-0 bg-transparent font-mono text-sm resize-none focus-visible:ring-0 focus-visible:ring-offset-0"
               value={output}
               placeholder="..."
             />

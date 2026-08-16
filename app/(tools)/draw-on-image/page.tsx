@@ -5,21 +5,14 @@ import dynamic from "next/dynamic";
 import { useI18n } from "@/lib/i18n/context";
 import { useToast } from "@/hooks/use-toast";
 import { ToolShell } from "@/components/tools/ToolShell";
+import { ToolWorkspace } from "@/components/tools/ToolWorkspace";
+import { Dropzone } from "@/components/tools/Dropzone";
+import { ImageZoomPreview } from "@/components/tools/ImageZoomPreview";
+import { ToolActionBar } from "@/components/tools/ToolActionBar";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Upload, Download, RotateCcw, Undo2, Eraser, X } from "lucide-react";
+import { Upload, Download, Undo2, Eraser } from "lucide-react";
 
 // @ts-ignore
 const CanvasDraw = dynamic(
@@ -33,13 +26,11 @@ export default function DrawOnImagePage() {
   const CanvasDrawComponent = CanvasDraw as any;
 
   const canvasRef = useRef<any>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const [bgImage, setBgImage] = useState<string | null>(null);
   const [imageSize, setImageSize] = useState({ width: 800, height: 500 });
   const [brushColor, setBrushColor] = useState("#000000");
   const [brushRadius, setBrushRadius] = useState(2);
-  const [confirmClear, setConfirmClear] = useState(false);
 
   const allowedTypes = [
     "image/jpeg",
@@ -48,9 +39,8 @@ export default function DrawOnImagePage() {
     "image/svg+xml",
   ];
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && allowedTypes.includes(file.type)) {
+  const handleImageUpload = (file: File) => {
+    if (allowedTypes.includes(file.type)) {
       processFile(file);
     } else {
       toast({
@@ -109,79 +99,19 @@ export default function DrawOnImagePage() {
 
   const handleReset = () => {
     setBgImage(null);
-    setConfirmClear(false);
     toast({
       description: t("tool.image-draw.reset-msg") || "Canvas has been reset.",
     });
   };
 
   return (
-    <>
-      <ToolShell
-        title={t("tool.image-draw.name")}
-        description={t("tool.image-draw.description")}
-      >
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
-          <div className="flex-1 w-full min-w-0">
-            {!bgImage ? (
-              <Card
-                className="border-dashed cursor-pointer hover:bg-accent/50 transition-colors group"
-                onClick={() => inputRef.current?.click()}
-              >
-                <CardContent className="flex flex-col items-center justify-center py-20 text-center">
-                  <input
-                    type="file"
-                    accept=".jpg,.jpeg,.png,.webp,.svg"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                    ref={inputRef}
-                  />
-                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Upload className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="font-medium">{t("common.upload-click")}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {t("common.upload-drag")} (JPG, PNG, WEBP, SVG)
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="relative border rounded-xl bg-muted/20 shadow-inner flex flex-col items-center justify-center p-4 min-h-[500px] max-h-[85vh] overflow-hidden">
-                <div className="w-full h-full overflow-auto flex justify-center custom-scrollbar">
-                  <div
-                    className="relative shadow-2xl border bg-white"
-                    style={{
-                      width: imageSize.width,
-                      height: imageSize.height,
-                      maxWidth: "none",
-                    }}
-                  >
-                    <CanvasDrawComponent
-                      ref={canvasRef}
-                      imgSrc={bgImage}
-                      brushColor={brushColor}
-                      brushRadius={brushRadius}
-                      canvasWidth={imageSize.width}
-                      canvasHeight={imageSize.height}
-                      lazyRadius={0}
-                      hideGrid
-                      immediateLoading
-                    />
-                  </div>
-                </div>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="absolute top-4 right-4 h-8 w-8 bg-background/80 backdrop-blur hover:bg-destructive hover:text-white z-10 shadow-sm"
-                  onClick={() => setConfirmClear(true)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-          </div>
-
-          <div className="w-full lg:w-[280px] flex flex-col gap-6 sticky top-6">
+    <ToolShell
+      title={t("tool.image-draw.name")}
+      description={t("tool.image-draw.description")}
+    >
+      <ToolWorkspace
+        sidebar={
+          <>
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -220,72 +150,73 @@ export default function DrawOnImagePage() {
 
             <Separator />
 
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => canvasRef.current?.undo()}
-              >
-                <Undo2 className="h-4 w-4" /> {t("common.undo") || "Undo"}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 text-destructive hover:bg-destructive/10"
-                onClick={() => canvasRef.current?.clear()}
-              >
-                <Eraser className="h-4 w-4" /> {t("common.clear") || "Clear"}
-              </Button>
-            </div>
-
-            <Button
-              className="w-full gap-2"
-              onClick={handleSave}
-              disabled={!bgImage}
+            <ToolActionBar
+              primaryLabel={t("tool.image-draw.save")}
+              primaryIcon={<Download className="h-4 w-4" />}
+              onPrimary={handleSave}
+              primaryDisabled={!bgImage}
+              onReset={bgImage ? handleReset : undefined}
+              resetLabel={t("tool.image-draw.change")}
             >
-              <Download className="h-4 w-4" /> {t("tool.image-draw.save")}
-            </Button>
-
-            <Button
-              variant="ghost"
-              className="w-full gap-2 text-muted-foreground"
-              onClick={() => setConfirmClear(true)}
-              disabled={!bgImage}
-            >
-              <RotateCcw className="h-4 w-4" /> {t("tool.image-draw.change")}
-            </Button>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => canvasRef.current?.undo()}
+                >
+                  <Undo2 className="h-4 w-4" /> {t("common.undo") || "Undo"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 text-destructive hover:bg-destructive/10"
+                  onClick={() => canvasRef.current?.clear()}
+                >
+                  <Eraser className="h-4 w-4" /> {t("common.clear") || "Clear"}
+                </Button>
+              </div>
+            </ToolActionBar>
 
             <p className="text-[11px] text-muted-foreground text-center bg-muted/30 p-3 rounded-lg border italic">
               {t("tool.image-draw.footer-note") ||
                 "Processing is done 100% in your browser."}
             </p>
-          </div>
-        </div>
-      </ToolShell>
-
-      <AlertDialog open={confirmClear} onOpenChange={setConfirmClear}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t("common.confirm-title") || "Are you sure?"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("tool.image-draw.confirm-desc") ||
-                "This will delete all your current sketches."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleReset}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          </>
+        }
+      >
+        {bgImage ? (
+          <ImageZoomPreview>
+            <div
+              className="relative shadow-2xl border bg-white"
+              style={{
+                width: imageSize.width,
+                height: imageSize.height,
+                maxWidth: "none",
+              }}
             >
-              {t("tool.image-draw.change")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+              <CanvasDrawComponent
+                ref={canvasRef}
+                imgSrc={bgImage}
+                brushColor={brushColor}
+                brushRadius={brushRadius}
+                canvasWidth={imageSize.width}
+                canvasHeight={imageSize.height}
+                lazyRadius={0}
+                hideGrid
+                immediateLoading
+              />
+            </div>
+          </ImageZoomPreview>
+        ) : (
+          <Dropzone
+            onFile={handleImageUpload}
+            accept=".jpg,.jpeg,.png,.webp,.svg"
+            title={t("common.upload-click")}
+            subtitle={`${t("common.upload-drag")} (JPG, PNG, WEBP, SVG)`}
+          />
+        )}
+      </ToolWorkspace>
+    </ToolShell>
   );
 }

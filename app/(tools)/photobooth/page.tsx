@@ -1,6 +1,8 @@
 "use client";
 
+import { ToolActionBar } from "@/components/tools/ToolActionBar";
 import { ToolShell } from "@/components/tools/ToolShell";
+import { ToolWorkspace } from "@/components/tools/ToolWorkspace";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -28,7 +30,6 @@ import {
   Sparkles,
   Sun,
   Thermometer,
-  Trash2,
   X,
 } from "lucide-react";
 import Image from "next/image";
@@ -347,7 +348,238 @@ export default function PhotoBoothPage() {
       title={t("tool.photobooth.name")}
       description={t("tool.photobooth.description")}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8">
+      <ToolWorkspace
+        sidebar={
+          <>
+            <Tabs defaultValue="adjust" className="w-full">
+              <TabsList className="w-full">
+                <TabsTrigger value="adjust" className="flex-1 gap-1 text-[11px]">
+                  <Settings2 className="h-3 w-3" /> Adjust
+                </TabsTrigger>
+                <TabsTrigger value="filter" className="flex-1 gap-1 text-[11px]">
+                  <Palette className="h-3 w-3" /> Filter
+                </TabsTrigger>
+                <TabsTrigger value="layout" className="flex-1 gap-1 text-[11px]">
+                  <Grid3X3 className="h-3 w-3" /> Layout
+                </TabsTrigger>
+                <TabsTrigger value="frames" className="flex-1 gap-1 text-[11px]">
+                  <Sparkles className="h-3 w-3" /> Frames
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="adjust" className="space-y-5 pt-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-2">
+                    <Sun className="h-3 w-3" /> Brightness ({brightness}%)
+                  </Label>
+                  <Slider
+                    value={[brightness]}
+                    min={50}
+                    max={150}
+                    onValueChange={(v) => setBrightness(v[0])}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-2">
+                    <ContrastIcon className="h-3 w-3" /> Contrast ({contrast}%)
+                  </Label>
+                  <Slider
+                    value={[contrast]}
+                    min={50}
+                    max={150}
+                    onValueChange={(v) => setContrast(v[0])}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-2">
+                    <Thermometer className="h-3 w-3" /> Temp (Warm/Cold)
+                  </Label>
+                  <Slider
+                    value={[colorTemp]}
+                    min={-100}
+                    max={100}
+                    onValueChange={(v) => setColorTemp(v[0])}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-2">
+                    <Eye className="h-3 w-3" /> Vignette ({vignette}%)
+                  </Label>
+                  <Slider
+                    value={[vignette]}
+                    min={0}
+                    max={100}
+                    onValueChange={(v) => setVignette(v[0])}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-2">
+                    <Sparkles className="h-3 w-3" /> Blur ({blur}px)
+                  </Label>
+                  <Slider
+                    value={[blur]}
+                    min={0}
+                    max={10}
+                    step={0.1}
+                    onValueChange={(v) => setBlur(v[0])}
+                  />
+                </div>
+
+                <div className="space-y-2 pt-2 border-t">
+                  <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-2">
+                    <Fullscreen className="h-3 w-3" />{" "}
+                    {t("tool.photobooth.label.radius")} ({radius}
+                    px)
+                  </Label>
+                  <Slider
+                    value={[radius]}
+                    min={0}
+                    max={50}
+                    onValueChange={(v) => setRadius(v[0])}
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="filter" className="pt-4">
+                <Select value={filter} onValueChange={setFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Default (Clean)</SelectItem>
+                    <SelectItem value="brightness(110%) contrast(90%) saturate(120%) blur(0.3px)">
+                      Sweet Look ✨
+                    </SelectItem>
+                    <SelectItem value="sepia(0.4) brightness(110%) hue-rotate(-10deg)">
+                      Golden Hour ☀️
+                    </SelectItem>
+                    <SelectItem value="sepia(0.6) contrast(0.9) brightness(1.1)">
+                      Vintage 🎞️
+                    </SelectItem>
+                    <SelectItem value="brightness(110%) contrast(120%) hue-rotate(180deg)">
+                      Cold Tone ❄️
+                    </SelectItem>
+                    <SelectItem value="grayscale(100%)">Classic B&W</SelectItem>
+                    <SelectItem value="grayscale(100%) contrast(150%)">
+                      High Contrast B&W
+                    </SelectItem>
+                    <SelectItem value="brightness(105%) contrast(95%) saturate(120%) sepia(0.5) hue-rotate(-10deg)">
+                      Retro 70s
+                    </SelectItem>
+                    <SelectItem value="brightness(110%) contrast(90%) saturate(85%) sepia(0.3) blur(0.4px)">
+                      Retro 80s
+                    </SelectItem>
+                    <SelectItem value="brightness(70%) contrast(130%) hue-rotate(210deg)">
+                      Midnight 🌙
+                    </SelectItem>
+                    <SelectItem value="contrast(200%) brightness(80%)">
+                      Dramatic
+                    </SelectItem>
+                    <SelectItem value="blur(0.5px) brightness(115%)">
+                      Soft Glow
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="mt-4 text-[10px] text-muted-foreground">
+                  * Filters override Manual Adjustments (Brightness/Contrast/Blur)
+                </p>
+              </TabsContent>
+
+              <TabsContent value="layout" className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase font-bold text-muted-foreground">
+                    {t("tool.photobooth.label.grid")}
+                  </Label>
+                  <Select
+                    value={`${grid.cols}x${grid.rows}`}
+                    onValueChange={(v) => {
+                      const [c, r] = v.split("x").map(Number);
+                      setGrid({ cols: c, rows: r });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="2x3">2 x 3 Grid</SelectItem>
+                      <SelectItem value="2x4">2 x 4 Grid</SelectItem>
+                      <SelectItem value="3x3">3 x 3 Grid</SelectItem>
+                      <SelectItem value="1x4">4 Strip</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase font-bold text-muted-foreground">
+                    {t("tool.photobooth.label.frame")}
+                  </Label>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      "white",
+                      "black",
+                      "#ff0000",
+                      "#00ff00",
+                      "#0000ff",
+                      "#ffe4e1",
+                      "#f0f8ff",
+                    ].map((c) => (
+                      <div
+                        key={c}
+                        className={`h-7 w-7 rounded-full border cursor-pointer ${frameColor === c ? "ring-2 ring-primary ring-offset-2" : ""}`}
+                        style={{ backgroundColor: c }}
+                        onClick={() => setFrameColor(c)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="frames" className="space-y-4 pt-4">
+                <Label className="text-[10px] uppercase font-bold text-muted-foreground">
+                  Decorative Overlay
+                </Label>
+                <div className="grid grid-cols-4 gap-2">
+                  {DECORATIVE_FRAMES.map((f) => (
+                    <Button
+                      key={f.id}
+                      variant={selectedFrame === f.id ? "default" : "outline"}
+                      className="h-14 flex flex-col items-center justify-center gap-1 p-1"
+                      onClick={() => setSelectedFrame(f.id)}
+                    >
+                      <span className="text-lg">{f.icon}</span>
+                      <span className="text-[9px] truncate w-full text-center">
+                        {f.name}
+                      </span>
+                    </Button>
+                  ))}
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            <ToolActionBar
+              primaryLabel={t("action.capture")}
+              primaryIcon={<Camera className="h-4 w-4" />}
+              onPrimary={capturePhoto}
+              primaryDisabled={photos.length >= grid.cols * grid.rows}
+              onReset={() => setPhotos([])}
+              resetLabel={t("action.clearAll")}
+              resetDisabled={photos.length === 0}
+            >
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                onClick={downloadGrid}
+                disabled={photos.length === 0}
+              >
+                <Download className="h-4 w-4" /> {t("action.download")}
+              </Button>
+            </ToolActionBar>
+          </>
+        }
+      >
         <div className="flex flex-col gap-4">
           <div className="relative bg-black rounded-xl overflow-hidden aspect-video shadow-2xl group">
             <video ref={videoRef} className="hidden" playsInline />
@@ -421,247 +653,7 @@ export default function PhotoBoothPage() {
             ))}
           </div>
         </div>
-
-        <div className="flex flex-col gap-6">
-          <Tabs defaultValue="adjust" className="w-full">
-            <TabsList className="w-full">
-              <TabsTrigger value="adjust" className="flex-1 gap-1 text-[11px]">
-                <Settings2 className="h-3 w-3" /> Adjust
-              </TabsTrigger>
-              <TabsTrigger value="filter" className="flex-1 gap-1 text-[11px]">
-                <Palette className="h-3 w-3" /> Filter
-              </TabsTrigger>
-              <TabsTrigger value="layout" className="flex-1 gap-1 text-[11px]">
-                <Grid3X3 className="h-3 w-3" /> Layout
-              </TabsTrigger>
-              <TabsTrigger value="frames" className="flex-1 gap-1 text-[11px]">
-                <Sparkles className="h-3 w-3" /> Frames
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="adjust" className="space-y-5 pt-4">
-              <div className="space-y-2">
-                <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-2">
-                  <Sun className="h-3 w-3" /> Brightness ({brightness}%)
-                </Label>
-                <Slider
-                  value={[brightness]}
-                  min={50}
-                  max={150}
-                  onValueChange={(v) => setBrightness(v[0])}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-2">
-                  <ContrastIcon className="h-3 w-3" /> Contrast ({contrast}%)
-                </Label>
-                <Slider
-                  value={[contrast]}
-                  min={50}
-                  max={150}
-                  onValueChange={(v) => setContrast(v[0])}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-2">
-                  <Thermometer className="h-3 w-3" /> Temp (Warm/Cold)
-                </Label>
-                <Slider
-                  value={[colorTemp]}
-                  min={-100}
-                  max={100}
-                  onValueChange={(v) => setColorTemp(v[0])}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-2">
-                  <Eye className="h-3 w-3" /> Vignette ({vignette}%)
-                </Label>
-                <Slider
-                  value={[vignette]}
-                  min={0}
-                  max={100}
-                  onValueChange={(v) => setVignette(v[0])}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-2">
-                  <Sparkles className="h-3 w-3" /> Blur ({blur}px)
-                </Label>
-                <Slider
-                  value={[blur]}
-                  min={0}
-                  max={10}
-                  step={0.1}
-                  onValueChange={(v) => setBlur(v[0])}
-                />
-              </div>
-
-              <div className="space-y-2 pt-2 border-t">
-                <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-2">
-                  <Fullscreen className="h-3 w-3" />{" "}
-                  {t("tool.photobooth.label.radius")} ({radius}
-                  px)
-                </Label>
-                <Slider
-                  value={[radius]}
-                  min={0}
-                  max={50}
-                  onValueChange={(v) => setRadius(v[0])}
-                />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="filter" className="pt-4">
-              <Select value={filter} onValueChange={setFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Default (Clean)</SelectItem>
-                  <SelectItem value="brightness(110%) contrast(90%) saturate(120%) blur(0.3px)">
-                    Sweet Look ✨
-                  </SelectItem>
-                  <SelectItem value="sepia(0.4) brightness(110%) hue-rotate(-10deg)">
-                    Golden Hour ☀️
-                  </SelectItem>
-                  <SelectItem value="sepia(0.6) contrast(0.9) brightness(1.1)">
-                    Vintage 🎞️
-                  </SelectItem>
-                  <SelectItem value="brightness(110%) contrast(120%) hue-rotate(180deg)">
-                    Cold Tone ❄️
-                  </SelectItem>
-                  <SelectItem value="grayscale(100%)">Classic B&W</SelectItem>
-                  <SelectItem value="grayscale(100%) contrast(150%)">
-                    High Contrast B&W
-                  </SelectItem>
-                  <SelectItem value="brightness(105%) contrast(95%) saturate(120%) sepia(0.5) hue-rotate(-10deg)">
-                    Retro 70s
-                  </SelectItem>
-                  <SelectItem value="brightness(110%) contrast(90%) saturate(85%) sepia(0.3) blur(0.4px)">
-                    Retro 80s
-                  </SelectItem>
-                  <SelectItem value="brightness(70%) contrast(130%) hue-rotate(210deg)">
-                    Midnight 🌙
-                  </SelectItem>
-                  <SelectItem value="contrast(200%) brightness(80%)">
-                    Dramatic
-                  </SelectItem>
-                  <SelectItem value="blur(0.5px) brightness(115%)">
-                    Soft Glow
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="mt-4 text-[10px] text-muted-foreground">
-                * Filters override Manual Adjustments (Brightness/Contrast/Blur)
-              </p>
-            </TabsContent>
-
-            <TabsContent value="layout" className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label className="text-[10px] uppercase font-bold text-muted-foreground">
-                  {t("tool.photobooth.label.grid")}
-                </Label>
-                <Select
-                  value={`${grid.cols}x${grid.rows}`}
-                  onValueChange={(v) => {
-                    const [c, r] = v.split("x").map(Number);
-                    setGrid({ cols: c, rows: r });
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="2x3">2 x 3 Grid</SelectItem>
-                    <SelectItem value="2x4">2 x 4 Grid</SelectItem>
-                    <SelectItem value="3x3">3 x 3 Grid</SelectItem>
-                    <SelectItem value="1x4">4 Strip</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] uppercase font-bold text-muted-foreground">
-                  {t("tool.photobooth.label.frame")}
-                </Label>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    "white",
-                    "black",
-                    "#ff0000",
-                    "#00ff00",
-                    "#0000ff",
-                    "#ffe4e1",
-                    "#f0f8ff",
-                  ].map((c) => (
-                    <div
-                      key={c}
-                      className={`h-7 w-7 rounded-full border cursor-pointer ${frameColor === c ? "ring-2 ring-primary ring-offset-2" : ""}`}
-                      style={{ backgroundColor: c }}
-                      onClick={() => setFrameColor(c)}
-                    />
-                  ))}
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="frames" className="space-y-4 pt-4">
-              <Label className="text-[10px] uppercase font-bold text-muted-foreground">
-                Decorative Overlay
-              </Label>
-              <div className="grid grid-cols-4 gap-2">
-                {DECORATIVE_FRAMES.map((f) => (
-                  <Button
-                    key={f.id}
-                    variant={selectedFrame === f.id ? "default" : "outline"}
-                    className="h-14 flex flex-col items-center justify-center gap-1 p-1"
-                    onClick={() => setSelectedFrame(f.id)}
-                  >
-                    <span className="text-lg">{f.icon}</span>
-                    <span className="text-[9px] truncate w-full text-center">
-                      {f.name}
-                    </span>
-                  </Button>
-                ))}
-              </div>
-            </TabsContent>
-          </Tabs>
-
-          <div className="flex flex-col gap-2 pt-4 border-t">
-            <Button
-              size="lg"
-              className="gap-2 bg-primary hover:opacity-90"
-              onClick={capturePhoto}
-              disabled={photos.length >= grid.cols * grid.rows}
-            >
-              <Camera className="h-4 w-4" /> {t("action.capture")}
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="gap-2"
-              onClick={downloadGrid}
-              disabled={photos.length === 0}
-            >
-              <Download className="h-4 w-4" /> {t("action.download")}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-destructive hover:bg-destructive/10"
-              onClick={() => {
-                if (confirm("Hapus semua foto?")) setPhotos([]);
-              }}
-            >
-              <Trash2 className="h-4 w-4 mr-2" /> {t("action.clearAll")}
-            </Button>
-          </div>
-        </div>
-      </div>
+      </ToolWorkspace>
       <canvas ref={exportRef} className="hidden" />
     </ToolShell>
   );

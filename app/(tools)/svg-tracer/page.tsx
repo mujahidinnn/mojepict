@@ -1,13 +1,15 @@
 "use client";
 
 import { ToolShell } from "@/components/tools/ToolShell";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { ToolWorkspace } from "@/components/tools/ToolWorkspace";
+import { Dropzone } from "@/components/tools/Dropzone";
+import { ImageZoomPreview } from "@/components/tools/ImageZoomPreview";
+import { ToolActionBar } from "@/components/tools/ToolActionBar";
+import { ToolEmptyState } from "@/components/tools/ToolEmptyState";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
-import ImageTracer from "imagetracerjs";
-import { Download, Loader2, PenTool, Trash2, Upload } from "lucide-react";
+import { Download, Loader2, PenTool, Upload } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -18,16 +20,14 @@ export default function SvgTracerPage() {
   const [svgOutput, setSvgOutput] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const handleFile = (file: File) => {
     setIsProcessing(true);
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const dataUrl = event.target?.result as string;
       setImagePreview(dataUrl);
 
+      const { default: ImageTracer } = await import("imagetracerjs");
       ImageTracer.imageToSVG(
         dataUrl,
         (svgString: string) => {
@@ -56,89 +56,80 @@ export default function SvgTracerPage() {
     toast({ description: t("toast.success.downloaded") });
   };
 
+  const handleReset = () => {
+    setImagePreview(null);
+    setSvgOutput(null);
+  };
+
   return (
     <ToolShell
       title={t("tool.svg-tracer.name")}
       description={t("tool.svg-tracer.description")}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="space-y-4">
-          <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-            <Upload className="h-3 w-3" /> {t("tool.remove-bg.input-label")}
-          </Label>
-          <Card className="relative border-dashed border-2 min-h-[400px] flex items-center justify-center bg-muted/20 overflow-hidden">
+      <ToolWorkspace
+        sidebar={
+          <ToolActionBar
+            primaryLabel={t("tool.svg-tracer.download")}
+            primaryIcon={<Download className="h-4 w-4" />}
+            onPrimary={downloadSvg}
+            primaryDisabled={!svgOutput}
+            onReset={imagePreview ? handleReset : undefined}
+          />
+        }
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+              <Upload className="h-3 w-3" /> {t("common.input-image")}
+            </Label>
             {imagePreview ? (
-              <div className="relative w-full h-[400px] p-4 flex flex-col items-center justify-center">
+              <ImageZoomPreview onRemove={handleReset} removeLabel={t("action.clear")}>
                 <Image
                   src={imagePreview}
                   alt="Original Image"
-                  fill
+                  width={480}
+                  height={480}
                   unoptimized
-                  className="object-contain p-4"
+                  className="max-h-[320px] w-auto object-contain"
                 />
-                <Button
-                  size="icon"
-                  variant="destructive"
-                  className="absolute top-2 right-2 z-10"
-                  onClick={() => {
-                    setImagePreview(null);
-                    setSvgOutput(null);
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
+              </ImageZoomPreview>
             ) : (
-              <label className="flex flex-col items-center gap-4 cursor-pointer p-12 text-center w-full group">
-                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                  <Upload className="h-8 w-8 text-primary" />
-                </div>
-                <p className="font-medium">{t("common.upload-click")}</p>
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="image/png,image/jpeg"
-                  onChange={handleUpload}
-                />
-              </label>
+              <Dropzone
+                onFile={handleFile}
+                accept="image/png,image/jpeg"
+                title={t("common.upload-click")}
+                subtitle={t("common.upload-drag")}
+              />
             )}
-          </Card>
-        </div>
+          </div>
 
-        <div className="space-y-4">
-          <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-            <PenTool className="h-3 w-3" /> {t("tool.remove-bg.result-label")}
-          </Label>
-          <Card className="relative border-2 min-h-[400px] flex items-center justify-center bg-muted/20 overflow-hidden shadow-inner p-4">
-            {isProcessing ? (
-              <div className="flex flex-col items-center gap-3">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground italic">
-                  {t("tool.svg-tracer.processing")}
-                </p>
-              </div>
-            ) : svgOutput ? (
-              <div className="w-full h-full flex flex-col items-center justify-center">
+          <div className="space-y-2">
+            <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+              <PenTool className="h-3 w-3" /> {t("tool.svg-tracer.result-label")}
+            </Label>
+            <ImageZoomPreview>
+              {isProcessing ? (
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-sm text-muted-foreground italic">
+                    {t("tool.svg-tracer.processing")}
+                  </p>
+                </div>
+              ) : svgOutput ? (
                 <div
-                  className="w-full h-full min-h-[300px] flex items-center justify-center overflow-auto"
+                  className="flex items-center justify-center [&_svg]:max-h-[320px] [&_svg]:w-auto"
                   dangerouslySetInnerHTML={{ __html: svgOutput }}
                 />
-                <Button
-                  className="mt-4 gap-2 w-full sm:w-auto"
-                  onClick={downloadSvg}
-                >
-                  <Download className="h-4 w-4" />{" "}
-                  {t("tool.svg-tracer.download")}
-                </Button>
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-sm italic">
-                {t("tool.remove-bg.placeholder")}
-              </p>
-            )}
-          </Card>
+              ) : (
+                <ToolEmptyState
+                  icon={<PenTool className="h-6 w-6" />}
+                  title={t("tool.svg-tracer.placeholder")}
+                />
+              )}
+            </ImageZoomPreview>
+          </div>
         </div>
-      </div>
+      </ToolWorkspace>
     </ToolShell>
   );
 }

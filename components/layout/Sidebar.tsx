@@ -4,67 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n/context";
-import { TOOLS, CATEGORIES, ToolCategory } from "@/lib/tools";
+import { TOOLS, CATEGORIES, ToolCategory, getToolBadge } from "@/lib/tools";
+import { getToolIconComponent } from "@/lib/tool-icons";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import {
-  Ruler,
-  Type,
-  Calculator,
-  PaintbrushVertical,
-  Palette,
-  Code2,
-  ImageIcon,
-  Crop,
-  PackageOpen,
-  Pipette,
-  Zap,
-  Scaling,
-  Brush,
-  ScanSearch,
-  Grid3X3,
-  BookmarkCheck,
-  Frame,
-  Smartphone,
-  QrCode,
-  Cpu,
-  Eraser,
-  Camera,
-  PenTool,
-  ScanQrCode,
-  LucideIcon,
-} from "lucide-react";
+import { ImageIcon } from "lucide-react";
 import Image from "next/image";
 
-const ICONS: Record<string, LucideIcon> = {
-  Ruler,
-  Grid3X3,
-  PenTool,
-  Smartphone,
-  Type,
-  Calculator,
-  PaintbrushVertical,
-  Code2,
-  ImageIcon,
-  Crop,
-  PackageOpen,
-  Pipette,
-  Zap,
-  Scaling,
-  Brush,
-  ScanSearch,
-  BookmarkCheck,
-  Frame,
-  QrCode,
-  ScanQrCode,
-  Palette,
-  Cpu,
-  Eraser,
-  Camera,
-};
-
 function Icon({ name, className }: { name: string; className?: string }) {
-  const LIcon = ICONS[name] ?? Zap;
+  const LIcon = getToolIconComponent(name);
   return <LIcon className={cn("h-4 w-4", className)} />;
 }
 
@@ -89,8 +37,8 @@ export function Sidebar() {
         "w-[var(--sidebar-width)] shrink-0",
       )}
     >
-      <div className="flex items-center gap-2 px-4 py-4 border-b border-[hsl(var(--sidebar-border))]">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-foreground">
+      <div className="flex flex-wrap items-center gap-2 px-4 py-4 border-b border-[hsl(var(--sidebar-border))]">
+        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-foreground shrink-0">
           <Image
             src="/mojepict-logo.png"
             alt="M"
@@ -103,7 +51,7 @@ export function Sidebar() {
           {t("site.name")}
         </span>
 
-        <small className="sm:ml-auto">v2.0</small>
+        <small className="ml-auto text-muted-foreground shrink-0">v2.0</small>
       </div>
 
       <ScrollArea className="flex-1 px-3 py-3 scrollbar-none">
@@ -139,6 +87,7 @@ export function Sidebar() {
               {tools.map((tool) => {
                 const href = tool.slug;
                 const active = pathname === href;
+                const badge = getToolBadge(tool);
                 return (
                   <Link
                     key={tool.id}
@@ -153,12 +102,12 @@ export function Sidebar() {
                       <Icon name={tool.icon} />
                       {t(`tool.${tool.id}.name` as any)}
                     </span>
-                    {tool.badge && (
+                    {badge && (
                       <Badge
                         variant="secondary"
                         className="h-4 px-1 text-[10px] leading-none"
                       >
-                        {t(`landing.badge.${tool.badge}` as any)}
+                        {t(`landing.badge.${badge}` as any)}
                       </Badge>
                     )}
                   </Link>
@@ -170,7 +119,7 @@ export function Sidebar() {
       </ScrollArea>
       <div className="border-t border-[hsl(var(--sidebar-border))] px-4 py-3">
         <p className="text-[11px] text-muted-foreground">
-          100% free · No ads · Locally · Open source
+          {t("layout.sidebar.footer")}
         </p>
       </div>
     </aside>

@@ -37,7 +37,7 @@ export function getToolMetadata(slug: string): Metadata {
       `free ${name.toLowerCase()}`,
       `online ${name.toLowerCase()}`,
       tool.category,
-      "browser-based tool",
+      "free online tool",
       SITE_NAME,
     ],
     openGraph: {

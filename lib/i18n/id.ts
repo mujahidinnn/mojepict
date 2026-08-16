@@ -2,7 +2,7 @@ export const id = {
   "site.name": "Mojepict",
   "site.tagline": "Alat gratis yang langsung bekerja.",
   "site.description":
-    "Kumpulan alat web cepat dan privat — tanpa unggahan ke server, tanpa akun.",
+    "Kumpulan alat web cepat dan gratis — sebagian besar berjalan penuh di browser Anda, dengan mode AI opsional untuk beberapa alat.",
 
   "nav.allTools": "Semua Alat",
   "nav.search": "Cari alat...",
@@ -32,6 +32,14 @@ export const id = {
   "common.to": "Ke",
   "common.swap": "Tukar posisi",
   "common.actions": "Aksi",
+  "common.input-image": "Gambar Input",
+  "common.mode.local": "Lokal (Browser)",
+  "common.mode.ai": "AI Enhanced",
+  "common.mode.local.hint": "Berjalan di perangkat Anda. Gratis, privat, tanpa setup.",
+  "common.mode.ai.hint":
+    "Memanggil API pihak ketiga untuk hasil lebih baik. Butuh API key yang sudah dikonfigurasi.",
+  "common.mode.ai.notConfigured":
+    "Mode AI Enhanced belum dikonfigurasi. Kembali ke mode Lokal.",
 
   "tool.image-converter.name": "Konverter Gambar",
   "tool.image-converter.description":
@@ -43,7 +51,7 @@ export const id = {
 
   "tool.image-compressor.name": "Kompres Gambar",
   "tool.image-compressor.description":
-    "Kurangi ukuran file tanpa kehilangan kualitas yang terlihat.",
+    "Kurangi ukuran file tanpa kehilangan kualitas yang terlihat — dengan mode kompresi AI opsional.",
 
   "tool.image-cropper.name": "Potong Gambar",
   "tool.image-cropper.description":
@@ -55,12 +63,12 @@ export const id = {
 
   "tool.remove-bg.name": "Hapus Latar Belakang",
   "tool.remove-bg.description":
-    "Hapus latar belakang gambar 100% di browser dengan AI secara aman.",
-  "tool.remove-bg.input-label": "Gambar Input",
+    "Hapus latar belakang gambar secara instan — proses lokal di browser, atau gunakan mode AI Enhanced untuk hasil tepi yang lebih presisi.",
   "tool.remove-bg.result-label": "Hasil",
   "tool.remove-bg.upload-hint": "Klik atau seret untuk unggah",
   "tool.remove-bg.format-hint": "Mendukung PNG, JPG, WEBP",
   "tool.remove-bg.processing": "Memproses via AI di Browser...",
+  "tool.remove-bg.processing.ai": "Memproses via remove.bg...",
   "tool.remove-bg.finalizing": "Menyelesaikan...",
   "tool.remove-bg.model-note":
     "Percobaan pertama mungkin memakan waktu untuk mengunduh model AI.",
@@ -90,10 +98,12 @@ export const id = {
     "Ubah gambar raster (JPG, PNG) Anda menjadi vektor SVG yang bersih dan skalabel.",
   "tool.svg-tracer.processing": "Menelusuri gambar...",
   "tool.svg-tracer.download": "Unduh SVG",
+  "tool.svg-tracer.result-label": "Hasil Vektor",
+  "tool.svg-tracer.placeholder": "SVG hasil vektorisasi akan muncul di sini",
 
   "tool.watermark.name": "Tanda Air",
   "tool.watermark.description":
-    "Lindungi gambar Anda dengan watermark teks atau logo. Berjalan 100% di browser Anda.",
+    "Lindungi gambar Anda dengan watermark teks atau logo. Berjalan penuh di browser Anda.",
   "tool.watermark.text-label": "Watermark Teks",
   "tool.watermark.logo-label": "Watermark Logo",
   "tool.watermark.font-size": "Ukuran Font",
@@ -102,6 +112,7 @@ export const id = {
   "tool.twibbon.name": "Pembuat Twibbon",
   "tool.twibbon.description":
     "Pasang bingkai profil atau twibbon ke foto Anda dengan mudah.",
+  "tool.twibbon.empty": "Unggah Twibbon dan foto Anda untuk mulai",
 
   "tool.color-picker-image.name": "Pemilih Warna dari Foto",
   "tool.color-picker-image.description":
@@ -120,11 +131,12 @@ export const id = {
   "tool.qr-generator.logo-label": "Logo (Opsional)",
   "tool.qr-generator.footer":
     "Output PNG berkualitas tinggi dengan integrasi logo kustom.",
+  "tool.qr-generator.empty": "Masukkan teks untuk membuat kode QR",
+  "common.remove-logo": "Hapus Logo",
 
   "tool.qr-scanner.name": "Pembaca QR Code",
   "tool.qr-scanner.description":
     "Baca QR code dari gambar, tangkapan layar, atau clipboard secara instan.",
-  "tool.qr-scanner.input-label": "Input Gambar",
   "tool.qr-scanner.result-label": "Konten Terurai",
   "tool.qr-scanner.placeholder": "Menunggu QR code...",
   "tool.qr-scanner.upload-title": "Klik, Seret, atau Tempel",
@@ -190,6 +202,82 @@ export const id = {
   "tool.color-picker.description":
     "Pilih, konversi, dan ekspor warna dalam HEX, RGB, HSL.",
 
+  "tool.color-palette.name": "Pembuat Palet Warna",
+  "tool.color-palette.description":
+    "Buat palet warna dari satu warna dasar, atau ekstrak langsung dari foto.",
+  "tool.color-palette.base-color": "Warna Dasar",
+  "tool.color-palette.harmony": "Harmoni",
+  "tool.color-palette.mode.complementary": "Complementary",
+  "tool.color-palette.mode.splitComplementary": "Split-Complementary",
+  "tool.color-palette.mode.analogous": "Analogous",
+  "tool.color-palette.mode.triadic": "Triadic",
+  "tool.color-palette.mode.tetradic": "Tetradic",
+  "tool.color-palette.mode.square": "Square",
+  "tool.color-palette.mode.monochromatic": "Monochromatic",
+  "tool.color-palette.randomize": "Acak",
+  "tool.color-palette.copy-all": "Salin Semua",
+  "tool.color-palette.copied-all": "Palet disalin.",
+  "tool.color-palette.export-format": "Format Ekspor",
+  "tool.color-palette.format.css": "Variabel CSS",
+  "tool.color-palette.format.scss": "Variabel SCSS",
+  "tool.color-palette.format.tailwind": "Konfigurasi Tailwind",
+  "tool.color-palette.format.json": "Array JSON",
+  "tool.color-palette.source": "Sumber",
+  "tool.color-palette.source.color": "Dari Warna",
+  "tool.color-palette.source.image": "Dari Gambar",
+  "tool.color-palette.upload-hint": "Unggah foto untuk mengekstrak warnanya",
+  "tool.color-palette.change-image": "Ganti Gambar",
+  "tool.color-palette.lock": "Kunci warna",
+  "tool.color-palette.unlock": "Buka kunci warna",
+  "tool.color-palette.save": "Simpan Palet",
+  "tool.color-palette.saved": "Palet disimpan.",
+  "tool.color-palette.saved-title": "Palet Tersimpan",
+  "tool.color-palette.remove-saved": "Hapus",
+
+  "tool.base64-encoder.name": "Encoder/Decoder Base64",
+  "tool.base64-encoder.description":
+    "Encode teks ke Base64 atau decode Base64 kembali ke teks biasa, langsung di browser.",
+  "tool.base64-encoder.input-label": "Teks Biasa",
+  "tool.base64-encoder.output-label": "Base64",
+  "tool.base64-encoder.placeholder": "Ketik atau tempel teks di sini...",
+  "tool.base64-encoder.encode": "Encode",
+  "tool.base64-encoder.decode": "Decode",
+  "tool.base64-encoder.invalid": "Teks ini bukan Base64 yang valid.",
+
+  "tool.password-generator.name": "Generator Password",
+  "tool.password-generator.description":
+    "Buat password acak yang kuat dengan panjang dan jenis karakter kustom.",
+  "tool.password-generator.length": "Panjang",
+  "tool.password-generator.uppercase": "Huruf Besar (A-Z)",
+  "tool.password-generator.lowercase": "Huruf Kecil (a-z)",
+  "tool.password-generator.numbers": "Angka (0-9)",
+  "tool.password-generator.symbols": "Simbol (!@#$...)",
+  "tool.password-generator.generate": "Buat Password",
+  "tool.password-generator.strength.weak": "Lemah",
+  "tool.password-generator.strength.fair": "Cukup",
+  "tool.password-generator.strength.strong": "Kuat",
+  "tool.password-generator.strength.veryStrong": "Sangat Kuat",
+  "tool.password-generator.needOneOption":
+    "Pilih minimal satu jenis karakter.",
+
+  "tool.word-counter.name": "Penghitung Kata",
+  "tool.word-counter.description":
+    "Hitung kata, karakter, kalimat, dan estimasi waktu baca saat Anda mengetik.",
+  "tool.word-counter.placeholder": "Mulai ketik atau tempel teks Anda di sini...",
+  "tool.word-counter.words": "Kata",
+  "tool.word-counter.characters": "Karakter",
+  "tool.word-counter.charactersNoSpaces": "Karakter (tanpa spasi)",
+  "tool.word-counter.sentences": "Kalimat",
+  "tool.word-counter.paragraphs": "Paragraf",
+  "tool.word-counter.readingTime": "Waktu baca",
+  "tool.word-counter.readingTimeValue": "{{minutes}} menit baca",
+
+  "tool.hash-generator.name": "Generator Hash",
+  "tool.hash-generator.description":
+    "Buat hash SHA-1, SHA-256, SHA-384, dan SHA-512 dari teks, langsung di browser.",
+  "tool.hash-generator.placeholder": "Ketik atau tempel teks untuk di-hash...",
+  "tool.hash-generator.empty": "Hash akan muncul di sini saat Anda mengetik",
+
   "action.convert": "Konversi",
   "action.download": "Unduh",
   "action.clear": "Hapus",
@@ -220,11 +308,16 @@ export const id = {
   "landing.hero.title": "Alat Web Gratis,",
   "landing.hero.titleAccent": "Tanpa Syarat.",
   "landing.hero.subtitle":
-    "Setiap alat berjalan sepenuhnya di browser Anda. Tidak ada yang dikirim ke server.",
+    "Sebagian besar alat berjalan penuh di browser Anda — beberapa menawarkan mode AI opsional saat dibutuhkan.",
+  "landing.hero.badge": "Berjalan di browser · AI opsional",
   "landing.featured": "Alat Unggulan",
-  "landing.allTools": "Semua Alat",
+  "landing.popular": "Alat Populer",
+  "landing.recent": "Lanjutkan yang Terakhir Dipakai",
   "landing.badge.new": "Baru",
   "landing.badge.beta": "Beta",
+
+  // --- Layout chrome ---
+  "layout.sidebar.footer": "Gratis digunakan · Tanpa iklan · Open source",
 
   "palette.placeholder": "Ketik nama alat...",
   "palette.noResults": "Tidak ada alat yang ditemukan.",

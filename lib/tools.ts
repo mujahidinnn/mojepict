@@ -5,8 +5,13 @@ export interface Tool {
   slug: string;
   icon: string;
   category: ToolCategory;
-  badge?: "new" | "beta";
+  /** Manual override only — for date-driven "new" status see getToolBadge(). */
+  badge?: "beta";
+  /** ISO date the tool shipped. Drives the "new" badge (see NEW_WINDOW_DAYS). */
+  createdAt: string;
   featured?: boolean;
+  /** Surfaced in the homepage "Popular" row. */
+  popular?: boolean;
 }
 
 export const TOOLS: Tool[] = [
@@ -16,98 +21,112 @@ export const TOOLS: Tool[] = [
     slug: "remove-bg",
     icon: "Eraser",
     category: "image",
-    badge: "new",
+    createdAt: "2026-08-16",
+    popular: true,
   },
   {
     id: "image-converter",
     slug: "image-converter",
     icon: "ImageIcon",
     category: "image",
+    createdAt: "2026-05-10",
     featured: true,
+    popular: true,
   },
   {
     id: "image-resizer",
     slug: "image-resizer",
     icon: "Scaling",
     category: "image",
+    createdAt: "2026-05-10",
+    popular: true,
   },
   {
     id: "image-compressor",
     slug: "image-compressor",
     icon: "PackageOpen",
     category: "image",
+    createdAt: "2026-05-10",
+    popular: true,
   },
   {
     id: "image-cropper",
     slug: "image-cropper",
     icon: "Crop",
     category: "image",
+    createdAt: "2026-05-10",
   },
   {
     id: "image-splitter",
     slug: "image-splitter",
     icon: "Grid3X3",
     category: "image",
-    badge: "new",
+    createdAt: "2026-08-16",
   },
   {
     id: "image-draw",
     slug: "draw-on-image",
     icon: "Brush",
     category: "image",
+    createdAt: "2026-05-10",
   },
   {
     id: "color-picker-image",
     slug: "color-picker-image",
     icon: "Pipette",
     category: "image",
-    badge: "new",
+    createdAt: "2026-08-16",
   },
   {
     id: "metadata-viewer",
     slug: "metadata-viewer",
     icon: "ScanSearch",
     category: "image",
+    createdAt: "2026-05-10",
   },
   {
     id: "svg-tracer",
     slug: "svg-tracer",
     icon: "PenTool",
     category: "image",
-    badge: "new",
+    createdAt: "2026-08-16",
   },
   {
     id: "watermark",
     slug: "watermark",
     icon: "BookmarkCheck",
     category: "image",
+    createdAt: "2026-05-10",
+    popular: true,
   },
   {
     id: "twibbon",
     slug: "twibbon",
     icon: "Frame",
     category: "image",
-    badge: "new",
+    createdAt: "2026-08-16",
   },
   {
     id: "photobooth",
     slug: "photobooth",
     icon: "Camera",
     category: "image",
-    badge: "new",
+    createdAt: "2026-08-16",
   },
   {
     id: "qr-generator",
     slug: "qr-generator",
     icon: "QrCode",
     category: "image",
+    createdAt: "2026-05-10",
+    popular: true,
   },
   {
     id: "qr-scanner",
     slug: "qr-scanner",
     icon: "ScanQrCode",
     category: "image",
-    badge: "new",
+    createdAt: "2026-08-16",
   },
 
   // --- KATEGORI: UNIT ---
@@ -116,6 +135,7 @@ export const TOOLS: Tool[] = [
     slug: "unit-converter",
     icon: "Ruler",
     category: "unit",
+    createdAt: "2026-05-10",
     featured: true,
   },
   {
@@ -123,6 +143,7 @@ export const TOOLS: Tool[] = [
     slug: "data-converter",
     icon: "Cpu",
     category: "unit",
+    createdAt: "2026-05-10",
     featured: true,
   },
 
@@ -132,7 +153,14 @@ export const TOOLS: Tool[] = [
     slug: "case-converter",
     icon: "Type",
     category: "text",
-    badge: "new",
+    createdAt: "2026-08-16",
+  },
+  {
+    id: "word-counter",
+    slug: "word-counter",
+    icon: "AlignLeft",
+    category: "text",
+    createdAt: "2026-08-16",
   },
 
   // --- KATEGORI: COLOR ---
@@ -141,7 +169,15 @@ export const TOOLS: Tool[] = [
     slug: "color-picker",
     icon: "PaintbrushVertical",
     category: "color",
-    badge: "new",
+    createdAt: "2026-08-16",
+  },
+  {
+    id: "color-palette",
+    slug: "color-palette",
+    icon: "SwatchBook",
+    category: "color",
+    createdAt: "2026-08-16",
+    popular: true,
   },
 
   // --- KATEGORI: DEV ---
@@ -150,9 +186,42 @@ export const TOOLS: Tool[] = [
     slug: "json-formatter",
     icon: "Code2",
     category: "dev",
-    badge: "new",
+    createdAt: "2026-08-16",
+  },
+  {
+    id: "base64-encoder",
+    slug: "base64-encoder",
+    icon: "Binary",
+    category: "dev",
+    createdAt: "2026-08-16",
+    popular: true,
+  },
+  {
+    id: "password-generator",
+    slug: "password-generator",
+    icon: "KeyRound",
+    category: "dev",
+    createdAt: "2026-08-16",
+    popular: true,
+  },
+  {
+    id: "hash-generator",
+    slug: "hash-generator",
+    icon: "Hash",
+    category: "dev",
+    createdAt: "2026-08-16",
   },
 ];
+
+/** A tool is "new" for this many days after its createdAt date. */
+export const NEW_WINDOW_DAYS = 90;
+
+/** Computes the badge to display: manual "beta" flags win, otherwise date-driven "new". */
+export function getToolBadge(tool: Tool): "new" | "beta" | undefined {
+  if (tool.badge === "beta") return "beta";
+  const ageDays = (Date.now() - new Date(tool.createdAt).getTime()) / 86_400_000;
+  return ageDays >= 0 && ageDays <= NEW_WINDOW_DAYS ? "new" : undefined;
+}
 
 export const CATEGORIES: Record<
   ToolCategory,
@@ -181,4 +250,8 @@ export function getToolsByCategory(category: ToolCategory): Tool[] {
 
 export function getFeaturedTools(): Tool[] {
   return TOOLS.filter((t) => t.featured);
+}
+
+export function getPopularTools(): Tool[] {
+  return TOOLS.filter((t) => t.popular);
 }

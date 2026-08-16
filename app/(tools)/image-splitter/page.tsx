@@ -3,12 +3,14 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useI18n } from "@/lib/i18n/context";
 import { useToast } from "@/hooks/use-toast";
+import { Dropzone } from "@/components/tools/Dropzone";
+import { ImageZoomPreview } from "@/components/tools/ImageZoomPreview";
+import { ToolActionBar } from "@/components/tools/ToolActionBar";
 import { ToolShell } from "@/components/tools/ToolShell";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { ToolWorkspace } from "@/components/tools/ToolWorkspace";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Upload, Download, Trash2, Grid3X3, Loader2 } from "lucide-react";
+import { Download, Grid3X3, Loader2 } from "lucide-react";
 import Image from "next/image";
 
 export default function ImageSplitterPage() {
@@ -72,13 +74,10 @@ export default function ImageSplitterPage() {
     }
   }, [image, splitImage]);
 
-  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setImage(url);
-      setPieces([]);
-    }
+  const handleUpload = (file: File) => {
+    const url = URL.createObjectURL(file);
+    setImage(url);
+    setPieces([]);
   };
 
   const downloadAll = () => {
@@ -105,66 +104,9 @@ export default function ImageSplitterPage() {
       title={t("tool.image-splitter.name")}
       description={t("tool.image-splitter.description")}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-8">
-        <div className="space-y-4 order-1">
-          <Card className="relative border-dashed border-2 min-h-[550px] flex items-center justify-center bg-muted/20 overflow-hidden p-6 shadow-inner hover:border-foreground/30 hover:bg-muted/20 cursor-pointer">
-            {!image ? (
-              <label className="flex flex-col items-center gap-4 cursor-pointer text-center group w-full py-20">
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <Upload className="h-6 w-6 text-primary" />
-                </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-sm">
-                    {t("common.upload-click")}
-                  </p>
-                  <p className="text-xs text-muted-foreground italic text-center">
-                    Supports JPG, PNG, WEBP
-                  </p>
-                </div>
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleUpload}
-                />
-              </label>
-            ) : (
-              <div
-                className="grid gap-2 w-full max-w-3xl mx-auto"
-                style={{
-                  gridTemplateColumns: `repeat(${grid.cols}, 1fr)`,
-                }}
-              >
-                {pieces.length > 0 && !isProcessing ? (
-                  pieces.map((src, i) => (
-                    <div
-                      key={i}
-                      className="relative aspect-square border-2 border-white/10 shadow-md overflow-hidden rounded-md animate-in fade-in zoom-in-95 duration-300"
-                    >
-                      <Image
-                        src={src}
-                        alt={`Grid Piece ${i + 1}`}
-                        fill
-                        unoptimized
-                        className="object-cover"
-                      />
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-full flex flex-col items-center py-20">
-                    <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
-                    <p className="text-sm font-medium animate-pulse text-muted-foreground">
-                      {t("state.loading")}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </Card>
-        </div>
-
-        <div className="space-y-6 order-2">
-          <Card className="p-6 space-y-8 bg-background border-2 shadow-sm sticky top-4">
+      <ToolWorkspace
+        sidebar={
+          <>
             <div className="space-y-6 text-left">
               <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2 border-b pb-2">
                 <Grid3X3 className="h-4 w-4 text-primary" /> Grid Configuration
@@ -209,29 +151,59 @@ export default function ImageSplitterPage() {
               </div>
             </div>
 
-            <div className="space-y-3 pt-4">
-              <Button
-                className="w-full gap-2 py-6 text-md font-bold shadow-lg shadow-primary/20"
-                onClick={downloadAll}
-                disabled={pieces.length === 0 || isProcessing}
+            <ToolActionBar
+              primaryLabel={t("tool.image-splitter.download-all")}
+              primaryIcon={<Download className="h-5 w-5" />}
+              onPrimary={downloadAll}
+              primaryDisabled={pieces.length === 0 || isProcessing}
+              resetLabel={t("common.clear")}
+              onReset={clearAll}
+              resetDisabled={!image}
+            />
+          </>
+        }
+      >
+        {image ? (
+          <ImageZoomPreview>
+            {pieces.length > 0 && !isProcessing ? (
+              <div
+                className="grid gap-2 max-w-3xl mx-auto"
+                style={{
+                  gridTemplateColumns: `repeat(${grid.cols}, 1fr)`,
+                }}
               >
-                <Download className="h-5 w-5" />{" "}
-                {t("tool.image-splitter.download-all")}
-              </Button>
-
-              {image && (
-                <Button
-                  variant="ghost"
-                  className="w-full text-destructive hover:bg-destructive/5 font-medium"
-                  onClick={clearAll}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" /> {t("common.clear")}
-                </Button>
-              )}
-            </div>
-          </Card>
-        </div>
-      </div>
+                {pieces.map((src, i) => (
+                  <div
+                    key={i}
+                    className="relative aspect-square w-32 border-2 border-white/10 shadow-md overflow-hidden rounded-md animate-in fade-in zoom-in-95 duration-300"
+                  >
+                    <Image
+                      src={src}
+                      alt={`Grid Piece ${i + 1}`}
+                      fill
+                      unoptimized
+                      className="object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center py-20">
+                <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+                <p className="text-sm font-medium animate-pulse text-muted-foreground">
+                  {t("state.loading")}
+                </p>
+              </div>
+            )}
+          </ImageZoomPreview>
+        ) : (
+          <Dropzone
+            onFile={handleUpload}
+            title={t("common.upload-click")}
+            subtitle="Supports JPG, PNG, WEBP"
+          />
+        )}
+      </ToolWorkspace>
     </ToolShell>
   );
 }

@@ -1,13 +1,16 @@
 "use client";
 
+import { Dropzone } from "@/components/tools/Dropzone";
+import { ImageZoomPreview } from "@/components/tools/ImageZoomPreview";
+import { ToolActionBar } from "@/components/tools/ToolActionBar";
 import { ToolShell } from "@/components/tools/ToolShell";
-import { Button } from "@/components/ui/button";
+import { ToolWorkspace } from "@/components/tools/ToolWorkspace";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
 import { cn } from "@/lib/utils";
-import { Download, Upload } from "lucide-react";
+import { Download } from "lucide-react";
 import { useCallback, useState } from "react";
 
 export default function ImageResizerPage() {
@@ -79,63 +82,29 @@ export default function ImageResizerPage() {
     img.src = preview;
   };
 
+  const clearFile = () => {
+    setFile(null);
+    setPreview(null);
+  };
+
   return (
     <ToolShell
       title={t("tool.image-resizer.name")}
       description={t("tool.image-resizer.description")}
     >
-      <div className="flex flex-col gap-6 max-w-xl">
-        <div
-          className={cn(
-            "flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed min-h-[200px] cursor-pointer hover:bg-muted/20 transition-colors",
-          )}
-          onDrop={(e) => {
-            e.preventDefault();
-            const f = e.dataTransfer.files[0];
-            if (f) handleFile(f);
-          }}
-          onDragOver={(e) => e.preventDefault()}
-          onClick={() => document.getElementById("resizer-input")?.click()}
-        >
-          <input
-            id="resizer-input"
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) =>
-              e.target.files?.[0] && handleFile(e.target.files[0])
-            }
-          />
-          {preview ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={preview}
-              alt="preview"
-              className="max-h-48 max-w-full object-contain rounded-lg"
-            />
-          ) : (
-            <>
-              <Upload className="h-8 w-8 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
-                {t("action.dropzone")}
-              </p>
-            </>
-          )}
-        </div>
-
-        {file && (
+      <ToolWorkspace
+        sidebar={
           <>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>
-                Original: {origW} × {origH}px
-              </span>
-            </div>
+            <p className="text-xs text-muted-foreground">
+              {file ? `Original: ${origW} × ${origH}px` : t("action.dropzone")}
+            </p>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
                 <Label>Width (px)</Label>
                 <Input
                   type="number"
                   value={width}
+                  disabled={!file}
                   onChange={(e) => onWidthChange(e.target.value)}
                 />
               </div>
@@ -144,26 +113,44 @@ export default function ImageResizerPage() {
                 <Input
                   type="number"
                   value={height}
+                  disabled={!file}
                   onChange={(e) => onHeightChange(e.target.value)}
                 />
               </div>
             </div>
-            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+            <label className="flex items-center gap-2 text-sm cursor-pointer select-none aria-disabled:cursor-not-allowed aria-disabled:opacity-50">
               <input
                 type="checkbox"
                 checked={keepRatio}
+                disabled={!file}
                 onChange={(e) => setKeepRatio(e.target.checked)}
-                className="rounded"
+                className={cn("h-4 w-4 rounded border-input accent-primary")}
               />
               Keep aspect ratio
             </label>
-            <Button onClick={resize} className="gap-2 w-full">
-              <Download className="h-4 w-4" />
-              {t("action.download")}
-            </Button>
+            <ToolActionBar
+              primaryLabel={t("action.download")}
+              primaryIcon={<Download className="h-4 w-4" />}
+              onPrimary={resize}
+              primaryDisabled={!file}
+              onReset={file ? clearFile : undefined}
+            />
           </>
+        }
+      >
+        {file && preview ? (
+          <ImageZoomPreview onRemove={clearFile} removeLabel={t("action.clear")}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={preview}
+              alt="preview"
+              className="max-h-[400px] max-w-full object-contain rounded-lg"
+            />
+          </ImageZoomPreview>
+        ) : (
+          <Dropzone onFile={handleFile} title={t("action.dropzone")} />
         )}
-      </div>
+      </ToolWorkspace>
     </ToolShell>
   );
 }

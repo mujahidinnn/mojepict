@@ -66,7 +66,7 @@ export default function CaseConverterPage() {
       title={t("tool.case-converter.name")}
       description={t("tool.case-converter.description")}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">

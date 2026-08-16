@@ -53,8 +53,8 @@ export function Navbar() {
         </SheetContent>
       </Sheet>
 
-      <Link href="/" className="flex items-center gap-1.5 lg:hidden">
-        <div className="flex h-5 w-5 items-center justify-center rounded bg-foreground">
+      <Link href="/" className="flex min-w-0 items-center gap-1.5 lg:hidden">
+        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-foreground">
           <Image
             src="/mj.png"
             alt="M"
@@ -63,7 +63,11 @@ export function Navbar() {
             className="object-contain"
           />
         </div>
-        <span className="text-sm font-semibold">{t("site.name")}</span>
+        <span className="truncate text-sm font-semibold capitalize">
+          {pathname !== "/"
+            ? pathname.split("/").pop()?.replace(/-/g, " ")
+            : t("site.name")}
+        </span>
       </Link>
 
       {pathname !== "/" && (

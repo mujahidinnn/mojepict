@@ -3,7 +3,7 @@ export const en = {
   "site.name": "Mojepict",
   "site.tagline": "Free tools that just work.",
   "site.description":
-    "A collection of fast, private, browser-only web tools — no uploads, no accounts.",
+    "A collection of fast, free web tools — most run entirely in your browser, with optional AI-enhanced processing for a few.",
 
   // --- Navigation ---
   "nav.allTools": "All Tools",
@@ -35,6 +35,13 @@ export const en = {
   "common.to": "To",
   "common.swap": "Swap position",
   "common.actions": "Actions",
+  "common.input-image": "Input Image",
+  "common.mode.local": "Local (Browser)",
+  "common.mode.ai": "AI Enhanced",
+  "common.mode.local.hint": "Runs on your device. Free, private, no setup.",
+  "common.mode.ai.hint": "Calls a third-party API for better results. Requires a configured API key.",
+  "common.mode.ai.notConfigured":
+    "AI Enhanced mode isn't configured yet. Falling back to Local.",
 
   // --- Tool names ---
   "tool.image-converter.name": "Image Converter",
@@ -47,7 +54,7 @@ export const en = {
 
   "tool.image-compressor.name": "Image Compressor",
   "tool.image-compressor.description":
-    "Reduce file size without visible quality loss.",
+    "Reduce file size without visible quality loss — with an optional AI-enhanced compression mode.",
 
   "tool.image-cropper.name": "Image Cropper",
   "tool.image-cropper.description":
@@ -59,12 +66,12 @@ export const en = {
 
   "tool.remove-bg.name": "Remove Background",
   "tool.remove-bg.description":
-    "Professional AI background removal that runs 100% in your browser. No server uploads, total privacy.",
-  "tool.remove-bg.input-label": "Input Image",
+    "Remove image backgrounds instantly — process locally in your browser, or switch to AI Enhanced mode for sharper edges.",
   "tool.remove-bg.result-label": "Result",
   "tool.remove-bg.upload-hint": "Click or drag to upload",
   "tool.remove-bg.format-hint": "Supports PNG, JPG, WEBP",
   "tool.remove-bg.processing": "Processing via AI in Browser...",
+  "tool.remove-bg.processing.ai": "Processing via remove.bg...",
   "tool.remove-bg.finalizing": "Finalizing...",
   "tool.remove-bg.model-note":
     "First run may take a moment to download the AI model.",
@@ -94,10 +101,12 @@ export const en = {
     "Convert your raster images (JPG, PNG) into clean, scalable SVG vectors.",
   "tool.svg-tracer.processing": "Tracing image...",
   "tool.svg-tracer.download": "Download SVG",
+  "tool.svg-tracer.result-label": "Vector Output",
+  "tool.svg-tracer.placeholder": "Your traced SVG will appear here",
 
   "tool.watermark.name": "Watermark",
   "tool.watermark.description":
-    "Protect your images with text or logo watermarks. Runs 100% in your browser.",
+    "Protect your images with text or logo watermarks. Runs entirely in your browser.",
   "tool.watermark.text-label": "Text Watermark",
   "tool.watermark.logo-label": "Logo Watermark",
   "tool.watermark.font-size": "Font Size",
@@ -106,6 +115,7 @@ export const en = {
   "tool.twibbon.name": "Twibbon Maker",
   "tool.twibbon.description":
     "Easily apply profile frames or twibbons to your photos.",
+  "tool.twibbon.empty": "Upload a Twibbon and your photo to start",
 
   "tool.color-picker-image.name": "Color Picker from Image",
   "tool.color-picker-image.description":
@@ -124,11 +134,12 @@ export const en = {
   "tool.qr-generator.logo-label": "Logo (Optional)",
   "tool.qr-generator.footer":
     "High-quality PNG output with optional logo integration.",
+  "tool.qr-generator.empty": "Enter text to generate a QR code",
+  "common.remove-logo": "Remove Logo",
 
   "tool.qr-scanner.name": "QR Code Viewer",
   "tool.qr-scanner.description":
     "Read QR codes from images, screenshots, or your clipboard instantly.",
-  "tool.qr-scanner.input-label": "Input Image",
   "tool.qr-scanner.result-label": "Decoded Content",
   "tool.qr-scanner.placeholder": "Waiting for QR code...",
   "tool.qr-scanner.upload-title": "Click, Drag, or Paste",
@@ -194,6 +205,82 @@ export const en = {
   "tool.color-picker.description":
     "Pick, convert, and export colors in HEX, RGB, HSL.",
 
+  "tool.color-palette.name": "Color Palette Generator",
+  "tool.color-palette.description":
+    "Generate color palettes from a base color or extract them straight from a photo.",
+  "tool.color-palette.base-color": "Base Color",
+  "tool.color-palette.harmony": "Harmony",
+  "tool.color-palette.mode.complementary": "Complementary",
+  "tool.color-palette.mode.splitComplementary": "Split-Complementary",
+  "tool.color-palette.mode.analogous": "Analogous",
+  "tool.color-palette.mode.triadic": "Triadic",
+  "tool.color-palette.mode.tetradic": "Tetradic",
+  "tool.color-palette.mode.square": "Square",
+  "tool.color-palette.mode.monochromatic": "Monochromatic",
+  "tool.color-palette.randomize": "Randomize",
+  "tool.color-palette.copy-all": "Copy All",
+  "tool.color-palette.copied-all": "Palette copied.",
+  "tool.color-palette.export-format": "Export Format",
+  "tool.color-palette.format.css": "CSS Variables",
+  "tool.color-palette.format.scss": "SCSS Variables",
+  "tool.color-palette.format.tailwind": "Tailwind Config",
+  "tool.color-palette.format.json": "JSON Array",
+  "tool.color-palette.source": "Source",
+  "tool.color-palette.source.color": "From Color",
+  "tool.color-palette.source.image": "From Image",
+  "tool.color-palette.upload-hint": "Upload a photo to extract its colors",
+  "tool.color-palette.change-image": "Change Image",
+  "tool.color-palette.lock": "Lock color",
+  "tool.color-palette.unlock": "Unlock color",
+  "tool.color-palette.save": "Save Palette",
+  "tool.color-palette.saved": "Palette saved.",
+  "tool.color-palette.saved-title": "Saved Palettes",
+  "tool.color-palette.remove-saved": "Remove",
+
+  "tool.base64-encoder.name": "Base64 Encoder/Decoder",
+  "tool.base64-encoder.description":
+    "Encode text to Base64 or decode Base64 back to plain text, instantly in your browser.",
+  "tool.base64-encoder.input-label": "Plain Text",
+  "tool.base64-encoder.output-label": "Base64",
+  "tool.base64-encoder.placeholder": "Type or paste text here...",
+  "tool.base64-encoder.encode": "Encode",
+  "tool.base64-encoder.decode": "Decode",
+  "tool.base64-encoder.invalid": "That doesn't look like valid Base64.",
+
+  "tool.password-generator.name": "Password Generator",
+  "tool.password-generator.description":
+    "Generate strong, random passwords with custom length and character sets.",
+  "tool.password-generator.length": "Length",
+  "tool.password-generator.uppercase": "Uppercase (A-Z)",
+  "tool.password-generator.lowercase": "Lowercase (a-z)",
+  "tool.password-generator.numbers": "Numbers (0-9)",
+  "tool.password-generator.symbols": "Symbols (!@#$...)",
+  "tool.password-generator.generate": "Generate Password",
+  "tool.password-generator.strength.weak": "Weak",
+  "tool.password-generator.strength.fair": "Fair",
+  "tool.password-generator.strength.strong": "Strong",
+  "tool.password-generator.strength.veryStrong": "Very strong",
+  "tool.password-generator.needOneOption":
+    "Select at least one character set.",
+
+  "tool.word-counter.name": "Word Counter",
+  "tool.word-counter.description":
+    "Count words, characters, sentences, and estimate reading time as you type.",
+  "tool.word-counter.placeholder": "Start typing or paste your text here...",
+  "tool.word-counter.words": "Words",
+  "tool.word-counter.characters": "Characters",
+  "tool.word-counter.charactersNoSpaces": "Characters (no spaces)",
+  "tool.word-counter.sentences": "Sentences",
+  "tool.word-counter.paragraphs": "Paragraphs",
+  "tool.word-counter.readingTime": "Reading time",
+  "tool.word-counter.readingTimeValue": "{{minutes}} min read",
+
+  "tool.hash-generator.name": "Hash Generator",
+  "tool.hash-generator.description":
+    "Generate SHA-1, SHA-256, SHA-384, and SHA-512 hashes from text, right in your browser.",
+  "tool.hash-generator.placeholder": "Type or paste text to hash...",
+  "tool.hash-generator.empty": "Hashes will appear here as you type",
+
   // --- Common actions ---
   "action.convert": "Convert",
   "action.download": "Download",
@@ -228,11 +315,16 @@ export const en = {
   "landing.hero.title": "Free Web Tools,",
   "landing.hero.titleAccent": "No Strings Attached.",
   "landing.hero.subtitle":
-    "Every tool runs entirely in your browser. Nothing is sent to a server.",
+    "Most tools run entirely in your browser — a couple offer optional AI-enhanced processing when you need it.",
+  "landing.hero.badge": "Client-side by default · Optional AI",
   "landing.featured": "Featured Tools",
-  "landing.allTools": "All Tools",
+  "landing.popular": "Popular Tools",
+  "landing.recent": "Continue Where You Left Off",
   "landing.badge.new": "New",
   "landing.badge.beta": "Beta",
+
+  // --- Layout chrome ---
+  "layout.sidebar.footer": "Free to use · No ads · Open source",
 
   // --- Command palette ---
   "palette.placeholder": "Type a tool name...",
