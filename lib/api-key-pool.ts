@@ -10,7 +10,7 @@ export function parseKeyPool(raw: string | undefined): string[] {
 /**
  * Tries `attempt(key)` against each key in the pool, in order. Stops and
  * returns as soon as a key succeeds (`res.ok`) or fails for a reason that
- * isn't key-related (`shouldRotate` returns false — e.g. a malformed image
+ * isn't key-related (`shouldRotate` returns false; e.g. a malformed image
  * should fail fast, not burn through the whole pool). If every key is
  * exhausted/invalid, returns the last response.
  */

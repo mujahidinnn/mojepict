@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n/context";
 import { TOOLS, CATEGORIES, ToolCategory, getToolBadge } from "@/lib/tools";
 import { getToolIconComponent } from "@/lib/tool-icons";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { ImageIcon } from "lucide-react";
 import Image from "next/image";
@@ -50,17 +49,25 @@ export function Sidebar() {
         <span className="font-semibold text-sm tracking-tight">
           {t("site.name")}
         </span>
-
-        <small className="ml-auto text-muted-foreground shrink-0">v2.0</small>
       </div>
 
-      <ScrollArea className="flex-1 px-3 py-3 scrollbar-none">
+      {/*
+        Plain scrollable div, not Radix ScrollArea: ScrollArea's Viewport
+        renders `display:table` internally (to measure content for the
+        scrollbar thumb), which makes its children shrink-to-fit the widest
+        row's content instead of respecting the sidebar's actual width.
+        Table auto-layout ignores flex-shrink/min-w-0 entirely, so truncation
+        silently never engages. Since this sidebar already hides its
+        scrollbar visually (scrollbar-none) and has no custom thumb styling,
+        a plain overflow-y-auto div gives the same look without the bug.
+      */}
+      <div className="flex-1 overflow-y-auto px-3 py-3 scrollbar-none">
         <Link
           href="/"
           className={cn(
             "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm mb-4",
             "text-muted-foreground hover:text-foreground hover:bg-accent transition-colors",
-            pathname === "/" && "text-foreground bg-accent font-medium",
+            pathname === "/" && "bg-accent font-medium text-primary",
           )}
         >
           <ImageIcon className="h-4 w-4" aria-label="All Tools" role="img" />
@@ -85,7 +92,7 @@ export function Sidebar() {
               </div>
 
               {tools.map((tool) => {
-                const href = tool.slug;
+                const href = `/${tool.slug}`;
                 const active = pathname === href;
                 const badge = getToolBadge(tool);
                 return (
@@ -93,19 +100,21 @@ export function Sidebar() {
                     key={tool.id}
                     href={href}
                     className={cn(
-                      "flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm",
-                      "text-slate-800 dark:text-muted-foreground hover:text-foreground hover:bg-accent transition-colors",
-                      active && "text-foreground bg-accent font-medium",
+                      "flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
+                      "text-slate-800 dark:text-muted-foreground hover:text-foreground hover:bg-accent",
+                      active && "bg-accent font-medium text-primary",
                     )}
                   >
-                    <span className="flex items-center gap-2">
-                      <Icon name={tool.icon} />
-                      {t(`tool.${tool.id}.name` as any)}
+                    <span className="flex min-w-0 items-center gap-2">
+                      <Icon name={tool.icon} className="shrink-0" />
+                      <span className="min-w-0 truncate">
+                        {t(`tool.${tool.id}.name` as any)}
+                      </span>
                     </span>
                     {badge && (
                       <Badge
                         variant="secondary"
-                        className="h-4 px-1 text-[10px] leading-none"
+                        className="h-4 shrink-0 px-1 text-[10px] leading-none"
                       >
                         {t(`landing.badge.${badge}` as any)}
                       </Badge>
@@ -116,7 +125,7 @@ export function Sidebar() {
             </div>
           );
         })}
-      </ScrollArea>
+      </div>
       <div className="border-t border-[hsl(var(--sidebar-border))] px-4 py-3">
         <p className="text-[11px] text-muted-foreground">
           {t("layout.sidebar.footer")}

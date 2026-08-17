@@ -2,7 +2,7 @@ export const id = {
   "site.name": "Mojepict",
   "site.tagline": "Alat gratis yang langsung bekerja.",
   "site.description":
-    "Kumpulan alat web cepat dan gratis — sebagian besar berjalan penuh di browser Anda, dengan mode AI opsional untuk beberapa alat.",
+    "Kumpulan alat web cepat dan gratis. Sebagian besar berjalan penuh di browser Anda, dengan mode AI opsional untuk beberapa alat.",
 
   "nav.allTools": "Semua Alat",
   "nav.search": "Cari alat...",
@@ -35,15 +35,16 @@ export const id = {
   "common.input-image": "Gambar Input",
   "common.mode.local": "Lokal (Browser)",
   "common.mode.ai": "AI Enhanced",
-  "common.mode.local.hint": "Berjalan di perangkat Anda. Gratis, privat, tanpa setup.",
+  "common.mode.local.hint":
+    "Berjalan di perangkat Anda. Gratis, privat, tanpa setup.",
   "common.mode.ai.hint":
-    "Memanggil API pihak ketiga untuk hasil lebih baik. Butuh API key yang sudah dikonfigurasi.",
+    "Menggunakan layanan AI di cloud untuk hasil yang lebih tajam, jika tersedia.",
   "common.mode.ai.notConfigured":
-    "Mode AI Enhanced belum dikonfigurasi. Kembali ke mode Lokal.",
+    "AI Enhanced belum tersedia saat ini. Menggunakan mode Lokal.",
 
   "tool.image-converter.name": "Konverter Gambar",
   "tool.image-converter.description":
-    "Konversi gambar antara JPG, PNG, WebP, dan lainnya — semua di browser.",
+    "Konversi gambar antara JPG, PNG, WebP, dan lainnya, semua di browser.",
 
   "tool.image-resizer.name": "Pengubah Ukuran Gambar",
   "tool.image-resizer.description":
@@ -51,7 +52,7 @@ export const id = {
 
   "tool.image-compressor.name": "Kompres Gambar",
   "tool.image-compressor.description":
-    "Kurangi ukuran file tanpa kehilangan kualitas yang terlihat — dengan mode kompresi AI opsional.",
+    "Kurangi ukuran file tanpa kehilangan kualitas yang terlihat, dengan mode kompresi AI opsional.",
 
   "tool.image-cropper.name": "Potong Gambar",
   "tool.image-cropper.description":
@@ -63,7 +64,7 @@ export const id = {
 
   "tool.remove-bg.name": "Hapus Latar Belakang",
   "tool.remove-bg.description":
-    "Hapus latar belakang gambar secara instan — proses lokal di browser, atau gunakan mode AI Enhanced untuk hasil tepi yang lebih presisi.",
+    "Hapus latar belakang gambar secara instan. Proses lokal di browser, atau gunakan mode AI Enhanced untuk hasil tepi yang lebih presisi.",
   "tool.remove-bg.result-label": "Hasil",
   "tool.remove-bg.upload-hint": "Klik atau seret untuk unggah",
   "tool.remove-bg.format-hint": "Mendukung PNG, JPG, WEBP",
@@ -257,13 +258,13 @@ export const id = {
   "tool.password-generator.strength.fair": "Cukup",
   "tool.password-generator.strength.strong": "Kuat",
   "tool.password-generator.strength.veryStrong": "Sangat Kuat",
-  "tool.password-generator.needOneOption":
-    "Pilih minimal satu jenis karakter.",
+  "tool.password-generator.needOneOption": "Pilih minimal satu jenis karakter.",
 
   "tool.word-counter.name": "Penghitung Kata",
   "tool.word-counter.description":
     "Hitung kata, karakter, kalimat, dan estimasi waktu baca saat Anda mengetik.",
-  "tool.word-counter.placeholder": "Mulai ketik atau tempel teks Anda di sini...",
+  "tool.word-counter.placeholder":
+    "Mulai ketik atau tempel teks Anda di sini...",
   "tool.word-counter.words": "Kata",
   "tool.word-counter.characters": "Karakter",
   "tool.word-counter.charactersNoSpaces": "Karakter (tanpa spasi)",
@@ -272,11 +273,171 @@ export const id = {
   "tool.word-counter.readingTime": "Waktu baca",
   "tool.word-counter.readingTimeValue": "{{minutes}} menit baca",
 
+  "tool.lorem-ipsum.name": "Generator Lorem Ipsum",
+  "tool.lorem-ipsum.description":
+    "Buat teks placeholder berdasarkan paragraf, kalimat, atau kata.",
+  "tool.lorem-ipsum.unit": "Buat berdasarkan",
+  "tool.lorem-ipsum.unit.paragraphs": "Paragraf",
+  "tool.lorem-ipsum.unit.sentences": "Kalimat",
+  "tool.lorem-ipsum.unit.words": "Kata",
+  "tool.lorem-ipsum.count": "Jumlah",
+  "tool.lorem-ipsum.startWithLorem": "Mulai dengan \"Lorem ipsum dolor sit amet\"",
+  "tool.lorem-ipsum.generate": "Buat Teks",
+  "tool.lorem-ipsum.placeholder": "Klik Buat Teks untuk membuat teks placeholder",
+
   "tool.hash-generator.name": "Generator Hash",
   "tool.hash-generator.description":
     "Buat hash SHA-1, SHA-256, SHA-384, dan SHA-512 dari teks, langsung di browser.",
   "tool.hash-generator.placeholder": "Ketik atau tempel teks untuk di-hash...",
   "tool.hash-generator.empty": "Hash akan muncul di sini saat Anda mengetik",
+
+  "tool.percentage-calculator.name": "Kalkulator Persentase",
+  "tool.percentage-calculator.description":
+    "Hitung persentase, cari berapa persen suatu angka dari angka lain, dan hitung perubahan persentase.",
+  "tool.percentage-calculator.mode.of": "X% dari Y",
+  "tool.percentage-calculator.mode.isWhatPercent": "X adalah berapa % dari Y",
+  "tool.percentage-calculator.mode.change": "% perubahan dari X ke Y",
+  "tool.percentage-calculator.result": "Hasil",
+  "tool.percentage-calculator.increase": "Naik",
+  "tool.percentage-calculator.decrease": "Turun",
+
+  "tool.age-calculator.name": "Kalkulator Usia",
+  "tool.age-calculator.description":
+    "Cari tahu usia tepat Anda dalam tahun, bulan, dan hari dari tanggal lahir.",
+  "tool.age-calculator.birthDate": "Tanggal lahir",
+  "tool.age-calculator.asOfDate": "Dihitung sampai tanggal",
+  "tool.age-calculator.years": "Tahun",
+  "tool.age-calculator.months": "Bulan",
+  "tool.age-calculator.days": "Hari",
+  "tool.age-calculator.totalDays": "Total hari terlewati",
+  "tool.age-calculator.nextBirthday": "Hari menuju ulang tahun berikutnya",
+  "tool.age-calculator.placeholder": "Pilih tanggal lahir untuk melihat hasilnya",
+
+  "tool.timestamp-converter.name": "Konverter Timestamp",
+  "tool.timestamp-converter.description":
+    "Konversi antara Unix timestamp dan tanggal yang mudah dibaca, dua arah.",
+  "tool.timestamp-converter.now": "Timestamp saat ini",
+  "tool.timestamp-converter.toDate": "Timestamp ke tanggal",
+  "tool.timestamp-converter.toTimestamp": "Tanggal ke timestamp",
+  "tool.timestamp-converter.timestampPlaceholder": "contoh: 1765900800",
+  "tool.timestamp-converter.unit": "Satuan",
+  "tool.timestamp-converter.seconds": "Detik",
+  "tool.timestamp-converter.milliseconds": "Milidetik",
+  "tool.timestamp-converter.useNow": "Gunakan sekarang",
+  "tool.timestamp-converter.invalid": "Input tidak valid",
+
+  "tool.url-encoder.name": "Encoder/Decoder URL",
+  "tool.url-encoder.description":
+    "Encode teks agar aman digunakan dalam URL, atau decode string hasil URL-encode kembali ke teks biasa.",
+  "tool.url-encoder.input-label": "Teks Biasa",
+  "tool.url-encoder.output-label": "Hasil URL-Encode",
+  "tool.url-encoder.placeholder": "Ketik atau tempel teks atau URL di sini...",
+  "tool.url-encoder.encode": "Encode",
+  "tool.url-encoder.decode": "Decode",
+  "tool.url-encoder.invalid": "Teks ini bukan hasil URL-encode yang valid.",
+
+  "tool.uuid-generator.name": "UUID Generator",
+  "tool.uuid-generator.description": "Buat UUID v4 acak, satu atau langsung banyak sekaligus.",
+  "tool.uuid-generator.count": "Jumlah",
+  "tool.uuid-generator.uppercase": "Huruf kapital",
+  "tool.uuid-generator.hyphens": "Sertakan tanda hubung",
+  "tool.uuid-generator.generate": "Buat",
+  "tool.uuid-generator.copyAll": "Salin semua",
+  "tool.uuid-generator.placeholder": "Klik Buat untuk membuat UUID",
+
+  "tool.regex-tester.name": "Regex Tester",
+  "tool.regex-tester.description":
+    "Uji ekspresi reguler pada teks contoh dengan highlight hasil yang cocok secara langsung.",
+  "tool.regex-tester.pattern": "Pola",
+  "tool.regex-tester.testString": "Teks uji",
+  "tool.regex-tester.result": "Hasil highlight",
+  "tool.regex-tester.matchCount": "{{count}} kecocokan",
+  "tool.regex-tester.at": "di posisi",
+
+  "tool.number-base-converter.name": "Konverter Basis Angka",
+  "tool.number-base-converter.description":
+    "Konversi angka antara biner, oktal, desimal, dan heksadesimal.",
+  "tool.number-base-converter.baseLabel": "basis {{base}}",
+  "tool.number-base-converter.base.2": "Biner",
+  "tool.number-base-converter.base.8": "Oktal",
+  "tool.number-base-converter.base.10": "Desimal",
+  "tool.number-base-converter.base.16": "Heksadesimal",
+  "tool.number-base-converter.invalid": "Bukan angka yang valid untuk basis ini.",
+
+  "tool.jwt-decoder.name": "JWT Decoder",
+  "tool.jwt-decoder.description": "Decode header dan payload JWT untuk melihat isi claim-nya.",
+  "tool.jwt-decoder.input": "JWT",
+  "tool.jwt-decoder.placeholder": "Tempel JWT di sini (eyJhbGci...)",
+  "tool.jwt-decoder.header": "Header",
+  "tool.jwt-decoder.payload": "Payload",
+  "tool.jwt-decoder.invalid": "Ini bukan JWT yang valid.",
+  "tool.jwt-decoder.note": "Hanya decode - tidak memverifikasi tanda tangan token.",
+
+  "tool.bmi-calculator.name": "Kalkulator BMI",
+  "tool.bmi-calculator.description": "Hitung Indeks Massa Tubuh dari tinggi dan berat badan.",
+  "tool.bmi-calculator.metric": "Metrik",
+  "tool.bmi-calculator.imperial": "Imperial",
+  "tool.bmi-calculator.height": "Tinggi",
+  "tool.bmi-calculator.weight": "Berat",
+  "tool.bmi-calculator.placeholder": "Masukkan tinggi dan berat badan untuk melihat BMI kamu",
+  "tool.bmi-calculator.category.underweight": "Kurang berat badan",
+  "tool.bmi-calculator.category.normal": "Berat badan normal",
+  "tool.bmi-calculator.category.overweight": "Kelebihan berat badan",
+  "tool.bmi-calculator.category.obese": "Obesitas",
+
+  "tool.tip-calculator.name": "Kalkulator Tip",
+  "tool.tip-calculator.description": "Bagi tagihan dan tip untuk beberapa orang sekaligus.",
+  "tool.tip-calculator.bill": "Jumlah tagihan",
+  "tool.tip-calculator.tip": "Tip",
+  "tool.tip-calculator.customTip": "% custom",
+  "tool.tip-calculator.people": "Jumlah orang",
+  "tool.tip-calculator.tipAmount": "Jumlah tip",
+  "tool.tip-calculator.total": "Total",
+  "tool.tip-calculator.perPerson": "Per orang",
+
+  "tool.gradient-generator.name": "Gradient Generator",
+  "tool.gradient-generator.description": "Buat gradient CSS linear atau radial dan salin kodenya.",
+  "tool.gradient-generator.type": "Tipe",
+  "tool.gradient-generator.linear": "Linear",
+  "tool.gradient-generator.radial": "Radial",
+  "tool.gradient-generator.angle": "Sudut",
+  "tool.gradient-generator.colors": "Warna",
+
+  "tool.contrast-checker.name": "Contrast Checker",
+  "tool.contrast-checker.description":
+    "Cek rasio kontras WCAG antara dua warna untuk teks yang mudah dibaca.",
+  "tool.contrast-checker.foreground": "Warna teks",
+  "tool.contrast-checker.background": "Warna latar",
+  "tool.contrast-checker.sampleLarge": "Contoh teks besar",
+  "tool.contrast-checker.sampleNormal": "Contoh teks normal untuk dibaca",
+  "tool.contrast-checker.ratio": "Rasio kontras",
+  "tool.contrast-checker.invalid": "Masukkan dua warna hex yang valid untuk cek kontras.",
+
+  "tool.markdown-previewer.name": "Markdown Previewer",
+  "tool.markdown-previewer.description": "Tulis Markdown dan lihat hasilnya secara langsung.",
+  "tool.markdown-previewer.input": "Markdown",
+  "tool.markdown-previewer.preview": "Preview",
+
+  "tool.text-diff.name": "Text Diff Checker",
+  "tool.text-diff.description": "Bandingkan dua teks dan lihat perbedaannya baris per baris.",
+  "tool.text-diff.original": "Teks asli",
+  "tool.text-diff.modified": "Teks baru",
+  "tool.text-diff.result": "Perbedaan",
+  "tool.text-diff.placeholder": "Masukkan teks di kedua sisi untuk membandingkan",
+  "tool.text-diff.tooLarge": "Teks terlalu panjang untuk dibandingkan (maks {{max}} baris per sisi).",
+
+  "tool.html-viewer.name": "HTML Viewer",
+  "tool.html-viewer.description":
+    "Tulis atau upload file HTML, CSS, dan JS (bebas berapa pun) lalu lihat preview-nya secara langsung dalam sandbox yang aman.",
+  "tool.html-viewer.addFile": "Tambah file",
+  "tool.html-viewer.uploadFiles": "Upload file",
+  "tool.html-viewer.uploadSkipped": "{{count}} file dilewati (terlalu besar).",
+  "tool.html-viewer.run": "Jalankan",
+  "tool.html-viewer.preview": "Preview",
+  "tool.html-viewer.sandboxNote": "Berjalan di sandbox terisolasi - tidak bisa akses data situs ini",
+  "tool.html-viewer.asset": "Gambar",
+  "tool.html-viewer.assetHint":
+    "Rujuk file ini sebagai \"{{name}}\" di <img src>, <link rel=icon href>, atau CSS url().",
 
   "action.convert": "Konversi",
   "action.download": "Unduh",
@@ -308,8 +469,7 @@ export const id = {
   "landing.hero.title": "Alat Web Gratis,",
   "landing.hero.titleAccent": "Tanpa Syarat.",
   "landing.hero.subtitle":
-    "Sebagian besar alat berjalan penuh di browser Anda — beberapa menawarkan mode AI opsional saat dibutuhkan.",
-  "landing.hero.badge": "Berjalan di browser · AI opsional",
+    "Sebagian besar alat berjalan penuh di browser Anda, dan beberapa menawarkan mode AI opsional saat dibutuhkan.",
   "landing.featured": "Alat Unggulan",
   "landing.popular": "Alat Populer",
   "landing.recent": "Lanjutkan yang Terakhir Dipakai",

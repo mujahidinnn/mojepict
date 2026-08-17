@@ -3,14 +3,14 @@ import { parseKeyPool, withKeyRotation } from "@/lib/api-key-pool";
 
 export const runtime = "nodejs";
 
-// remove.bg signals a bad/exhausted key with one of these — worth trying the
+// remove.bg signals a bad/exhausted key with one of these; worth trying the
 // next key in the pool. Anything else (e.g. a malformed image) shouldn't burn
 // through the whole pool.
 const ROTATE_ON_STATUS = new Set([402, 403, 429]);
 
 /**
  * Proxies background removal to the remove.bg API. Keys stay server-side
- * only (REMOVE_BG_API_KEY) — the client never sees them. Supports a
+ * only (REMOVE_BG_API_KEY); the client never sees them. Supports a
  * comma-separated list of keys: if one is out of credits or invalid, the
  * next one is tried automatically.
  */

@@ -13,33 +13,37 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
 
-    --primary: 215 25% 27%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 4.8% 95.9%;
+    --secondary: 238 35% 96%;
     --secondary-foreground: 240 5.9% 10%;
 
-    --muted: 240 4.8% 95.9%;
+    --muted: 238 20% 96%;
     --muted-foreground: 240 3.8% 46.1%;
 
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --accent: 238 45% 95%;
+    --accent-foreground: 243 60% 30%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
-    --ring: 215 25% 27%;
+    --ring: 243 75% 59%;
 
     --radius: 0.5rem;
 
-    --sidebar-width: 240px;
+    --sidebar-width: 280px;
     --sidebar-bg: 240 5% 98%;
     --sidebar-border: 240 5.9% 92%;
+
+    color-scheme: light;
   }
 
   .dark {
+    color-scheme: dark;
+
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
 
@@ -49,24 +53,24 @@
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
+    --primary: 239 84% 67%;
+    --primary-foreground: 240 25% 10%;
 
-    --secondary: 240 3.7% 15.9%;
+    --secondary: 240 15% 16%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 240 3.7% 15.9%;
+    --muted: 240 12% 16%;
     --muted-foreground: 240 5% 64.9%;
 
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 240 25% 20%;
+    --accent-foreground: 235 90% 88%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --ring: 239 84% 67%;
 
     --sidebar-bg: 240 10% 5%;
     --sidebar-border: 240 3.7% 12%;
@@ -82,10 +86,6 @@
     font-feature-settings:
       "rlig" 1,
       "calt" 1;
-  }
-
-  html {
-    color-scheme: light dark;
   }
 }
 
@@ -103,5 +103,21 @@
       linear-gradient(to right, hsl(var(--border) / 0.4) 1px, transparent 1px),
       linear-gradient(to bottom, hsl(var(--border) / 0.4) 1px, transparent 1px);
     background-size: 32px 32px;
+  }
+
+  .bg-hero-glow {
+    background-image:
+      radial-gradient(700px circle at 12% 8%, hsl(243 75% 59% / 0.38), transparent 72%),
+      radial-gradient(640px circle at 88% 18%, hsl(330 80% 65% / 0.34), transparent 72%),
+      radial-gradient(680px circle at 25% 62%, hsl(35 90% 60% / 0.30), transparent 72%),
+      radial-gradient(640px circle at 80% 88%, hsl(160 80% 45% / 0.28), transparent 72%);
+  }
+
+  .dark .bg-hero-glow {
+    background-image:
+      radial-gradient(700px circle at 12% 8%, hsl(239 84% 67% / 0.50), transparent 72%),
+      radial-gradient(640px circle at 88% 18%, hsl(330 85% 65% / 0.42), transparent 72%),
+      radial-gradient(680px circle at 25% 62%, hsl(35 90% 60% / 0.34), transparent 72%),
+      radial-gradient(640px circle at 80% 88%, hsl(160 80% 55% / 0.34), transparent 72%);
   }
 }

@@ -5,13 +5,13 @@ export const runtime = "nodejs";
 
 const ALLOWED_FORMATS = new Set(["image/webp", "image/png", "image/jpeg"]);
 
-// Tinify signals a bad key (401) or an exhausted monthly quota (429) — worth
+// Tinify signals a bad key (401) or an exhausted monthly quota (429); worth
 // trying the next key in the pool. Anything else shouldn't burn through it.
 const ROTATE_ON_STATUS = new Set([401, 429]);
 
 /**
  * Proxies compression to the Tinify (TinyPNG) API. Keys stay server-side
- * only (TINIFY_API_KEY) — the client never sees them. Supports a
+ * only (TINIFY_API_KEY); the client never sees them. Supports a
  * comma-separated list of keys: if one is out of quota or invalid, the next
  * one is tried automatically.
  */

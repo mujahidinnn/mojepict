@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Tool, getToolBadge } from "@/lib/tools";
-import { getCategoryColor, getToolIconComponent } from "@/lib/tool-icons";
+import { getCategoryColor, getCategoryGlow, getToolIconComponent } from "@/lib/tool-icons";
 import { useI18n } from "@/lib/i18n/context";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight } from "lucide-react";
@@ -17,14 +17,16 @@ export function ToolCard({ tool, featured }: ToolCardProps) {
   const { t } = useI18n();
   const LIcon = getToolIconComponent(tool.icon);
   const iconColor = getCategoryColor(tool.category);
+  const glow = getCategoryGlow(tool.category);
   const badge = getToolBadge(tool);
 
   return (
     <Link
-      href={tool.slug}
+      href={`/${tool.slug}`}
       className={cn(
-        "group relative flex flex-col gap-3 rounded-xl border bg-card p-5",
-        "hover:border-foreground/20 hover:shadow-sm transition-all duration-150",
+        "group relative flex flex-col gap-3 rounded-xl border border-t-2 bg-card p-5",
+        "transition-all duration-150",
+        glow,
         featured && "ring-1 ring-foreground/5",
       )}
     >

@@ -22,7 +22,7 @@ function persist(list: SavedPalette[]) {
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
   } catch {
-    // localStorage unavailable (private mode, etc.) — silently skip.
+    // localStorage unavailable (private mode, etc.); silently skip.
   }
 }
 

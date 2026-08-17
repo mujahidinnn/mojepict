@@ -9,7 +9,7 @@ export function recordRecentTool(slug: string) {
     const next = [slug, ...list.filter((s) => s !== slug)].slice(0, MAX_RECENT);
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   } catch {
-    // localStorage unavailable (private mode, etc.) — silently skip.
+    // localStorage unavailable (private mode, etc.); silently skip.
   }
 }
 

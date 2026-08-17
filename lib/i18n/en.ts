@@ -3,7 +3,7 @@ export const en = {
   "site.name": "Mojepict",
   "site.tagline": "Free tools that just work.",
   "site.description":
-    "A collection of fast, free web tools — most run entirely in your browser, with optional AI-enhanced processing for a few.",
+    "A collection of fast, free web tools. Most run entirely in your browser, with optional AI-enhanced processing for a few.",
 
   // --- Navigation ---
   "nav.allTools": "All Tools",
@@ -39,14 +39,14 @@ export const en = {
   "common.mode.local": "Local (Browser)",
   "common.mode.ai": "AI Enhanced",
   "common.mode.local.hint": "Runs on your device. Free, private, no setup.",
-  "common.mode.ai.hint": "Calls a third-party API for better results. Requires a configured API key.",
+  "common.mode.ai.hint": "Uses a cloud AI service for sharper results, when available.",
   "common.mode.ai.notConfigured":
-    "AI Enhanced mode isn't configured yet. Falling back to Local.",
+    "AI Enhanced isn't available right now. Using Local instead.",
 
   // --- Tool names ---
   "tool.image-converter.name": "Image Converter",
   "tool.image-converter.description":
-    "Convert images between JPG, PNG, WebP, and more — all in your browser.",
+    "Convert images between JPG, PNG, WebP, and more, all in your browser.",
 
   "tool.image-resizer.name": "Image Resizer",
   "tool.image-resizer.description":
@@ -54,7 +54,7 @@ export const en = {
 
   "tool.image-compressor.name": "Image Compressor",
   "tool.image-compressor.description":
-    "Reduce file size without visible quality loss — with an optional AI-enhanced compression mode.",
+    "Reduce file size without visible quality loss, with an optional AI-enhanced compression mode.",
 
   "tool.image-cropper.name": "Image Cropper",
   "tool.image-cropper.description":
@@ -66,7 +66,7 @@ export const en = {
 
   "tool.remove-bg.name": "Remove Background",
   "tool.remove-bg.description":
-    "Remove image backgrounds instantly — process locally in your browser, or switch to AI Enhanced mode for sharper edges.",
+    "Remove image backgrounds instantly. Process locally in your browser, or switch to AI Enhanced mode for sharper edges.",
   "tool.remove-bg.result-label": "Result",
   "tool.remove-bg.upload-hint": "Click or drag to upload",
   "tool.remove-bg.format-hint": "Supports PNG, JPG, WEBP",
@@ -260,8 +260,7 @@ export const en = {
   "tool.password-generator.strength.fair": "Fair",
   "tool.password-generator.strength.strong": "Strong",
   "tool.password-generator.strength.veryStrong": "Very strong",
-  "tool.password-generator.needOneOption":
-    "Select at least one character set.",
+  "tool.password-generator.needOneOption": "Select at least one character set.",
 
   "tool.word-counter.name": "Word Counter",
   "tool.word-counter.description":
@@ -275,11 +274,171 @@ export const en = {
   "tool.word-counter.readingTime": "Reading time",
   "tool.word-counter.readingTimeValue": "{{minutes}} min read",
 
+  "tool.lorem-ipsum.name": "Lorem Ipsum Generator",
+  "tool.lorem-ipsum.description":
+    "Generate placeholder text by paragraphs, sentences, or words.",
+  "tool.lorem-ipsum.unit": "Generate by",
+  "tool.lorem-ipsum.unit.paragraphs": "Paragraphs",
+  "tool.lorem-ipsum.unit.sentences": "Sentences",
+  "tool.lorem-ipsum.unit.words": "Words",
+  "tool.lorem-ipsum.count": "Amount",
+  "tool.lorem-ipsum.startWithLorem": "Start with \"Lorem ipsum dolor sit amet\"",
+  "tool.lorem-ipsum.generate": "Generate",
+  "tool.lorem-ipsum.placeholder": "Click Generate to create placeholder text",
+
   "tool.hash-generator.name": "Hash Generator",
   "tool.hash-generator.description":
     "Generate SHA-1, SHA-256, SHA-384, and SHA-512 hashes from text, right in your browser.",
   "tool.hash-generator.placeholder": "Type or paste text to hash...",
   "tool.hash-generator.empty": "Hashes will appear here as you type",
+
+  "tool.percentage-calculator.name": "Percentage Calculator",
+  "tool.percentage-calculator.description":
+    "Calculate percentages, find what percent one number is of another, and work out percentage change.",
+  "tool.percentage-calculator.mode.of": "X% of Y",
+  "tool.percentage-calculator.mode.isWhatPercent": "X is what % of Y",
+  "tool.percentage-calculator.mode.change": "% change from X to Y",
+  "tool.percentage-calculator.result": "Result",
+  "tool.percentage-calculator.increase": "Increase",
+  "tool.percentage-calculator.decrease": "Decrease",
+
+  "tool.age-calculator.name": "Age Calculator",
+  "tool.age-calculator.description":
+    "Find your exact age in years, months, and days from your birth date.",
+  "tool.age-calculator.birthDate": "Birth date",
+  "tool.age-calculator.asOfDate": "As of date",
+  "tool.age-calculator.years": "Years",
+  "tool.age-calculator.months": "Months",
+  "tool.age-calculator.days": "Days",
+  "tool.age-calculator.totalDays": "Total days lived",
+  "tool.age-calculator.nextBirthday": "Days until next birthday",
+  "tool.age-calculator.placeholder": "Pick a birth date to see the result",
+
+  "tool.timestamp-converter.name": "Timestamp Converter",
+  "tool.timestamp-converter.description":
+    "Convert between Unix timestamps and human-readable dates, both ways.",
+  "tool.timestamp-converter.now": "Current timestamp",
+  "tool.timestamp-converter.toDate": "Timestamp to date",
+  "tool.timestamp-converter.toTimestamp": "Date to timestamp",
+  "tool.timestamp-converter.timestampPlaceholder": "e.g. 1765900800",
+  "tool.timestamp-converter.unit": "Unit",
+  "tool.timestamp-converter.seconds": "Seconds",
+  "tool.timestamp-converter.milliseconds": "Milliseconds",
+  "tool.timestamp-converter.useNow": "Use now",
+  "tool.timestamp-converter.invalid": "Invalid input",
+
+  "tool.url-encoder.name": "URL Encoder/Decoder",
+  "tool.url-encoder.description":
+    "Encode text for safe use in a URL, or decode a URL-encoded string back to plain text.",
+  "tool.url-encoder.input-label": "Plain Text",
+  "tool.url-encoder.output-label": "URL-Encoded",
+  "tool.url-encoder.placeholder": "Type or paste text or a URL here...",
+  "tool.url-encoder.encode": "Encode",
+  "tool.url-encoder.decode": "Decode",
+  "tool.url-encoder.invalid": "That doesn't look like a valid URL-encoded string.",
+
+  "tool.uuid-generator.name": "UUID Generator",
+  "tool.uuid-generator.description": "Generate random v4 UUIDs, one or in bulk.",
+  "tool.uuid-generator.count": "Amount",
+  "tool.uuid-generator.uppercase": "Uppercase",
+  "tool.uuid-generator.hyphens": "Include hyphens",
+  "tool.uuid-generator.generate": "Generate",
+  "tool.uuid-generator.copyAll": "Copy all",
+  "tool.uuid-generator.placeholder": "Click Generate to create UUIDs",
+
+  "tool.regex-tester.name": "Regex Tester",
+  "tool.regex-tester.description":
+    "Test regular expressions against sample text with live match highlighting.",
+  "tool.regex-tester.pattern": "Pattern",
+  "tool.regex-tester.testString": "Test string",
+  "tool.regex-tester.result": "Highlighted result",
+  "tool.regex-tester.matchCount": "{{count}} matches",
+  "tool.regex-tester.at": "at",
+
+  "tool.number-base-converter.name": "Number Base Converter",
+  "tool.number-base-converter.description":
+    "Convert numbers between binary, octal, decimal, and hexadecimal.",
+  "tool.number-base-converter.baseLabel": "base {{base}}",
+  "tool.number-base-converter.base.2": "Binary",
+  "tool.number-base-converter.base.8": "Octal",
+  "tool.number-base-converter.base.10": "Decimal",
+  "tool.number-base-converter.base.16": "Hexadecimal",
+  "tool.number-base-converter.invalid": "Not a valid number for this base.",
+
+  "tool.jwt-decoder.name": "JWT Decoder",
+  "tool.jwt-decoder.description": "Decode a JWT's header and payload to inspect its claims.",
+  "tool.jwt-decoder.input": "JWT",
+  "tool.jwt-decoder.placeholder": "Paste a JWT (eyJhbGci...)",
+  "tool.jwt-decoder.header": "Header",
+  "tool.jwt-decoder.payload": "Payload",
+  "tool.jwt-decoder.invalid": "That doesn't look like a valid JWT.",
+  "tool.jwt-decoder.note": "Decoding only - this does not verify the token's signature.",
+
+  "tool.bmi-calculator.name": "BMI Calculator",
+  "tool.bmi-calculator.description": "Calculate your Body Mass Index from height and weight.",
+  "tool.bmi-calculator.metric": "Metric",
+  "tool.bmi-calculator.imperial": "Imperial",
+  "tool.bmi-calculator.height": "Height",
+  "tool.bmi-calculator.weight": "Weight",
+  "tool.bmi-calculator.placeholder": "Enter your height and weight to see your BMI",
+  "tool.bmi-calculator.category.underweight": "Underweight",
+  "tool.bmi-calculator.category.normal": "Normal weight",
+  "tool.bmi-calculator.category.overweight": "Overweight",
+  "tool.bmi-calculator.category.obese": "Obese",
+
+  "tool.tip-calculator.name": "Tip Calculator",
+  "tool.tip-calculator.description": "Split a bill with tip across any number of people.",
+  "tool.tip-calculator.bill": "Bill amount",
+  "tool.tip-calculator.tip": "Tip",
+  "tool.tip-calculator.customTip": "Custom %",
+  "tool.tip-calculator.people": "Number of people",
+  "tool.tip-calculator.tipAmount": "Tip amount",
+  "tool.tip-calculator.total": "Total",
+  "tool.tip-calculator.perPerson": "Per person",
+
+  "tool.gradient-generator.name": "Gradient Generator",
+  "tool.gradient-generator.description": "Build linear or radial CSS gradients and copy the code.",
+  "tool.gradient-generator.type": "Type",
+  "tool.gradient-generator.linear": "Linear",
+  "tool.gradient-generator.radial": "Radial",
+  "tool.gradient-generator.angle": "Angle",
+  "tool.gradient-generator.colors": "Colors",
+
+  "tool.contrast-checker.name": "Contrast Checker",
+  "tool.contrast-checker.description":
+    "Check the WCAG contrast ratio between two colors for accessible text.",
+  "tool.contrast-checker.foreground": "Text color",
+  "tool.contrast-checker.background": "Background color",
+  "tool.contrast-checker.sampleLarge": "Large sample text",
+  "tool.contrast-checker.sampleNormal": "Normal sample text for reading",
+  "tool.contrast-checker.ratio": "Contrast ratio",
+  "tool.contrast-checker.invalid": "Enter two valid hex colors to check contrast.",
+
+  "tool.markdown-previewer.name": "Markdown Previewer",
+  "tool.markdown-previewer.description": "Write Markdown and see the rendered result live.",
+  "tool.markdown-previewer.input": "Markdown",
+  "tool.markdown-previewer.preview": "Preview",
+
+  "tool.text-diff.name": "Text Diff Checker",
+  "tool.text-diff.description": "Compare two blocks of text and highlight what changed, line by line.",
+  "tool.text-diff.original": "Original",
+  "tool.text-diff.modified": "Modified",
+  "tool.text-diff.result": "Differences",
+  "tool.text-diff.placeholder": "Enter text on both sides to compare",
+  "tool.text-diff.tooLarge": "Text is too long to compare (max {{max}} lines per side).",
+
+  "tool.html-viewer.name": "HTML Viewer",
+  "tool.html-viewer.description":
+    "Write or upload HTML, CSS, and JS files (as many as you need) and preview them live in a sandboxed frame.",
+  "tool.html-viewer.addFile": "Add file",
+  "tool.html-viewer.uploadFiles": "Upload files",
+  "tool.html-viewer.uploadSkipped": "{{count}} file(s) were skipped (too large).",
+  "tool.html-viewer.run": "Run",
+  "tool.html-viewer.preview": "Preview",
+  "tool.html-viewer.sandboxNote": "Runs in an isolated sandbox - no access to this site's data",
+  "tool.html-viewer.asset": "Image asset",
+  "tool.html-viewer.assetHint":
+    "Reference this as \"{{name}}\" in an <img src>, <link rel=icon href>, or CSS url().",
 
   // --- Common actions ---
   "action.convert": "Convert",
@@ -315,8 +474,7 @@ export const en = {
   "landing.hero.title": "Free Web Tools,",
   "landing.hero.titleAccent": "No Strings Attached.",
   "landing.hero.subtitle":
-    "Most tools run entirely in your browser — a couple offer optional AI-enhanced processing when you need it.",
-  "landing.hero.badge": "Client-side by default · Optional AI",
+    "Most tools run entirely in your browser, and a couple offer optional AI-enhanced processing when you need it.",
   "landing.featured": "Featured Tools",
   "landing.popular": "Popular Tools",
   "landing.recent": "Continue Where You Left Off",

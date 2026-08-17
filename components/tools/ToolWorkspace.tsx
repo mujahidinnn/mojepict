@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 interface ToolWorkspaceProps {
-  /** Main content — dropzone, canvas, preview, form. */
+  /** Main content: dropzone, canvas, preview, form. */
   children: ReactNode;
   /** Options/controls column. Omit for single-column tools (e.g. unit-converter). */
   sidebar?: ReactNode;

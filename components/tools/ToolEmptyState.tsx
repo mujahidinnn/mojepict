@@ -9,9 +9,9 @@ interface ToolEmptyStateProps {
 }
 
 /**
- * Standard "nothing here yet" placeholder for a result/output panel —
- * one consistent icon-circle + text treatment instead of every tool
- * inventing its own opacity/sizing for the same idea.
+ * Standard "nothing here yet" placeholder for a result/output panel: one
+ * consistent icon-circle + text treatment instead of every tool inventing
+ * its own opacity/sizing for the same idea.
  */
 export function ToolEmptyState({ icon, title, hint, className }: ToolEmptyStateProps) {
   return (

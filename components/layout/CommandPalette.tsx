@@ -96,7 +96,7 @@ export function CommandPalette() {
   const navigate = useCallback(
     (slug: string) => {
       setOpen(false);
-      router.push(slug);
+      router.push(`/${slug}`);
     },
     [router],
   );

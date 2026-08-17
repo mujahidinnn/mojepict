@@ -5,7 +5,7 @@ export interface Tool {
   slug: string;
   icon: string;
   category: ToolCategory;
-  /** Manual override only — for date-driven "new" status see getToolBadge(). */
+  /** Manual override only; for date-driven "new" status see getToolBadge(). */
   badge?: "beta";
   /** ISO date the tool shipped. Drives the "new" badge (see NEW_WINDOW_DAYS). */
   createdAt: string;
@@ -162,6 +162,59 @@ export const TOOLS: Tool[] = [
     category: "text",
     createdAt: "2026-08-16",
   },
+  {
+    id: "lorem-ipsum",
+    slug: "lorem-ipsum",
+    icon: "Pilcrow",
+    category: "text",
+    createdAt: "2026-08-17",
+  },
+  {
+    id: "markdown-previewer",
+    slug: "markdown-previewer",
+    icon: "FileCode",
+    category: "text",
+    createdAt: "2026-08-18",
+  },
+  {
+    id: "text-diff",
+    slug: "text-diff",
+    icon: "GitCompare",
+    category: "text",
+    createdAt: "2026-08-18",
+  },
+
+  // --- KATEGORI: MATH ---
+  {
+    id: "percentage-calculator",
+    slug: "percentage-calculator",
+    icon: "Percent",
+    category: "math",
+    createdAt: "2026-08-17",
+    popular: true,
+  },
+  {
+    id: "age-calculator",
+    slug: "age-calculator",
+    icon: "Cake",
+    category: "math",
+    createdAt: "2026-08-17",
+  },
+  {
+    id: "bmi-calculator",
+    slug: "bmi-calculator",
+    icon: "HeartPulse",
+    category: "math",
+    createdAt: "2026-08-18",
+    popular: true,
+  },
+  {
+    id: "tip-calculator",
+    slug: "tip-calculator",
+    icon: "Receipt",
+    category: "math",
+    createdAt: "2026-08-18",
+  },
 
   // --- KATEGORI: COLOR ---
   {
@@ -178,6 +231,21 @@ export const TOOLS: Tool[] = [
     category: "color",
     createdAt: "2026-08-16",
     popular: true,
+  },
+  {
+    id: "gradient-generator",
+    slug: "gradient-generator",
+    icon: "Blend",
+    category: "color",
+    createdAt: "2026-08-18",
+    popular: true,
+  },
+  {
+    id: "contrast-checker",
+    slug: "contrast-checker",
+    icon: "Contrast",
+    category: "color",
+    createdAt: "2026-08-18",
   },
 
   // --- KATEGORI: DEV ---
@@ -210,6 +278,58 @@ export const TOOLS: Tool[] = [
     icon: "Hash",
     category: "dev",
     createdAt: "2026-08-16",
+  },
+  {
+    id: "timestamp-converter",
+    slug: "timestamp-converter",
+    icon: "Clock",
+    category: "dev",
+    createdAt: "2026-08-17",
+    popular: true,
+  },
+  {
+    id: "url-encoder",
+    slug: "url-encoder",
+    icon: "Link2",
+    category: "dev",
+    createdAt: "2026-08-17",
+  },
+  {
+    id: "uuid-generator",
+    slug: "uuid-generator",
+    icon: "Fingerprint",
+    category: "dev",
+    createdAt: "2026-08-18",
+    popular: true,
+  },
+  {
+    id: "regex-tester",
+    slug: "regex-tester",
+    icon: "Regex",
+    category: "dev",
+    createdAt: "2026-08-18",
+  },
+  {
+    id: "number-base-converter",
+    slug: "number-base-converter",
+    icon: "Binary",
+    category: "dev",
+    createdAt: "2026-08-18",
+  },
+  {
+    id: "jwt-decoder",
+    slug: "jwt-decoder",
+    icon: "Unlock",
+    category: "dev",
+    createdAt: "2026-08-18",
+  },
+  {
+    id: "html-viewer",
+    slug: "html-viewer",
+    icon: "AppWindow",
+    category: "dev",
+    createdAt: "2026-08-18",
+    popular: true,
   },
 ];
 

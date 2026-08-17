@@ -41,7 +41,7 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 flex h-12 items-center gap-3 border-b bg-background/80 backdrop-blur-sm px-4">
+    <header className="sticky top-0 z-40 flex h-12 items-center gap-1 sm:gap-3 border-b bg-background/80 backdrop-blur-sm px-2 sm:px-4">
       <Sheet>
         <SheetTrigger asChild>
           <Button variant="ghost" size="icon" className="lg:hidden h-7 w-7">
@@ -86,7 +86,7 @@ export function Navbar() {
       <Button
         asChild
         variant="outline"
-        className="h-7 gap-1.5 px-2.5 text-xs text-pink-600 dark:text-pink-400 border-pink-200 dark:border-pink-900 hover:bg-pink-50 dark:hover:bg-pink-950 hover:text-pink-700 dark:hover:text-pink-300"
+        className="h-7 w-7 p-0 sm:w-auto sm:gap-1.5 sm:px-2.5 text-xs text-pink-600 dark:text-pink-400 border-pink-200 dark:border-pink-900 hover:bg-pink-50 dark:hover:bg-pink-950 hover:text-pink-700 dark:hover:text-pink-300"
       >
         <a
           href="https://trakteer.id/mujahidinnn/tip"
@@ -99,7 +99,7 @@ export function Navbar() {
       </Button>
       <Button
         variant="outline"
-        className="h-7 gap-2 px-2.5 text-xs text-muted-foreground hover:text-foreground"
+        className="h-7 w-7 p-0 sm:w-auto sm:gap-2 sm:px-2.5 text-xs text-muted-foreground hover:text-foreground"
         onClick={openPalette}
       >
         <Search className="h-3.5 w-3.5" />

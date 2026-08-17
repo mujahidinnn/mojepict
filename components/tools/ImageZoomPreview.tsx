@@ -1,12 +1,12 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { Maximize, Trash2, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const MIN_SCALE = 0.5;
-const MAX_SCALE = 3;
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 3;
 const STEP = 0.25;
 
 interface ImageZoomPreviewProps {
@@ -17,15 +17,22 @@ interface ImageZoomPreviewProps {
   overlay?: ReactNode;
   /** Checkerboard background, for previewing transparent-background results. */
   checkered?: boolean;
-  /** Renders the standard top-right "remove image" button when provided — one consistent look everywhere. */
+  /** Renders the standard top-right "remove image" button when provided, for one consistent look everywhere. */
   onRemove?: () => void;
   removeLabel?: string;
 }
 
 /**
- * Shared preview surface: opens fit-to-view (scale 1) and only changes size
- * via the explicit zoom in/out/reset controls — no implicit scroll-wheel or
- * drag-to-zoom, so the initial view is always predictable.
+ * Shared preview surface: opens fit-to-view and only changes size via
+ * explicit zoom actions (buttons, Ctrl/Cmd + Plus/Minus/0, or Ctrl/Cmd +
+ * scroll / trackpad pinch) - never a bare scroll or drag, so the box never
+ * zooms by accident while the user is just scrolling the page. The fit
+ * scale is measured against the content's actual natural size (via
+ * ResizeObserver), not assumed to be 100% - individual tool pages render
+ * children at wildly different native sizes (full resolution canvases,
+ * fixed-px overlays, etc.), and a naive scale(1) baseline left the edges of
+ * anything bigger than the box permanently clipped (flex-centered overflow
+ * can't scroll into negative offset).
  */
 export function ImageZoomPreview({
   children,
@@ -35,16 +42,89 @@ export function ImageZoomPreview({
   onRemove,
   removeLabel = "Remove image",
 }: ImageZoomPreviewProps) {
-  const [scale, setScale] = useState(1);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [fitScale, setFitScale] = useState(1);
+  const [zoom, setZoom] = useState(1);
+  const isActiveRef = useRef(false);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (!isActiveRef.current || !(e.ctrlKey || e.metaKey)) return;
+      if (e.key === "+" || e.key === "=") {
+        e.preventDefault();
+        setZoom((z) => Math.min(MAX_ZOOM, +(z + STEP).toFixed(2)));
+      } else if (e.key === "-" || e.key === "_") {
+        e.preventDefault();
+        setZoom((z) => Math.max(MIN_ZOOM, +(z - STEP).toFixed(2)));
+      } else if (e.key === "0") {
+        e.preventDefault();
+        setZoom(1);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    const content = contentRef.current;
+    if (!viewport || !content) return;
+
+    const recompute = () => {
+      const style = getComputedStyle(viewport);
+      const paddingX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+      const paddingY = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+      const availableW = viewport.clientWidth - paddingX;
+      const availableH = viewport.clientHeight - paddingY;
+      const contentW = content.offsetWidth;
+      const contentH = content.offsetHeight;
+      if (!contentW || !contentH || availableW <= 0 || availableH <= 0) return;
+      const next = Math.min(1, availableW / contentW, availableH / contentH);
+      setFitScale(Number.isFinite(next) && next > 0 ? next : 1);
+    };
+
+    recompute();
+    const ro = new ResizeObserver(recompute);
+    ro.observe(viewport);
+    ro.observe(content);
+    return () => ro.disconnect();
+  }, [children]);
+
+  const effectiveScale = fitScale * zoom;
+
+  function handleWheel(e: React.WheelEvent<HTMLDivElement>) {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -STEP : STEP;
+    setZoom((z) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, +(z + delta).toFixed(2))));
+  }
 
   return (
     <div
       className={cn(
-        "relative flex min-h-[360px] w-full flex-col overflow-hidden rounded-xl border bg-muted/10",
+        "relative flex min-h-[360px] w-full flex-col overflow-hidden rounded-xl border bg-muted/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         className,
       )}
+      tabIndex={0}
+      role="group"
+      aria-label="Image preview. Use Ctrl or Cmd plus Plus, Minus, 0, or scroll to zoom."
+      onMouseEnter={() => {
+        isActiveRef.current = true;
+      }}
+      onMouseLeave={() => {
+        isActiveRef.current = false;
+      }}
+      onFocus={() => {
+        isActiveRef.current = true;
+      }}
+      onBlur={() => {
+        isActiveRef.current = false;
+      }}
     >
       <div
+        ref={viewportRef}
+        onWheel={handleWheel}
         className={cn(
           "relative flex flex-1 items-center justify-center overflow-auto p-4",
           checkered &&
@@ -52,8 +132,9 @@ export function ImageZoomPreview({
         )}
       >
         <div
+          ref={contentRef}
           className="transition-transform duration-150 ease-out"
-          style={{ transform: `scale(${scale})` }}
+          style={{ transform: `scale(${effectiveScale})` }}
         >
           {children}
         </div>
@@ -80,23 +161,25 @@ export function ImageZoomPreview({
           size="icon"
           variant="ghost"
           className="h-7 w-7"
-          onClick={() => setScale((s) => Math.max(MIN_SCALE, +(s - STEP).toFixed(2)))}
-          disabled={scale <= MIN_SCALE}
+          onClick={() => setZoom((z) => Math.max(MIN_ZOOM, +(z - STEP).toFixed(2)))}
+          disabled={zoom <= MIN_ZOOM}
           aria-label="Zoom out"
+          title="Zoom out (Ctrl/Cmd + -)"
         >
           <ZoomOut className="h-3.5 w-3.5" />
         </Button>
         <span className="w-10 text-center text-[10px] font-medium tabular-nums text-muted-foreground">
-          {Math.round(scale * 100)}%
+          {Math.round(zoom * 100)}%
         </span>
         <Button
           type="button"
           size="icon"
           variant="ghost"
           className="h-7 w-7"
-          onClick={() => setScale((s) => Math.min(MAX_SCALE, +(s + STEP).toFixed(2)))}
-          disabled={scale >= MAX_SCALE}
+          onClick={() => setZoom((z) => Math.min(MAX_ZOOM, +(z + STEP).toFixed(2)))}
+          disabled={zoom >= MAX_ZOOM}
           aria-label="Zoom in"
+          title="Zoom in (Ctrl/Cmd + +)"
         >
           <ZoomIn className="h-3.5 w-3.5" />
         </Button>
@@ -105,9 +188,10 @@ export function ImageZoomPreview({
           size="icon"
           variant="ghost"
           className="h-7 w-7"
-          onClick={() => setScale(1)}
-          disabled={scale === 1}
+          onClick={() => setZoom(1)}
+          disabled={zoom === 1}
           aria-label="Reset zoom"
+          title="Reset zoom (Ctrl/Cmd + 0)"
         >
           <Maximize className="h-3.5 w-3.5" />
         </Button>
