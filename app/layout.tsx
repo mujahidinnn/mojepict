@@ -36,6 +36,9 @@ export const metadata: Metadata = {
   ],
   metadataBase: new URL(SITE_URL),
   alternates: { canonical: SITE_URL },
+  verification: {
+    google: "fvXDeFrH7oYYPdVM9Ry106WpY1edT4s5D0ZfuljevJo",
+  },
   applicationName: SITE_NAME,
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,
