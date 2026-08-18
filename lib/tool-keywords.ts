@@ -286,6 +286,25 @@ export const TOOL_KEYWORDS: Record<string, ToolKeywordSet> = {
       "buat bingkai foto kampanye online",
     ],
   },
+  "device-mockup": {
+    en: [
+      "device mockup generator",
+      "screenshot mockup maker",
+      "phone mockup generator free",
+      "laptop mockup generator",
+      "browser mockup generator",
+      "put screenshot in device frame",
+      "app screenshot mockup online",
+    ],
+    id: [
+      "buat mockup perangkat online",
+      "mockup hp gratis",
+      "bingkai screenshot online",
+      "mockup laptop online",
+      "generator mockup device",
+      "tampilan screenshot di bingkai hp",
+    ],
+  },
   photobooth: {
     en: [
       "online photobooth",

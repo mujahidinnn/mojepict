@@ -154,6 +154,15 @@ export const TOOLS: Tool[] = [
     featured: true,
     popular: true,
   },
+  {
+    id: "device-mockup",
+    slug: "device-mockup",
+    icon: "Smartphone",
+    category: "image",
+    createdAt: "2026-08-18",
+    featured: true,
+    popular: true,
+  },
 
   // --- KATEGORI: PDF ---
   {

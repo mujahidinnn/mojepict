@@ -12,7 +12,11 @@ import { CopyImageButton } from "@/components/tools/CopyImageButton";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Upload, Download, Undo2, Eraser } from "lucide-react";
+import { Upload, Download, Undo2, Eraser, ZoomIn, ZoomOut, Maximize } from "lucide-react";
+
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 3;
+const ZOOM_STEP = 0.25;
 
 // @ts-ignore
 const CanvasDraw = dynamic(
@@ -30,16 +34,17 @@ export default function DrawOnImagePage() {
 
   const [bgImage, setBgImage] = useState<string | null>(null);
   const [imageSize, setImageSize] = useState({ width: 800, height: 500 });
-  // The size CanvasDraw is actually rendered at on screen. This must stay
-  // 1:1 with the canvas's real CSS box (no ancestor `transform: scale`,
-  // which is how ImageZoomPreview usually fits oversized content): the
-  // library maps pointer events to canvas coordinates via
-  // getBoundingClientRect(), and any external CSS scaling desyncs that
-  // visual rect from the canvas's actual pixel buffer, offsetting every
-  // stroke from where the cursor actually is.
+  // Must stay 1:1 with the canvas's CSS box (no ancestor transform: scale) —
+  // the library maps pointer events via getBoundingClientRect(), so any
+  // external scaling would offset strokes from the cursor.
   const [displaySize, setDisplaySize] = useState({ width: 800, height: 500 });
   const [brushColor, setBrushColor] = useState("#000000");
   const [brushRadius, setBrushRadius] = useState(2);
+  const [zoom, setZoom] = useState(1);
+
+  // Resizing displaySize resets the canvas's pixel buffer, so we snapshot
+  // strokes beforehand and restore them via loadSaveData afterwards.
+  const pendingSaveDataRef = useRef<string | null>(null);
 
   useEffect(() => {
     const el = previewRef.current;
@@ -47,11 +52,19 @@ export default function DrawOnImagePage() {
 
     const recompute = () => {
       const maxW = el.clientWidth - 32;
-      const maxH = Math.max(320, window.innerHeight - 320);
-      const scale = Math.min(1, maxW / imageSize.width, maxH / imageSize.height);
-      setDisplaySize({
+      const maxH = el.clientHeight - 32;
+      const fitScale = Math.min(1, maxW / imageSize.width, maxH / imageSize.height);
+      const scale = fitScale * zoom;
+      const next = {
         width: Math.max(1, Math.round(imageSize.width * scale)),
         height: Math.max(1, Math.round(imageSize.height * scale)),
+      };
+      setDisplaySize((prev) => {
+        if (prev.width === next.width && prev.height === next.height) return prev;
+        if (canvasRef.current) {
+          pendingSaveDataRef.current = canvasRef.current.getSaveData();
+        }
+        return next;
       });
     };
 
@@ -59,7 +72,13 @@ export default function DrawOnImagePage() {
     const ro = new ResizeObserver(recompute);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [bgImage, imageSize]);
+  }, [bgImage, imageSize, zoom]);
+
+  useEffect(() => {
+    if (!pendingSaveDataRef.current || !canvasRef.current) return;
+    canvasRef.current.loadSaveData(pendingSaveDataRef.current, true);
+    pendingSaveDataRef.current = null;
+  }, [displaySize]);
 
   const allowedTypes = [
     "image/jpeg",
@@ -86,6 +105,7 @@ export default function DrawOnImagePage() {
     img.onload = () => {
       setImageSize({ width: img.width, height: img.height });
       setBgImage(url);
+      setZoom(1);
     };
     img.src = url;
   };
@@ -232,27 +252,80 @@ export default function DrawOnImagePage() {
       >
         {bgImage ? (
           <div
-            ref={previewRef}
-            className="flex min-h-[360px] items-center justify-center rounded-xl border bg-muted/10 p-4"
+            className="relative overflow-hidden rounded-xl border bg-muted/10"
+            style={{ height: "min(70vh, 640px)" }}
           >
             <div
-              className="relative shadow-2xl border bg-white"
-              style={{
-                width: displaySize.width,
-                height: displaySize.height,
+              ref={previewRef}
+              onWheel={(e) => {
+                if (!(e.ctrlKey || e.metaKey)) return;
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
+                setZoom((z) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, +(z + delta).toFixed(2))));
               }}
+              className="flex h-full w-full items-center justify-center overflow-auto p-4"
             >
-              <CanvasDrawComponent
-                ref={canvasRef}
-                imgSrc={bgImage}
-                brushColor={brushColor}
-                brushRadius={brushRadius}
-                canvasWidth={displaySize.width}
-                canvasHeight={displaySize.height}
-                lazyRadius={0}
-                hideGrid
-                immediateLoading
-              />
+              <div
+                className="relative shrink-0 shadow-2xl border bg-white"
+                style={{
+                  width: displaySize.width,
+                  height: displaySize.height,
+                }}
+              >
+                <CanvasDrawComponent
+                  ref={canvasRef}
+                  imgSrc={bgImage}
+                  brushColor={brushColor}
+                  brushRadius={brushRadius}
+                  canvasWidth={displaySize.width}
+                  canvasHeight={displaySize.height}
+                  lazyRadius={0}
+                  hideGrid
+                  immediateLoading
+                />
+              </div>
+            </div>
+
+            <div className="absolute bottom-3 right-3 flex items-center gap-1 rounded-lg border bg-background/90 p-1 shadow-sm backdrop-blur">
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                onClick={() => setZoom((z) => Math.max(MIN_ZOOM, +(z - ZOOM_STEP).toFixed(2)))}
+                disabled={zoom <= MIN_ZOOM}
+                aria-label="Zoom out"
+                title="Zoom out (Ctrl/Cmd + scroll)"
+              >
+                <ZoomOut className="h-3.5 w-3.5" />
+              </Button>
+              <span className="w-10 text-center text-[10px] font-medium tabular-nums text-muted-foreground">
+                {Math.round(zoom * 100)}%
+              </span>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                onClick={() => setZoom((z) => Math.min(MAX_ZOOM, +(z + ZOOM_STEP).toFixed(2)))}
+                disabled={zoom >= MAX_ZOOM}
+                aria-label="Zoom in"
+                title="Zoom in (Ctrl/Cmd + scroll)"
+              >
+                <ZoomIn className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                onClick={() => setZoom(1)}
+                disabled={zoom === 1}
+                aria-label="Reset zoom"
+                title="Reset zoom"
+              >
+                <Maximize className="h-3.5 w-3.5" />
+              </Button>
             </div>
           </div>
         ) : (

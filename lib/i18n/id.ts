@@ -121,6 +121,11 @@ export const id = {
     "Pasang bingkai profil atau twibbon ke foto Anda dengan mudah.",
   "tool.twibbon.empty": "Unggah Twibbon dan foto Anda untuk mulai",
 
+  "tool.device-mockup.name": "Pembuat Mockup Perangkat",
+  "tool.device-mockup.description":
+    "Tampilkan tangkapan layar Anda dalam bingkai ponsel, tablet, laptop, browser, atau monitor.",
+  "tool.device-mockup.empty": "Unggah tangkapan layar untuk pratinjau",
+
   "tool.color-picker-image.name": "Pemilih Warna dari Foto",
   "tool.color-picker-image.description":
     "Ekstrak kode warna dari foto apa pun dengan mudah menggunakan fitur eyedropper.",

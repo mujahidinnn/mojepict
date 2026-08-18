@@ -123,6 +123,11 @@ export const en = {
     "Easily apply profile frames or twibbons to your photos.",
   "tool.twibbon.empty": "Upload a Twibbon and your photo to start",
 
+  "tool.device-mockup.name": "Device Mockup Generator",
+  "tool.device-mockup.description":
+    "Place your screenshot inside a phone, tablet, laptop, browser, or monitor frame.",
+  "tool.device-mockup.empty": "Upload a screenshot to preview",
+
   "tool.color-picker-image.name": "Color Picker from Image",
   "tool.color-picker-image.description":
     "Easily extract colors from any image using an eyedropper tool.",
