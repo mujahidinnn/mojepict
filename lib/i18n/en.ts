@@ -3,7 +3,7 @@ export const en = {
   "site.name": "Mojepict",
   "site.tagline": "Free tools that just work.",
   "site.description":
-    "A collection of fast, free web tools. Most run entirely in your browser, with optional AI-enhanced processing for a few.",
+    "Mojepict is a free collection of browser-based image, PDF, unit, text, and color tools — fast, private, no sign-up required.",
 
   // --- Navigation ---
   "nav.allTools": "All Tools",
@@ -13,6 +13,8 @@ export const en = {
   "nav.theme.dark": "Dark",
   "nav.language": "Language",
   "nav.support": "Support",
+  "nav.about": "About",
+  "nav.privacy": "Privacy Policy",
 
   // --- Categories ---
   "category.image": "Image",
@@ -757,6 +759,7 @@ export const en = {
 
   // --- Layout chrome ---
   "layout.sidebar.footer": "Free to use · No ads · Open source",
+  "layout.sidebar.madeBy": "Made by",
 
   // --- Command palette ---
   "palette.placeholder": "Type a tool name...",

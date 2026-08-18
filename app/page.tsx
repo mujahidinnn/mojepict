@@ -8,7 +8,7 @@ import { useI18n } from "@/lib/i18n/context";
 import { cn } from "@/lib/utils";
 import { TOOLS, getPopularTools } from "@/lib/tools";
 import { getRecentTools } from "@/hooks/use-recent-tools";
-import { Layers, Search, ShieldCheck, Sparkles, Zap } from "lucide-react";
+import { Layers, Search, ShieldCheck, Sparkles } from "lucide-react";
 
 export default function HomePage() {
   const { t } = useI18n();
@@ -32,18 +32,18 @@ export default function HomePage() {
     <div className="flex flex-col gap-12 pb-16">
       <div>
         {/*
-          No `relative` on this wrapper on purpose: the absolute background
-          below must skip past it and anchor to <main> (position:relative in
-          the root layout) so inset-x-0 spans main's true full width, edge to
-          edge next to the sidebar, instead of this component's own narrower
-          max-w-6xl centered column. Adding `relative` here would make THIS
-          div the containing block instead, silently trapping the background
-          back to the narrow width (which is exactly what happened last time).
+          `fixed`, not `absolute`: this backdrop should stay put behind the
+          content as the page scrolls, instead of scrolling away with it and
+          leaving plain `bg-background` below the fold. `top-12` clears the
+          navbar (h-12) and `lg:left-[var(--sidebar-width)]` clears the
+          sidebar — both are plain (non-positioned) elements, so without that
+          offset this `fixed` layer would paint over them: positioned
+          elements always paint above static ones, regardless of z-index or
+          DOM order.
         */}
-        <div className="absolute inset-x-0 top-0 h-[980px] sm:h-[620px] lg:h-[680px] overflow-hidden pointer-events-none">
+        <div className="fixed inset-x-0 top-12 bottom-0 lg:left-[var(--sidebar-width)] overflow-hidden pointer-events-none">
           <div className="absolute inset-0 bg-hero-glow" />
           <div className="absolute inset-0 bg-grid opacity-60 dark:opacity-30" />
-          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent" />
         </div>
 
         <section className="relative px-4 sm:px-6 lg:px-8 pt-14 grid grid-cols-1 lg:grid-cols-[1fr_280px] items-center gap-8">

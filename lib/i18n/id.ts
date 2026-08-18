@@ -2,7 +2,7 @@ export const id = {
   "site.name": "Mojepict",
   "site.tagline": "Alat gratis yang langsung bekerja.",
   "site.description":
-    "Kumpulan alat web cepat dan gratis. Sebagian besar berjalan penuh di browser Anda, dengan mode AI opsional untuk beberapa alat.",
+    "Mojepict adalah kumpulan alat gratis berbasis browser untuk gambar, PDF, satuan, teks, dan warna — cepat, privat, tanpa perlu daftar.",
 
   "nav.allTools": "Semua Alat",
   "nav.search": "Cari alat...",
@@ -11,6 +11,8 @@ export const id = {
   "nav.theme.dark": "Gelap",
   "nav.language": "Bahasa",
   "nav.support": "Dukung",
+  "nav.about": "Tentang",
+  "nav.privacy": "Kebijakan Privasi",
 
   "category.image": "Gambar",
   "category.pdf": "PDF",
@@ -751,6 +753,7 @@ export const id = {
 
   // --- Layout chrome ---
   "layout.sidebar.footer": "Gratis digunakan · Tanpa iklan · Open source",
+  "layout.sidebar.madeBy": "Dibuat oleh",
 
   "palette.placeholder": "Ketik nama alat...",
   "palette.noResults": "Tidak ada alat yang ditemukan.",

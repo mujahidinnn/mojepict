@@ -127,10 +127,56 @@ export function Sidebar() {
           );
         })}
       </div>
-      <div className="border-t border-[hsl(var(--sidebar-border))] px-4 py-3">
-        <p className="text-[11px] text-muted-foreground">
-          {t("layout.sidebar.footer")}
-        </p>
+      <div className="border-t border-[hsl(var(--sidebar-border))] px-4 py-3 flex flex-col gap-1.5">
+        <div className="flex items-center gap-2 text-[11px]">
+          <Link
+            href="/about"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {t("nav.about")}
+          </Link>
+          <span className="text-muted-foreground/40">·</span>
+          <Link
+            href="/privacy"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {t("nav.privacy")}
+          </Link>
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[11px] text-muted-foreground">
+            {t("layout.sidebar.footer")}
+          </p>
+          <a
+            href="https://mujahidin.my.id"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`${t("layout.sidebar.madeBy")} Mujahidin`}
+            className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <svg
+              width="26"
+              height="16"
+              viewBox="0 0 32 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M2 14C3.5 7 5 7 6.5 14C8 21 9.5 21 11 12C12.5 3 14 3 15.5 11C17 19 18.5 19 20 12C20.8 8.2 21.6 8 22.5 10"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M25 16L30 15"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+              />
+            </svg>
+          </a>
+        </div>
       </div>
     </aside>
   );

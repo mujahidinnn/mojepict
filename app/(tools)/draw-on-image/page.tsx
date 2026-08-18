@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useI18n } from "@/lib/i18n/context";
 import { useToast } from "@/hooks/use-toast";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolWorkspace } from "@/components/tools/ToolWorkspace";
 import { Dropzone } from "@/components/tools/Dropzone";
-import { ImageZoomPreview } from "@/components/tools/ImageZoomPreview";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
 import { CopyImageButton } from "@/components/tools/CopyImageButton";
 import { Button } from "@/components/ui/button";
@@ -27,11 +26,40 @@ export default function DrawOnImagePage() {
   const CanvasDrawComponent = CanvasDraw as any;
 
   const canvasRef = useRef<any>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
 
   const [bgImage, setBgImage] = useState<string | null>(null);
   const [imageSize, setImageSize] = useState({ width: 800, height: 500 });
+  // The size CanvasDraw is actually rendered at on screen. This must stay
+  // 1:1 with the canvas's real CSS box (no ancestor `transform: scale`,
+  // which is how ImageZoomPreview usually fits oversized content): the
+  // library maps pointer events to canvas coordinates via
+  // getBoundingClientRect(), and any external CSS scaling desyncs that
+  // visual rect from the canvas's actual pixel buffer, offsetting every
+  // stroke from where the cursor actually is.
+  const [displaySize, setDisplaySize] = useState({ width: 800, height: 500 });
   const [brushColor, setBrushColor] = useState("#000000");
   const [brushRadius, setBrushRadius] = useState(2);
+
+  useEffect(() => {
+    const el = previewRef.current;
+    if (!el || !bgImage) return;
+
+    const recompute = () => {
+      const maxW = el.clientWidth - 32;
+      const maxH = Math.max(320, window.innerHeight - 320);
+      const scale = Math.min(1, maxW / imageSize.width, maxH / imageSize.height);
+      setDisplaySize({
+        width: Math.max(1, Math.round(imageSize.width * scale)),
+        height: Math.max(1, Math.round(imageSize.height * scale)),
+      });
+    };
+
+    recompute();
+    const ro = new ResizeObserver(recompute);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [bgImage, imageSize]);
 
   const allowedTypes = [
     "image/jpeg",
@@ -203,13 +231,15 @@ export default function DrawOnImagePage() {
         }
       >
         {bgImage ? (
-          <ImageZoomPreview>
+          <div
+            ref={previewRef}
+            className="flex min-h-[360px] items-center justify-center rounded-xl border bg-muted/10 p-4"
+          >
             <div
               className="relative shadow-2xl border bg-white"
               style={{
-                width: imageSize.width,
-                height: imageSize.height,
-                maxWidth: "none",
+                width: displaySize.width,
+                height: displaySize.height,
               }}
             >
               <CanvasDrawComponent
@@ -217,14 +247,14 @@ export default function DrawOnImagePage() {
                 imgSrc={bgImage}
                 brushColor={brushColor}
                 brushRadius={brushRadius}
-                canvasWidth={imageSize.width}
-                canvasHeight={imageSize.height}
+                canvasWidth={displaySize.width}
+                canvasHeight={displaySize.height}
                 lazyRadius={0}
                 hideGrid
                 immediateLoading
               />
             </div>
-          </ImageZoomPreview>
+          </div>
         ) : (
           <Dropzone
             onFile={handleImageUpload}

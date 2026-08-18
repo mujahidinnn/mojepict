@@ -30,8 +30,13 @@ export function HeroIllustration() {
         />
       </g>
 
-      {/* front photo card, tilted opposite way */}
+      {/* front photo card, tilted opposite way, showing the Mojepict logo as its "photo" */}
       <g transform="rotate(6 210 150)">
+        <defs>
+          <clipPath id="hero-front-card-clip">
+            <rect x="150" y="90" width="150" height="150" rx="16" />
+          </clipPath>
+        </defs>
         <rect
           x="150"
           y="90"
@@ -41,10 +46,14 @@ export function HeroIllustration() {
           className="fill-card stroke-border"
           strokeWidth="1.5"
         />
-        <circle cx="182" cy="124" r="10" className="fill-pink-400/70 dark:fill-pink-300/60" />
-        <path
-          d="M150 206 L200 158 L230 186 L260 148 L300 190 V224 A16 16 0 0 1 284 240 H166 A16 16 0 0 1 150 224 Z"
-          className="fill-violet-500/15 dark:fill-violet-400/15"
+        <image
+          href="/mojepict-logo.png"
+          x="170"
+          y="110"
+          width="110"
+          height="110"
+          clipPath="url(#hero-front-card-clip)"
+          preserveAspectRatio="xMidYMid meet"
         />
       </g>
 
