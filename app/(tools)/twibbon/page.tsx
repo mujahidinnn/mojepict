@@ -5,6 +5,7 @@ import { ToolWorkspace } from "@/components/tools/ToolWorkspace";
 import { Dropzone } from "@/components/tools/Dropzone";
 import { ImageZoomPreview } from "@/components/tools/ImageZoomPreview";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
+import { CopyImageButton } from "@/components/tools/CopyImageButton";
 import { ToolEmptyState } from "@/components/tools/ToolEmptyState";
 import { Label } from "@/components/ui/label";
 import {
@@ -137,6 +138,11 @@ export default function TwibbonPage() {
     toast({ title: t("common.success") });
   };
 
+  const getCanvasBlob = (): Promise<Blob | null> =>
+    new Promise((resolve) =>
+      canvasRef.current ? canvasRef.current.toBlob(resolve, "image/png") : resolve(null),
+    );
+
   const handleReset = () => {
     setPhotoElement(null);
     setTwibbonElement(null);
@@ -215,7 +221,12 @@ export default function TwibbonPage() {
               onReset={
                 photoElement || twibbonElement ? handleReset : undefined
               }
-            />
+            >
+              <CopyImageButton
+                getBlob={getCanvasBlob}
+                disabled={!photoElement || !twibbonElement}
+              />
+            </ToolActionBar>
           </>
         }
       >

@@ -17,6 +17,7 @@ function Icon({ name, className }: { name: string; className?: string }) {
 
 const CATEGORY_ORDER: ToolCategory[] = [
   "image",
+  "pdf",
   "unit",
   "color",
   "text",

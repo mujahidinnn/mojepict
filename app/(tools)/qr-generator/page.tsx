@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolWorkspace } from "@/components/tools/ToolWorkspace";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
+import { CopyImageButton } from "@/components/tools/CopyImageButton";
 import { ToolEmptyState } from "@/components/tools/ToolEmptyState";
 import { Dropzone } from "@/components/tools/Dropzone";
 import { ImageZoomPreview } from "@/components/tools/ImageZoomPreview";
@@ -62,6 +63,12 @@ export default function QrGeneratorPage() {
       title: t("common.success"),
       description: t("toast.success.downloaded"),
     });
+  };
+
+  const getQrBlob = (): Promise<Blob | null> => {
+    const canvas = document.querySelector("canvas");
+    if (!canvas) return Promise.resolve(null);
+    return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
   };
 
   return (
@@ -189,6 +196,7 @@ export default function QrGeneratorPage() {
               onPrimary={handleDownload}
               primaryDisabled={!text}
             >
+              <CopyImageButton getBlob={getQrBlob} disabled={!text} />
               <p className="text-[10px] text-center text-muted-foreground px-4">
                 {t("tool.qr-generator.footer") ||
                   "High-quality PNG output with optional logo integration."}

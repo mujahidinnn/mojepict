@@ -10,7 +10,7 @@ const OG_LOGO = "/mojepict-logo.png";
 
 type EnKey = keyof typeof en;
 
-function toolOgImage(name: string, category: keyof typeof CATEGORIES) {
+function toolOgImage(name: string, category: keyof typeof CATEGORIES, icon: string) {
   const categoryLabel = (en[CATEGORIES[category].labelKey as EnKey] as
     | string
     | undefined) ?? category;
@@ -18,6 +18,8 @@ function toolOgImage(name: string, category: keyof typeof CATEGORIES) {
     title: name,
     subtitle: "Free Online Tool",
     eyebrow: categoryLabel,
+    category,
+    icon,
   });
   return `/og?${params.toString()}`;
 }
@@ -55,7 +57,7 @@ export function getToolMetadata(slug: string): Metadata {
   const url = `${SITE_URL}/${slug}`;
   const title = `${name} · Free Online Tool`;
   const keywords = getToolKeywords(tool.id, name, tool.category);
-  const ogImage = toolOgImage(name, tool.category);
+  const ogImage = toolOgImage(name, tool.category, tool.icon);
 
   return {
     title,

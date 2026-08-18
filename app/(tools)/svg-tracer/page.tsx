@@ -5,10 +5,12 @@ import { ToolWorkspace } from "@/components/tools/ToolWorkspace";
 import { Dropzone } from "@/components/tools/Dropzone";
 import { ImageZoomPreview } from "@/components/tools/ImageZoomPreview";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
+import { CopyImageButton } from "@/components/tools/CopyImageButton";
 import { ToolEmptyState } from "@/components/tools/ToolEmptyState";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
+import { rasterizeToPngBlob } from "@/lib/copy-image";
 import { Download, Loader2, PenTool, Upload } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -56,6 +58,12 @@ export default function SvgTracerPage() {
     toast({ description: t("toast.success.downloaded") });
   };
 
+  const getSvgPngBlob = (): Promise<Blob | null> => {
+    if (!svgOutput) return Promise.resolve(null);
+    const url = URL.createObjectURL(new Blob([svgOutput], { type: "image/svg+xml" }));
+    return rasterizeToPngBlob(url).finally(() => URL.revokeObjectURL(url));
+  };
+
   const handleReset = () => {
     setImagePreview(null);
     setSvgOutput(null);
@@ -74,7 +82,9 @@ export default function SvgTracerPage() {
             onPrimary={downloadSvg}
             primaryDisabled={!svgOutput}
             onReset={imagePreview ? handleReset : undefined}
-          />
+          >
+            <CopyImageButton getBlob={getSvgPngBlob} disabled={!svgOutput} />
+          </ToolActionBar>
         }
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

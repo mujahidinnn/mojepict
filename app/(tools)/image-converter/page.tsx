@@ -3,6 +3,7 @@
 import { Dropzone } from "@/components/tools/Dropzone";
 import { ImageZoomPreview } from "@/components/tools/ImageZoomPreview";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
+import { CopyImageButton } from "@/components/tools/CopyImageButton";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolWorkspace } from "@/components/tools/ToolWorkspace";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,7 @@ import { useI18n } from "@/lib/i18n/context";
 import { Download } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useState } from "react";
+import { toPngBlob } from "@/lib/copy-image";
 
 type OutputFormat =
   | "image/jpeg"
@@ -45,6 +47,7 @@ export default function ImageConverterPage() {
   const [outputFormat, setOutputFormat] = useState<OutputFormat>("image/webp");
   const [converting, setConverting] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [resultBlob, setResultBlob] = useState<Blob | null>(null);
 
   const fileToDataUri = (f: File): Promise<string> =>
     new Promise((resolve) => {
@@ -63,6 +66,7 @@ export default function ImageConverterPage() {
       URL.revokeObjectURL(url);
       URL.revokeObjectURL(objectUrlToRevoke);
 
+      setResultBlob(blob);
       setProgress(100);
       toast({
         title: t("common.success"),
@@ -96,6 +100,7 @@ export default function ImageConverterPage() {
       }
       setFile(f);
       setPreview(URL.createObjectURL(f));
+      setResultBlob(null);
     },
     [toast, t],
   );
@@ -171,6 +176,7 @@ export default function ImageConverterPage() {
     if (preview) URL.revokeObjectURL(preview);
     setFile(null);
     setPreview(null);
+    setResultBlob(null);
   };
 
   return (
@@ -217,6 +223,10 @@ export default function ImageConverterPage() {
                   <Progress value={progress} className="h-1.5" />
                 </div>
               )}
+              <CopyImageButton
+                getBlob={() => (resultBlob ? toPngBlob(resultBlob) : Promise.resolve(null))}
+                disabled={!resultBlob}
+              />
             </ToolActionBar>
           </>
         }

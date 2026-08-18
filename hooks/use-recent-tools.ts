@@ -1,5 +1,5 @@
 const STORAGE_KEY = "mojepict:recent-tools";
-const MAX_RECENT = 6;
+const MAX_RECENT = 3;
 
 /** Records a tool visit (by slug) in localStorage, most-recent first. */
 export function recordRecentTool(slug: string) {

@@ -46,7 +46,7 @@ export default function HomePage() {
           <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent" />
         </div>
 
-        <section className="relative px-4 sm:px-6 lg:px-8 pt-14 sm:pt-20 grid grid-cols-1 lg:grid-cols-[1fr_280px] items-center gap-8">
+        <section className="relative px-4 sm:px-6 lg:px-8 pt-14 grid grid-cols-1 lg:grid-cols-[1fr_280px] items-center gap-8">
           <div>
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight max-w-xl">
               {t("landing.hero.title")}{" "}
@@ -79,7 +79,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="relative px-4 sm:px-6 lg:px-8 pt-10 pb-14 sm:pb-20 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <section className="relative px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {[
             {
               value: `${TOOLS.length}`,

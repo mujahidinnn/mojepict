@@ -8,6 +8,7 @@ import { ToolWorkspace } from "@/components/tools/ToolWorkspace";
 import { Dropzone } from "@/components/tools/Dropzone";
 import { ImageZoomPreview } from "@/components/tools/ImageZoomPreview";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
+import { CopyImageButton } from "@/components/tools/CopyImageButton";
 import {
   ProcessingMode,
   ProcessingModeToggle,
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Download, PackageOpen } from "lucide-react";
 import Image from "next/image";
+import { toPngBlob } from "@/lib/copy-image";
 
 type Format = "image/jpeg" | "image/png" | "image/webp";
 
@@ -38,6 +40,7 @@ export default function ImageCompressorPage() {
   const [origSize, setOrigSize] = useState(0);
   const [compressedSize, setCompressedSize] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [resultBlob, setResultBlob] = useState<Blob | null>(null);
 
   const handleFile = useCallback(
     (f: File) => {
@@ -53,6 +56,7 @@ export default function ImageCompressorPage() {
       setOrigSize(f.size);
       setPreview(URL.createObjectURL(f));
       setCompressedSize(null);
+      setResultBlob(null);
     },
     [toast, t],
   );
@@ -77,6 +81,7 @@ export default function ImageCompressorPage() {
           (blob) => {
             if (!blob) return reject(new Error("Compression failed."));
             setCompressedSize(blob.size);
+            setResultBlob(blob);
             downloadBlob(blob, `compressed-${file.name}`);
             resolve();
           },
@@ -113,6 +118,7 @@ export default function ImageCompressorPage() {
     const compressedBytes = Number(res.headers.get("X-Compressed-Size") ?? 0);
     const blob = await res.blob();
     setCompressedSize(compressedBytes || blob.size);
+    setResultBlob(blob);
     const ext = format.split("/")[1];
     downloadBlob(blob, `compressed-${file.name.split(".")[0]}.${ext}`);
   };
@@ -142,6 +148,7 @@ export default function ImageCompressorPage() {
     setFile(null);
     setPreview(null);
     setCompressedSize(null);
+    setResultBlob(null);
   };
 
   return (
@@ -205,7 +212,12 @@ export default function ImageCompressorPage() {
               onPrimary={compress}
               primaryDisabled={!file || isProcessing}
               onReset={file ? handleReset : undefined}
-            />
+            >
+              <CopyImageButton
+                getBlob={() => (resultBlob ? toPngBlob(resultBlob) : Promise.resolve(null))}
+                disabled={!resultBlob}
+              />
+            </ToolActionBar>
           </>
         }
       >

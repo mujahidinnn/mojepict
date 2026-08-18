@@ -3,6 +3,7 @@
 import { Dropzone } from "@/components/tools/Dropzone";
 import { ImageZoomPreview } from "@/components/tools/ImageZoomPreview";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
+import { CopyImageButton } from "@/components/tools/CopyImageButton";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolWorkspace } from "@/components/tools/ToolWorkspace";
 import { Button } from "@/components/ui/button";
@@ -129,6 +130,12 @@ export default function ImageCropperPage() {
     link.click();
   };
 
+  const getCroppedBlob = (): Promise<Blob | null> => {
+    const canvas = previewCanvasRef.current;
+    if (!canvas || canvas.width === 0) return Promise.resolve(null);
+    return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+  };
+
   const handleReset = () => {
     setUpImg(null);
     setFileDetails(null);
@@ -188,6 +195,7 @@ export default function ImageCropperPage() {
               >
                 <Download className="h-4 w-4" /> {t("action.download")}
               </Button>
+              <CopyImageButton getBlob={getCroppedBlob} disabled={!completedCrop} />
             </ToolActionBar>
           </>
         }

@@ -3,6 +3,7 @@
 import { Dropzone } from "@/components/tools/Dropzone";
 import { ImageZoomPreview } from "@/components/tools/ImageZoomPreview";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
+import { CopyImageButton } from "@/components/tools/CopyImageButton";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolWorkspace } from "@/components/tools/ToolWorkspace";
 import { Input } from "@/components/ui/input";
@@ -60,27 +61,35 @@ export default function ImageResizerPage() {
       setWidth(String(Math.round((parseInt(v) * origW) / origH)));
   };
 
-  const resize = () => {
-    if (!file || !preview) return;
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = parseInt(width) || origW;
-      canvas.height = parseInt(height) || origH;
-      canvas
-        .getContext("2d")!
-        .drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = `resized-${file.name}`;
-        a.click();
-        toast({ title: "Done!", description: t("toast.success.downloaded") });
-      }, file.type);
-    };
-    img.src = preview;
+  const buildResizedBlob = (mimeType: string): Promise<Blob | null> => {
+    if (!file || !preview) return Promise.resolve(null);
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = parseInt(width) || origW;
+        canvas.height = parseInt(height) || origH;
+        canvas
+          .getContext("2d")!
+          .drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(resolve, mimeType);
+      };
+      img.src = preview;
+    });
   };
+
+  const resize = async () => {
+    if (!file) return;
+    const blob = await buildResizedBlob(file.type);
+    if (!blob) return;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `resized-${file.name}`;
+    a.click();
+    toast({ title: "Done!", description: t("toast.success.downloaded") });
+  };
+
+  const getResizedPngBlob = () => buildResizedBlob("image/png");
 
   const clearFile = () => {
     setFile(null);
@@ -134,7 +143,9 @@ export default function ImageResizerPage() {
               onPrimary={resize}
               primaryDisabled={!file}
               onReset={file ? clearFile : undefined}
-            />
+            >
+              <CopyImageButton getBlob={getResizedPngBlob} disabled={!file} />
+            </ToolActionBar>
           </>
         }
       >

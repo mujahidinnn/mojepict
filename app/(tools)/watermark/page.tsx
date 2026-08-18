@@ -5,6 +5,7 @@ import { ToolWorkspace } from "@/components/tools/ToolWorkspace";
 import { Dropzone } from "@/components/tools/Dropzone";
 import { ImageZoomPreview } from "@/components/tools/ImageZoomPreview";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
+import { CopyImageButton } from "@/components/tools/CopyImageButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -187,6 +188,11 @@ export default function WatermarkPage() {
     });
   };
 
+  const getCanvasBlob = (): Promise<Blob | null> =>
+    new Promise((resolve) =>
+      canvasRef.current ? canvasRef.current.toBlob(resolve, "image/png") : resolve(null),
+    );
+
   const handleReset = () => {
     setBgImage(null);
     setImageElement(null);
@@ -290,6 +296,7 @@ export default function WatermarkPage() {
               primaryDisabled={!bgImage}
               onReset={bgImage ? handleReset : undefined}
             >
+              <CopyImageButton getBlob={getCanvasBlob} disabled={!bgImage} />
               {watermarkImage && (
                 <Button
                   variant="ghost"

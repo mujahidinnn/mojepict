@@ -9,6 +9,7 @@ import { ToolWorkspace } from "@/components/tools/ToolWorkspace";
 import { Dropzone } from "@/components/tools/Dropzone";
 import { ImageZoomPreview } from "@/components/tools/ImageZoomPreview";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
+import { CopyImageButton } from "@/components/tools/CopyImageButton";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -61,40 +62,55 @@ export default function DrawOnImagePage() {
     img.src = url;
   };
 
-  const handleSave = () => {
-    if (!canvasRef.current || !bgImage) return;
+  const buildFinalCanvas = (): Promise<HTMLCanvasElement | null> => {
+    if (!canvasRef.current || !bgImage) return Promise.resolve(null);
 
     const drawingCanvas = canvasRef.current.canvas.drawing;
     const drawingDataUrl = drawingCanvas.toDataURL("image/png");
 
-    const image = new Image();
-    image.crossOrigin = "anonymous";
-    image.onload = () => {
-      const finalCanvas = document.createElement("canvas");
-      finalCanvas.width = imageSize.width;
-      finalCanvas.height = imageSize.height;
-      const ctx = finalCanvas.getContext("2d");
+    return new Promise((resolve) => {
+      const image = new Image();
+      image.crossOrigin = "anonymous";
+      image.onload = () => {
+        const finalCanvas = document.createElement("canvas");
+        finalCanvas.width = imageSize.width;
+        finalCanvas.height = imageSize.height;
+        const ctx = finalCanvas.getContext("2d");
 
-      if (ctx) {
+        if (!ctx) {
+          resolve(null);
+          return;
+        }
         ctx.drawImage(image, 0, 0, imageSize.width, imageSize.height);
         const drawingImg = new Image();
         drawingImg.onload = () => {
           ctx.drawImage(drawingImg, 0, 0, imageSize.width, imageSize.height);
-          const finalDataURL = finalCanvas.toDataURL("image/png");
-          const link = document.createElement("a");
-          link.href = finalDataURL;
-          link.download = "drawing-mojepict.png";
-          link.click();
-          toast({
-            title: t("common.success"),
-            description:
-              t("tool.image-draw.success-save") || "Image saved successfully.",
-          });
+          resolve(finalCanvas);
         };
         drawingImg.src = drawingDataUrl;
-      }
-    };
-    image.src = bgImage;
+      };
+      image.src = bgImage;
+    });
+  };
+
+  const handleSave = async () => {
+    const finalCanvas = await buildFinalCanvas();
+    if (!finalCanvas) return;
+    const link = document.createElement("a");
+    link.href = finalCanvas.toDataURL("image/png");
+    link.download = "drawing-mojepict.png";
+    link.click();
+    toast({
+      title: t("common.success"),
+      description:
+        t("tool.image-draw.success-save") || "Image saved successfully.",
+    });
+  };
+
+  const getDrawingBlob = async (): Promise<Blob | null> => {
+    const finalCanvas = await buildFinalCanvas();
+    if (!finalCanvas) return null;
+    return new Promise((resolve) => finalCanvas.toBlob(resolve, "image/png"));
   };
 
   const handleReset = () => {
@@ -158,6 +174,7 @@ export default function DrawOnImagePage() {
               onReset={bgImage ? handleReset : undefined}
               resetLabel={t("tool.image-draw.change")}
             >
+              <CopyImageButton getBlob={getDrawingBlob} disabled={!bgImage} />
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   variant="outline"

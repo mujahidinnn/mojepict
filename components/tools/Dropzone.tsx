@@ -5,7 +5,9 @@ import { Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface DropzoneProps {
-  onFile: (file: File) => void;
+  onFile?: (file: File) => void;
+  /** When set alongside multiple, receives every selected/dropped file instead of just the first. */
+  onFiles?: (files: File[]) => void;
   accept?: string;
   title: string;
   subtitle?: string;
@@ -20,6 +22,7 @@ interface DropzoneProps {
  */
 export function Dropzone({
   onFile,
+  onFiles,
   accept = "image/*",
   title,
   subtitle,
@@ -32,10 +35,15 @@ export function Dropzone({
 
   const handleFiles = useCallback(
     (files: FileList | null) => {
-      const file = files?.[0];
-      if (file) onFile(file);
+      if (!files || files.length === 0) return;
+      if (multiple && onFiles) {
+        onFiles(Array.from(files));
+        return;
+      }
+      const file = files[0];
+      if (file) onFile?.(file);
     },
-    [onFile],
+    [onFile, onFiles, multiple],
   );
 
   return (
