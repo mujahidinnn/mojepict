@@ -19,12 +19,15 @@ interface SliderProps
    * a mouse cursor doesn't cover the page the way a finger does.
    */
   previewContent?: React.ReactNode
+  /** Overrides the track's background (e.g. a hue-spectrum gradient). */
+  trackClassName?: string
+  trackStyle?: React.CSSProperties
 }
 
 const Slider = React.forwardRef<
   React.ElementRef<typeof SliderPrimitive.Root>,
   SliderProps
->(({ className, previewContent, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, ...props }, ref) => {
+>(({ className, previewContent, trackClassName, trackStyle, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, ...props }, ref) => {
   const [bubblePos, setBubblePos] = React.useState<{ x: number; y: number } | null>(null)
   const [mounted, setMounted] = React.useState(false)
 
@@ -59,8 +62,14 @@ const Slider = React.forwardRef<
       }}
       {...props}
     >
-      <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary">
-        <SliderPrimitive.Range className="absolute h-full bg-primary" />
+      <SliderPrimitive.Track
+        className={cn(
+          "relative h-2 w-full grow overflow-hidden rounded-full bg-secondary",
+          trackClassName
+        )}
+        style={trackStyle}
+      >
+        <SliderPrimitive.Range className={cn("absolute h-full bg-primary", trackClassName && "opacity-0")} />
       </SliderPrimitive.Track>
       <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50" />
 

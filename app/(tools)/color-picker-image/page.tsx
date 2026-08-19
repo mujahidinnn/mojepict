@@ -24,12 +24,16 @@ export default function ColorPickerImagePage() {
     rgb: string;
     hsl: string;
   } | null>(null);
-  const [isPanning, setIsPanning] = useState(false);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [startPan, setStartPan] = useState({ x: 0, y: 0 });
+  const [magnifier, setMagnifier] = useState<{
+    x: number;
+    y: number;
+    imgX: number;
+    imgY: number;
+  } | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
+  const magnifierCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
 
@@ -41,15 +45,8 @@ export default function ColorPickerImagePage() {
     if (!ctx) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.save();
-    ctx.translate(offset.x, offset.y);
     ctx.drawImage(img, 0, 0);
-    ctx.restore();
   };
-
-  useEffect(() => {
-    drawImage();
-  }, [offset]);
 
   const handleImageUpload = (file: File) => {
     if (!allowedTypes.includes(file.type)) {
@@ -64,18 +61,13 @@ export default function ColorPickerImagePage() {
     const img = new Image();
     img.onload = () => {
       imgRef.current = img;
-      const aspectRatio = img.width / img.height;
-      const maxHeight = 500;
-      const height = maxHeight;
-      const width = height * aspectRatio;
 
       const canvas = canvasRef.current;
       if (!canvas) return;
 
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = img.width;
+      canvas.height = img.height;
 
-      setOffset({ x: 0, y: 0 });
       drawImage();
     };
     img.src = URL.createObjectURL(file);
@@ -83,12 +75,11 @@ export default function ColorPickerImagePage() {
     setPickedColor(null);
   };
 
-  const handleCanvasClick = (e: React.MouseEvent) => {
+  /** Maps a mouse event to image-native pixel coordinates, or null if outside the image. */
+  const getImageCoords = (e: React.MouseEvent): { x: number; y: number } | null => {
     const canvas = canvasRef.current;
     const img = imgRef.current;
-    if (!canvas || !img) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!canvas || !img) return null;
 
     const rect = canvas.getBoundingClientRect();
 
@@ -98,17 +89,34 @@ export default function ColorPickerImagePage() {
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
 
-    const x = clickX * scaleX - offset.x;
-    const y = clickY * scaleY - offset.y;
+    const x = clickX * scaleX;
+    const y = clickY * scaleY;
 
-    if (x < 0 || y < 0 || x >= img.width || y >= img.height) return;
+    if (x < 0 || y < 0 || x >= img.width || y >= img.height) return null;
+    return { x, y };
+  };
 
+  /** Offscreen canvas holding the raw source image at native resolution, for pixel sampling. */
+  const getSourceCanvas = (): HTMLCanvasElement | null => {
+    const img = imgRef.current;
+    if (!img) return null;
     const tempCanvas = document.createElement("canvas");
     tempCanvas.width = img.width;
     tempCanvas.height = img.height;
     const tempCtx = tempCanvas.getContext("2d");
-    if (!tempCtx) return;
+    if (!tempCtx) return null;
     tempCtx.drawImage(img, 0, 0);
+    return tempCanvas;
+  };
+
+  const handleCanvasClick = (e: React.MouseEvent) => {
+    const coords = getImageCoords(e);
+    if (!coords) return;
+    const { x, y } = coords;
+
+    const tempCanvas = getSourceCanvas();
+    const tempCtx = tempCanvas?.getContext("2d");
+    if (!tempCtx) return;
 
     const pixel = tempCtx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
     const rgb = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
@@ -139,6 +147,87 @@ export default function ColorPickerImagePage() {
     setPickedColor({ hex, rgb, hsl });
   };
 
+  const handleCanvasMouseMove = (e: React.MouseEvent) => {
+    const coords = getImageCoords(e);
+    if (!coords) {
+      setMagnifier(null);
+      return;
+    }
+    setMagnifier({
+      x: e.clientX,
+      y: e.clientY,
+      imgX: coords.x,
+      imgY: coords.y,
+    });
+  };
+
+  useEffect(() => {
+    const magnifierCanvas = magnifierCanvasRef.current;
+    if (!magnifier || !magnifierCanvas) return;
+
+    const img = imgRef.current;
+    if (!img) return;
+
+    const tempCanvas = getSourceCanvas();
+    const tempCtx = tempCanvas?.getContext("2d");
+    if (!tempCtx) return;
+
+    const SAMPLE = 17; // odd, so there's a well-defined center pixel
+    const HALF = Math.floor(SAMPLE / 2);
+    const centerX = Math.floor(magnifier.imgX);
+    const centerY = Math.floor(magnifier.imgY);
+
+    const sx = Math.max(0, Math.min(img.width - SAMPLE, centerX - HALF));
+    const sy = Math.max(0, Math.min(img.height - SAMPLE, centerY - HALF));
+    const sw = Math.min(SAMPLE, img.width);
+    const sh = Math.min(SAMPLE, img.height);
+
+    const sample = tempCtx.getImageData(sx, sy, sw, sh);
+
+    const magCtx = magnifierCanvas.getContext("2d");
+    if (!magCtx) return;
+
+    magCtx.imageSmoothingEnabled = false;
+    magCtx.clearRect(0, 0, magnifierCanvas.width, magnifierCanvas.height);
+
+    // Paint the sampled block via an intermediate canvas so it can be
+    // scaled up blockily (drawImage from ImageData isn't directly
+    // supported, so putImageData onto a same-size canvas first).
+    const sampleCanvas = document.createElement("canvas");
+    sampleCanvas.width = sw;
+    sampleCanvas.height = sh;
+    const sampleCtx = sampleCanvas.getContext("2d");
+    if (!sampleCtx) return;
+    sampleCtx.putImageData(sample, 0, 0);
+
+    magCtx.drawImage(
+      sampleCanvas,
+      0,
+      0,
+      sw,
+      sh,
+      0,
+      0,
+      magnifierCanvas.width,
+      magnifierCanvas.height,
+    );
+
+    // Crosshair marking the exact pixel that will be picked on click.
+    const cx = ((centerX - sx + 0.5) / sw) * magnifierCanvas.width;
+    const cy = ((centerY - sy + 0.5) / sh) * magnifierCanvas.height;
+    magCtx.strokeStyle = "rgba(255,255,255,0.9)";
+    magCtx.lineWidth = 1;
+    magCtx.beginPath();
+    magCtx.moveTo(cx - 6, cy);
+    magCtx.lineTo(cx + 6, cy);
+    magCtx.moveTo(cx, cy - 6);
+    magCtx.lineTo(cx, cy + 6);
+    magCtx.stroke();
+    magCtx.strokeStyle = "rgba(0,0,0,0.6)";
+    magCtx.lineWidth = 1;
+    magCtx.strokeRect(cx - 0.5, cy - 0.5, 1, 1);
+  }, [magnifier]);
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
       toast({ description: t("toast.success.copied") });
@@ -148,7 +237,7 @@ export default function ColorPickerImagePage() {
   const handleReset = () => {
     setImageFile(null);
     setPickedColor(null);
-    setOffset({ x: 0, y: 0 });
+    setMagnifier(null);
   };
 
   return (
@@ -228,28 +317,33 @@ export default function ColorPickerImagePage() {
                 ref={canvasRef}
                 className="rounded shadow-2xl cursor-crosshair bg-white max-w-full h-auto"
                 onClick={handleCanvasClick}
-                onMouseDown={(e) => {
-                  setIsPanning(true);
-                  setStartPan({
-                    x: e.clientX - offset.x,
-                    y: e.clientY - offset.y,
-                  });
-                }}
-                onMouseMove={(e) => {
-                  if (!isPanning) return;
-                  setOffset({
-                    x: e.clientX - startPan.x,
-                    y: e.clientY - startPan.y,
-                  });
-                }}
-                onMouseUp={() => setIsPanning(false)}
-                onMouseLeave={() => setIsPanning(false)}
+                onMouseMove={handleCanvasMouseMove}
+                onMouseLeave={() => setMagnifier(null)}
               />
             </ImageZoomPreview>
             <p className="mt-2 text-center text-[10px] text-muted-foreground flex items-center justify-center gap-1">
-              <MousePointer2 className="h-3 w-3" /> Click to pick color • Drag
-              to pan • Use the zoom controls to scale the view
+              <MousePointer2 className="h-3 w-3" /> Click to pick color • Use
+              the zoom controls to scale the view
             </p>
+
+            {magnifier && (
+              <div
+                className="pointer-events-none fixed z-50 rounded-full border-2 border-white shadow-2xl overflow-hidden"
+                style={{
+                  left: magnifier.x + 24,
+                  top: magnifier.y - 144,
+                  width: 120,
+                  height: 120,
+                }}
+              >
+                <canvas
+                  ref={magnifierCanvasRef}
+                  width={120}
+                  height={120}
+                  className="bg-white"
+                />
+              </div>
+            )}
           </>
         ) : (
           <Dropzone

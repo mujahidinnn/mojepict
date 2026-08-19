@@ -54,7 +54,7 @@ interface PreviewResult {
 const MAX_FILE_BYTES = 1_500_000;
 const MAX_TOTAL_BYTES = 5_000_000;
 const DEFAULT_FAVICON =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9A%80%3C/text%3E%3C/svg%3E";
+  "data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAQAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPFmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj/wAAAAAAAAAAAAAAAAAAAADxZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY/8AAAAAAAAAAPFmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj/wAAAAAAAAAA8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/AAAAAAAAAAAAAAAAAAAAAPFmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==";
 
 function uid() {
   return Math.random().toString(36).slice(2, 9);
@@ -93,7 +93,7 @@ function defaultFiles(): SnippetFile[] {
 <html>
 <head>
   <title>My Page</title>
-  <link rel="icon" href="favicon.svg">
+  <link rel="icon" href="favicon.ico">
 </head>
 <body>
   <h1>Hello, world!</h1>
@@ -131,7 +131,7 @@ button {
     },
     {
       id: uid(),
-      name: "favicon.svg",
+      name: "favicon.ico",
       language: "asset",
       content: DEFAULT_FAVICON,
     },

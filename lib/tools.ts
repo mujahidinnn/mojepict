@@ -171,6 +171,15 @@ export const TOOLS: Tool[] = [
     category: "image",
     createdAt: "2026-08-18",
   },
+  {
+    id: "wave-generator",
+    slug: "wave-generator",
+    icon: "Waves",
+    category: "image",
+    createdAt: "2026-08-19",
+    featured: true,
+    popular: true,
+  },
 
   // --- KATEGORI: PDF ---
   {

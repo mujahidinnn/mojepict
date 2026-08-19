@@ -40,7 +40,7 @@ export default function SvgTracerPage() {
             description: t("toast.success.processed"),
           });
         },
-        { ltres: 1, qtres: 1, numberofcolors: 16, strokewidth: 1 },
+        { ltres: 1, qtres: 1, numberofcolors: 16, strokewidth: 1, viewbox: true },
       );
     };
     reader.readAsDataURL(file);

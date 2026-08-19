@@ -1031,6 +1031,26 @@ export const TOOL_KEYWORDS: Record<string, ToolKeywordSet> = {
       "kombinasi warna gradient css",
     ],
   },
+  "wave-generator": {
+    en: [
+      "svg wave generator",
+      "wave divider maker",
+      "section divider svg generator",
+      "blob shape generator",
+      "organic shape generator svg",
+      "profile picture background shape",
+      "getwaves style generator",
+      "free svg wave background",
+    ],
+    id: [
+      "generator wave svg",
+      "buat pembatas section bergelombang",
+      "generator bentuk blob acak",
+      "buat background bentuk unik",
+      "svg wave gratis untuk website",
+      "generator shape acak online",
+    ],
+  },
   "contrast-checker": {
     en: [
       "color contrast checker",

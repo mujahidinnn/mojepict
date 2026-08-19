@@ -93,6 +93,13 @@ export default function VoiceToTextPage() {
   const [segments, setSegments] = useState<Segment[]>([]);
 
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  // Tracks the last text emitted as "final" for each SpeechRecognition
+  // result index within the current recognition session. Chrome's
+  // continuous mode can re-deliver/revise an already-final result at the
+  // same index, which without this guard causes appendFinalChunk to run
+  // again and duplicate words in the transcript. Cleared whenever a new
+  // recognition session starts, since result indices restart from 0 then.
+  const finalizedRef = useRef<Map<number, string>>(new Map());
   const listeningRef = useRef(listening);
   const continuousRef = useRef(continuous);
   const punctuationRef = useRef(punctuationCommands);
@@ -143,7 +150,18 @@ export default function VoiceToTextPage() {
           const result = event.results[i];
           const text = result[0]?.transcript ?? "";
           if (result.isFinal) {
-            appendFinalChunk(text);
+            const alreadyFinalized = finalizedRef.current.get(i);
+            if (alreadyFinalized === text) {
+              // Exact re-delivery of a result already committed - skip.
+              continue;
+            }
+            if (alreadyFinalized === undefined) {
+              appendFinalChunk(text);
+            }
+            // If this index was previously finalized with different text,
+            // don't re-append (that's the source of the duplication) - just
+            // update the record so future re-deliveries are recognized too.
+            finalizedRef.current.set(i, text);
           } else {
             interim += text;
           }
@@ -175,6 +193,10 @@ export default function VoiceToTextPage() {
         // uninterrupted instead of cutting off after a few seconds of silence.
         if (listeningRef.current && continuousRef.current) {
           try {
+            // A restarted session renumbers result indices from 0, so
+            // finalization tracking from the previous session no longer
+            // applies here.
+            finalizedRef.current.clear();
             recognition.start();
           } catch {
             // already started; ignore
@@ -206,6 +228,7 @@ export default function VoiceToTextPage() {
     }
     attachHandlers(recognition);
     recognitionRef.current = recognition;
+    finalizedRef.current.clear();
     setInterimText("");
     setListening(true);
     try {
@@ -246,6 +269,7 @@ export default function VoiceToTextPage() {
         if (!recognition) return;
         attachHandlers(recognition);
         recognitionRef.current = recognition;
+        finalizedRef.current.clear();
         try {
           recognition.start();
         } catch {

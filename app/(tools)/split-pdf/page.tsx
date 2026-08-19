@@ -1,31 +1,34 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PDFDocument } from "pdf-lib";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
 import { Dropzone } from "@/components/tools/Dropzone";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
-import { FileText, Scissors } from "lucide-react";
+import { Download, FileText, Scissors } from "lucide-react";
 
 type SplitMode = "range" | "half";
+
+interface SplitResult {
+  name: string;
+  url: string;
+}
 
 function baseName(name: string) {
   return name.replace(/\.pdf$/i, "");
 }
 
-function triggerDownload(bytes: Uint8Array, filename: string) {
-  const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
-  const url = URL.createObjectURL(blob);
+function triggerDownload(url: string, filename: string) {
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   a.click();
-  URL.revokeObjectURL(url);
 }
 
 export default function SplitPdfPage() {
@@ -38,6 +41,21 @@ export default function SplitPdfPage() {
   const [to, setTo] = useState(1);
   const [splitAt, setSplitAt] = useState(1);
   const [processing, setProcessing] = useState(false);
+  const [results, setResults] = useState<SplitResult[]>([]);
+
+  const revokeResults = (list: SplitResult[]) => {
+    list.forEach((r) => URL.revokeObjectURL(r.url));
+  };
+
+  // Revoke any generated result object URLs when the component unmounts.
+  useEffect(() => {
+    return () => {
+      setResults((prev) => {
+        revokeResults(prev);
+        return prev;
+      });
+    };
+  }, []);
 
   const handleFile = useCallback(
     async (f: File) => {
@@ -72,6 +90,10 @@ export default function SplitPdfPage() {
   const reset = () => {
     setFile(null);
     setPageCount(null);
+    setResults((prev) => {
+      revokeResults(prev);
+      return [];
+    });
   };
 
   const runSplit = useCallback(async () => {
@@ -80,6 +102,7 @@ export default function SplitPdfPage() {
     try {
       const bytes = await file.arrayBuffer();
       const name = baseName(file.name);
+      const newResults: SplitResult[] = [];
 
       if (mode === "range") {
         const start = Math.max(1, Math.min(from, pageCount));
@@ -89,7 +112,9 @@ export default function SplitPdfPage() {
         const indices = Array.from({ length: end - start + 1 }, (_, i) => start - 1 + i);
         const pages = await out.copyPages(source, indices);
         pages.forEach((p) => out.addPage(p));
-        triggerDownload(await out.save(), `${name}-p${start}-${end}.pdf`);
+        const outBytes = await out.save();
+        const blob = new Blob([outBytes as BlobPart], { type: "application/pdf" });
+        newResults.push({ name: `${name}-p${start}-${end}.pdf`, url: URL.createObjectURL(blob) });
       } else {
         const at = Math.max(1, Math.min(splitAt, pageCount - 1));
         const source1 = await PDFDocument.load(bytes);
@@ -99,7 +124,9 @@ export default function SplitPdfPage() {
           Array.from({ length: at }, (_, i) => i),
         );
         pages1.forEach((p) => part1.addPage(p));
-        triggerDownload(await part1.save(), `${name}-part1.pdf`);
+        const part1Bytes = await part1.save();
+        const blob1 = new Blob([part1Bytes as BlobPart], { type: "application/pdf" });
+        newResults.push({ name: `${name}-part1.pdf`, url: URL.createObjectURL(blob1) });
 
         const source2 = await PDFDocument.load(bytes);
         const part2 = await PDFDocument.create();
@@ -108,8 +135,15 @@ export default function SplitPdfPage() {
           Array.from({ length: pageCount - at }, (_, i) => at + i),
         );
         pages2.forEach((p) => part2.addPage(p));
-        triggerDownload(await part2.save(), `${name}-part2.pdf`);
+        const part2Bytes = await part2.save();
+        const blob2 = new Blob([part2Bytes as BlobPart], { type: "application/pdf" });
+        newResults.push({ name: `${name}-part2.pdf`, url: URL.createObjectURL(blob2) });
       }
+
+      setResults((prev) => {
+        revokeResults(prev);
+        return newResults;
+      });
 
       toast({ title: t("common.success"), description: t("toast.success.downloaded") });
     } catch {
@@ -198,6 +232,44 @@ export default function SplitPdfPage() {
                   onChange={(e) => setSplitAt(Number(e.target.value))}
                   className="h-11"
                 />
+              </div>
+            )}
+
+            {results.length > 0 && (
+              <div className="flex flex-col gap-4">
+                {results.map((result) => (
+                  <div key={result.url} className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate text-sm font-medium">{result.name}</span>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        className="shrink-0 gap-2"
+                        onClick={() => triggerDownload(result.url, result.name)}
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        {t("action.download")}
+                      </Button>
+                    </div>
+                    <iframe
+                      src={result.url}
+                      className="h-[360px] w-full rounded-lg border"
+                      title={result.name}
+                    />
+                  </div>
+                ))}
+                {results.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full gap-2"
+                    onClick={() => results.forEach((r) => triggerDownload(r.url, r.name))}
+                  >
+                    <Download className="h-4 w-4" />
+                    {t("tool.split-pdf.downloadAll")}
+                  </Button>
+                )}
               </div>
             )}
 

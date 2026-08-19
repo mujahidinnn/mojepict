@@ -204,7 +204,7 @@ export default function ImageSplitterPage() {
                 {pieces.map((src, i) => (
                   <div
                     key={i}
-                    className="relative aspect-square w-32 border-2 border-white/10 shadow-md overflow-hidden rounded-md animate-in fade-in zoom-in-95 duration-300"
+                    className="relative aspect-square w-32 border-2 border-white/10 shadow-md overflow-hidden animate-in fade-in zoom-in-95 duration-300"
                   >
                     <Image
                       src={src}

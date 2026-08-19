@@ -175,6 +175,7 @@ export const id = {
   "tool.photobooth.label.frame": "Warna Bingkai",
   "tool.photobooth.hint.empty": "Masukkan teks untuk membuat QR",
   "tool.photobooth.hint.camera": "Akses kamera ditolak.",
+  "tool.photobooth.hint.cameraUnavailable": "Kamera sedang dipakai aplikasi lain atau tidak ditemukan.",
 
   "tool.image-splitter.name": "Pemotong Gambar Grid",
   "tool.image-splitter.description":
@@ -444,6 +445,23 @@ export const id = {
   "tool.gradient-generator.radial": "Radial",
   "tool.gradient-generator.angle": "Sudut",
   "tool.gradient-generator.colors": "Warna",
+  "tool.wave-generator.name": "Wave & Shape Generator",
+  "tool.wave-generator.description": "Buat pembatas section bergelombang (wave) untuk website dan bentuk blob organik untuk background foto profil, lalu unduh sebagai SVG atau PNG.",
+  "tool.wave-generator.mode.wave": "Wave",
+  "tool.wave-generator.mode.blob": "Blob",
+  "tool.wave-generator.layers": "Layer",
+  "tool.wave-generator.addLayer": "Tambah layer",
+  "tool.wave-generator.amplitude": "Amplitudo",
+  "tool.wave-generator.frequency": "Frekuensi",
+  "tool.wave-generator.baseline": "Posisi Dasar",
+  "tool.wave-generator.opacity": "Opasitas",
+  "tool.wave-generator.flip": "Balik (pembatas bawah)",
+  "tool.wave-generator.color": "Warna",
+  "tool.wave-generator.randomize": "Acak",
+  "tool.wave-generator.points": "Jumlah Titik",
+  "tool.wave-generator.irregularity": "Ketidakberaturan",
+  "tool.wave-generator.downloadSvg": "Unduh SVG",
+  "tool.wave-generator.downloadPng": "Unduh PNG",
 
   "tool.contrast-checker.name": "Contrast Checker",
   "tool.contrast-checker.description":
@@ -505,6 +523,7 @@ export const id = {
   "tool.split-pdf.splitAfter": "Pisah setelah halaman",
   "tool.split-pdf.split": "Pisah PDF",
   "tool.split-pdf.changeFile": "Ganti file",
+  "tool.split-pdf.downloadAll": "Unduh semua",
 
   "tool.image-to-pdf.name": "Gambar ke PDF",
   "tool.image-to-pdf.description":

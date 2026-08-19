@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { PDFDocumentProxy } from "pdfjs-dist";
+import type { PDFDocumentProxy, RenderTask } from "pdfjs-dist";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
@@ -116,6 +116,7 @@ export default function PdfEditorPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const pageScalesRef = useRef<Record<number, number>>({});
+  const renderTaskRef = useRef<RenderTask | null>(null);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const draggingTextRef = useRef<{ id: string; offsetX: number; offsetY: number } | null>(null);
 
@@ -174,7 +175,24 @@ export default function PdfEditorPage() {
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
       const transform = outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : undefined;
-      await page.render({ canvasContext: ctx, viewport, transform } as never).promise;
+
+      // Cancel any still-running render from a previous page before starting
+      // a new one - otherwise two renders can race on the same <canvas> and
+      // pdf.js throws "Cannot use the same canvas during multiple render()
+      // operations" or leaves a mixed/broken preview behind.
+      renderTaskRef.current?.cancel();
+      const renderTask = page.render({ canvasContext: ctx, viewport, transform } as never);
+      renderTaskRef.current = renderTask;
+      try {
+        await renderTask.promise;
+      } catch (err) {
+        // A cancelled render rejects its promise by design - swallow that
+        // one case and let the render that superseded it own the canvas.
+        const name = (err as { name?: string } | undefined)?.name;
+        if (name === "RenderingCancelledException") return;
+        throw err;
+      }
+      if (renderTaskRef.current === renderTask) renderTaskRef.current = null;
       if (cancelled) return;
       setPageSize({ width: viewport.width, height: viewport.height });
       setRendering(false);
@@ -204,6 +222,8 @@ export default function PdfEditorPage() {
     })();
     return () => {
       cancelled = true;
+      renderTaskRef.current?.cancel();
+      renderTaskRef.current = null;
     };
   }, [pdfDoc, currentPage]);
 
@@ -781,7 +801,7 @@ export default function PdfEditorPage() {
                 <Button
                   variant="outline"
                   size="icon"
-                  disabled={currentPage <= 1}
+                  disabled={currentPage <= 1 || rendering}
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -792,7 +812,7 @@ export default function PdfEditorPage() {
                 <Button
                   variant="outline"
                   size="icon"
-                  disabled={currentPage >= numPages}
+                  disabled={currentPage >= numPages || rendering}
                   onClick={() => setCurrentPage((p) => Math.min(numPages, p + 1))}
                 >
                   <ChevronRight className="h-4 w-4" />

@@ -2,10 +2,16 @@
 
 import { useMemo, useRef, useState } from "react";
 import {
+  AlertTriangle,
   Bell,
+  Briefcase,
+  Cake,
+  ClipboardCheck,
   Copy,
   Download,
+  Flower2,
   Gift,
+  Heart,
   Megaphone,
   PartyPopper,
   Share2,
@@ -49,6 +55,12 @@ const CATEGORIES: Category[] = [
   { id: "invitation", label: "Undangan & Acara", icon: PartyPopper },
   { id: "greeting", label: "Ucapan & Selamat", icon: Sparkles },
   { id: "reminder", label: "Pengingat", icon: Bell },
+  { id: "condolence", label: "Duka Cita", icon: Flower2 },
+  { id: "birthday", label: "Ucapan Ulang Tahun", icon: Cake },
+  { id: "job-vacancy", label: "Lowongan Kerja", icon: Briefcase },
+  { id: "order-confirmation", label: "Konfirmasi Pesanan", icon: ClipboardCheck },
+  { id: "urgent", label: "Info Darurat", icon: AlertTriangle },
+  { id: "thank-you", label: "Terima Kasih", icon: Heart },
   { id: "custom", label: "Kosong (Custom)", icon: Copy },
 ];
 
@@ -72,6 +84,18 @@ const TEMPLATES: Record<string, Template[]> = {
       text:
         "Kabar gembira! 🚀\n\nKami baru saja meluncurkan {produk} dengan harga perkenalan diskon {diskon}, hanya sampai {tanggal}.\n\nInfo lengkap & pemesanan hubungi {kontak}.",
     },
+    {
+      id: "cashback-promo",
+      label: "Cashback",
+      text:
+        "Yeay! 🥳 Belanja {produk} sekarang dan dapetin cashback {diskon} langsung masuk saldo kamu.\n\nBerlaku sampai {tanggal} aja, buruan checkout sebelum kehabisan! Order via {kontak}.",
+    },
+    {
+      id: "promo-korporat",
+      label: "Penawaran Korporat",
+      text:
+        "Kepada Pelanggan Yth,\n\nDengan hormat, kami informasikan bahwa {produk} kini tersedia dengan penawaran khusus diskon {diskon} yang berlaku hingga {tanggal}.\n\nUntuk informasi lebih lanjut mengenai syarat dan ketentuan, silakan hubungi {kontak}.\n\nTerima kasih atas kepercayaan Anda.",
+    },
   ],
   announcement: [
     {
@@ -85,6 +109,18 @@ const TEMPLATES: Record<string, Template[]> = {
       label: "Perubahan Jadwal",
       text:
         "PEMBERITAHUAN PERUBAHAN JADWAL\n\nKepada {tujuan},\n\n{isi}\n\nMohon maaf atas ketidaknyamanannya. Terima kasih atas pengertiannya.\n\nHormat kami,\n{pengirim}",
+    },
+    {
+      id: "info-santai",
+      label: "Info Santai",
+      text:
+        "Hai semua! 👋\n\n{isi}\n\nAda pertanyaan? Langsung aja hubungi {pengirim} ya. Makasih!",
+    },
+    {
+      id: "pengumuman-libur",
+      label: "Pengumuman Hari Libur",
+      text:
+        "PENGUMUMAN HARI LIBUR\n\nKepada Yth. {tujuan},\n\nSehubungan dengan {isi}, kami informasikan bahwa operasional akan diliburkan mulai {tanggal}.\n\nAtas perhatian dan pengertiannya kami ucapkan terima kasih.\n\nHormat kami,\n{pengirim}",
     },
   ],
   invitation: [
@@ -100,6 +136,18 @@ const TEMPLATES: Record<string, Template[]> = {
       text:
         "Halo {nama}! 👋\n\nYuk gabung di {acara}, akan membahas hal-hal seru dan bermanfaat untukmu.\n\nTanggal: {tanggal}\nWaktu: {waktu}\nTempat: {tempat}\n\nDaftar atau info lebih lanjut hubungi {kontak}. Ditunggu kehadirannya!",
     },
+    {
+      id: "undangan-santai",
+      label: "Ajakan Santai",
+      text:
+        "Woy {nama}! 🙌\n\nDatang yuk ke {acara} tanggal {tanggal} jam {waktu} di {tempat}. Seru banget nih, jangan sampai kelewatan!\n\nRSVP ke {kontak} ya.",
+    },
+    {
+      id: "undangan-resmi",
+      label: "Undangan Resmi",
+      text:
+        "Dengan hormat,\n\nKami mengundang Bapak/Ibu {nama} untuk menghadiri {acara} yang akan diselenggarakan pada:\n\nHari/Tanggal: {tanggal}\nPukul: {waktu}\nTempat: {tempat}\n\nMengingat pentingnya acara ini, kami mengharapkan kehadiran Bapak/Ibu tepat waktu. Konfirmasi kehadiran dapat disampaikan melalui {kontak}.\n\nAtas perhatian dan kehadirannya, kami ucapkan terima kasih.",
+    },
   ],
   greeting: [
     {
@@ -114,6 +162,18 @@ const TEMPLATES: Record<string, Template[]> = {
       text:
         "Menyambut {momen}, kami dari {pengirim} mengucapkan selamat merayakan.\n\nSemoga {harapan}. Mohon maaf lahir dan batin.\n\nSalam hangat,\n{pengirim}",
     },
+    {
+      id: "ucapan-santai",
+      label: "Ucapan Santai",
+      text:
+        "Wah selamat ya atas {momen}! 🎉 Bangga banget deh sama kamu. Semoga {harapan} terus ke depannya!",
+    },
+    {
+      id: "ucapan-formal",
+      label: "Ucapan Formal",
+      text:
+        "Sehubungan dengan {momen}, kami dari {pengirim} mengucapkan selamat dan sukses.\n\nSemoga {harapan} senantiasa menyertai. Terima kasih atas kerja sama yang telah terjalin.\n\nHormat kami,\n{pengirim}",
+    },
   ],
   reminder: [
     {
@@ -127,6 +187,126 @@ const TEMPLATES: Record<string, Template[]> = {
       label: "Pengingat Pembayaran",
       text:
         "PENGINGAT PEMBAYARAN\n\nHalo {nama},\n\nIni pengingat untuk {kegiatan} yang jatuh tempo pada {tanggal} pukul {waktu}.\n\nPembayaran dapat dilakukan di {tempat}. Terima kasih atas perhatiannya.",
+    },
+    {
+      id: "pengingat-santai",
+      label: "Reminder Santai",
+      text:
+        "Halo {nama}! ⏰ Jangan lupa ya, {kegiatan} udah deket nih, tanggal {tanggal} jam {waktu} di {tempat}. Yuk siap-siap!",
+    },
+    {
+      id: "pengingat-deadline",
+      label: "Pengingat Deadline",
+      text:
+        "PENGINGAT TENGGAT WAKTU\n\nKepada {nama},\n\nKami ingatkan kembali bahwa {kegiatan} memiliki batas waktu hingga {tanggal} pukul {waktu}.\n\nMohon segera diselesaikan sebelum tenggat waktu berakhir. Terima kasih atas perhatiannya.",
+    },
+  ],
+  condolence: [
+    {
+      id: "berita-duka",
+      label: "Berita Duka",
+      text:
+        "Turut berduka cita atas berpulangnya {nama} pada {tanggal} di {lokasi}.\n\nSemoga amal ibadah beliau diterima di sisi-Nya dan keluarga yang ditinggalkan diberikan ketabahan.\n\nInnalillahi wa inna ilaihi raji'un.",
+    },
+    {
+      id: "belasungkawa-singkat",
+      label: "Belasungkawa Singkat",
+      text:
+        "Turut berdukacita yang sedalam-dalamnya atas wafatnya {nama}. 🕊️\n\nSemoga Allah SWT memberikan tempat terbaik di sisi-Nya dan kesabaran bagi keluarga yang ditinggalkan.",
+    },
+    {
+      id: "info-pemakaman",
+      label: "Info Pemakaman",
+      text:
+        "INFO DUKA CITA\n\nTelah berpulang ke rahmatullah {nama} pada {tanggal}.\n\nPemakaman/persemayaman akan dilaksanakan di {lokasi} pukul {waktu}.\n\nMohon doa dan kehadirannya. Turut berduka cita.",
+    },
+  ],
+  birthday: [
+    {
+      id: "ucapan-ultah",
+      label: "Ucapan Ulang Tahun",
+      text:
+        "Selamat ulang tahun, {nama}! 🎂🎉\n\nDi usia yang ke-{usia} ini, semoga {harapan} dan selalu diberikan kesehatan serta kebahagiaan.\n\nSalam hangat,\n{pengirim}",
+    },
+    {
+      id: "ultah-singkat",
+      label: "Ucapan Singkat",
+      text:
+        "Happy birthday, {nama}! 🎈\n\nSemoga panjang umur, sehat selalu, dan semua impianmu tercapai. 🎊",
+    },
+    {
+      id: "ucapan-ultah-rekan-kerja",
+      label: "Untuk Rekan Kerja",
+      text:
+        "Selamat ulang tahun ke-{usia}, {nama}! 🎁\n\nTerima kasih atas dedikasi dan kerja samanya selama ini. Semoga di tahun baru ini {harapan}.\n\nSalam,\n{pengirim}",
+    },
+  ],
+  "job-vacancy": [
+    {
+      id: "info-loker",
+      label: "Info Lowongan",
+      text:
+        "LOWONGAN KERJA 💼\n\n{perusahaan} membuka kesempatan berkarier untuk posisi {posisi}.\n\nKualifikasi:\n{kualifikasi}\n\nKirimkan CV dan lamaran ke {kontak} paling lambat {tanggal}.\n\nBergabunglah bersama kami!",
+    },
+    {
+      id: "loker-singkat",
+      label: "Loker Singkat",
+      text:
+        "Kami membuka lowongan untuk posisi {posisi} di {perusahaan}. 💼\n\nBerminat? Kirim lamaran ke {kontak} sebelum {tanggal}.",
+    },
+    {
+      id: "panggilan-interview",
+      label: "Panggilan Interview",
+      text:
+        "UNDANGAN INTERVIEW\n\nHalo {nama},\n\nSelamat! Anda lolos tahap seleksi untuk posisi {posisi} di {perusahaan}.\n\nInterview akan dilaksanakan pada:\nTanggal: {tanggal}\nWaktu: {waktu}\nTempat: {tempat}\n\nMohon konfirmasi kehadiran ke {kontak}. Sampai jumpa!",
+    },
+  ],
+  "order-confirmation": [
+    {
+      id: "konfirmasi-pesanan",
+      label: "Konfirmasi Pesanan",
+      text:
+        "KONFIRMASI PESANAN ✅\n\nHalo {nama}, pesanan Anda dengan nomor {nomor_pesanan} telah kami terima.\n\nTotal pembayaran: {total}\nTanggal pemesanan: {tanggal}\n\nPesanan akan segera kami proses. Terima kasih telah berbelanja!",
+    },
+    {
+      id: "konfirmasi-pembayaran",
+      label: "Konfirmasi Pembayaran",
+      text:
+        "Halo {nama}, pembayaran untuk pesanan {nomor_pesanan} sebesar {total} telah kami terima pada {tanggal}. ✅\n\nTerima kasih atas kepercayaan Anda!",
+    },
+    {
+      id: "pesanan-dikirim",
+      label: "Pesanan Dikirim",
+      text:
+        "PESANAN DIKIRIM 📦\n\nHalo {nama}, pesanan {nomor_pesanan} kamu sudah dikirim pada {tanggal}.\n\nNomor resi: {kontak}\n\nTerima kasih sudah berbelanja bersama kami!",
+    },
+  ],
+  urgent: [
+    {
+      id: "info-darurat",
+      label: "Info Darurat",
+      text:
+        "⚠️ INFO PENTING ⚠️\n\nKepada {tujuan},\n\n{isi}\n\nMohon segera ditindaklanjuti. Terima kasih atas perhatian dan kerja samanya.\n\n{pengirim}",
+    },
+    {
+      id: "pengumuman-mendesak",
+      label: "Pengumuman Mendesak",
+      text:
+        "PERHATIAN! 🚨\n\n{isi}\n\nBerlaku efektif mulai {tanggal}. Mohon segera diinformasikan kepada seluruh {tujuan}.\n\nTerima kasih,\n{pengirim}",
+    },
+  ],
+  "thank-you": [
+    {
+      id: "ucapan-terima-kasih",
+      label: "Ucapan Terima Kasih",
+      text:
+        "Terima kasih banyak, {nama}, atas kepercayaan Anda kepada {pengirim}. 🙏\n\nKami sangat menghargai dukungan Anda dan berharap dapat terus melayani dengan baik.",
+    },
+    {
+      id: "follow-up",
+      label: "Follow-up",
+      text:
+        "Halo {nama}, kami ingin menindaklanjuti {kegiatan} yang lalu.\n\nApakah ada hal yang bisa kami bantu lebih lanjut? Jangan ragu menghubungi {kontak} ya.\n\nTerima kasih,\n{pengirim}",
     },
   ],
   custom: [

@@ -90,7 +90,13 @@ export default function TextToVoicePage() {
 
   const handlePlay = () => {
     if (!supported || !text.trim()) return;
-    window.speechSynthesis.cancel();
+    // Only cancel when something is actually speaking/queued - calling
+    // cancel() unconditionally right before speak() in the same tick is a
+    // known Chromium bug where the following speak() can be silently
+    // dropped with no error event, so an idle engine should be left alone.
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+      window.speechSynthesis.cancel();
+    }
     const utter = new SpeechSynthesisUtterance(text.slice(0, MAX_CHARS));
     const voice = voices.find((v) => v.voiceURI === voiceURI);
     if (voice) {
@@ -118,7 +124,10 @@ export default function TextToVoicePage() {
     utter.onboundary = (e) => {
       if (e.name === "word" || e.name === undefined) setSpokenAt(e.charIndex);
     };
-    window.speechSynthesis.speak(utter);
+    // Defer speak() by one tick so a just-issued cancel() has a chance to
+    // flush before the engine is asked to speak again - calling both in the
+    // same synchronous task is what triggers the silent-drop bug above.
+    setTimeout(() => window.speechSynthesis.speak(utter), 0);
   };
 
   const handlePause = () => {

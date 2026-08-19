@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PDFDocument } from "pdf-lib";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
-import { ArrowDown, ArrowUp, FileText, Merge, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Download, FileText, Merge, X } from "lucide-react";
 
 interface PdfEntry {
   id: string;
@@ -32,6 +32,17 @@ export default function MergePdfPage() {
   const [entries, setEntries] = useState<PdfEntry[]>([]);
   const [merging, setMerging] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [resultUrl, setResultUrl] = useState<string | null>(null);
+
+  // Revoke the generated result's object URL when the component unmounts.
+  useEffect(() => {
+    return () => {
+      setResultUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return prev;
+      });
+    };
+  }, []);
 
   const addFiles = useCallback(
     (files: File[]) => {
@@ -64,6 +75,22 @@ export default function MergePdfPage() {
     setEntries((prev) => prev.filter((e) => e.id !== id));
   };
 
+  const resetAll = () => {
+    setEntries([]);
+    setResultUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+  };
+
+  const downloadMerged = () => {
+    if (!resultUrl) return;
+    const a = document.createElement("a");
+    a.href = resultUrl;
+    a.download = "merged.pdf";
+    a.click();
+  };
+
   const merge = useCallback(async () => {
     if (entries.length < 2) return;
     setMerging(true);
@@ -82,11 +109,10 @@ export default function MergePdfPage() {
       const mergedBytes = await merged.save();
       const blob = new Blob([mergedBytes as BlobPart], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "merged.pdf";
-      a.click();
-      URL.revokeObjectURL(url);
+      setResultUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return url;
+      });
 
       setProgress(100);
       toast({ title: t("common.success"), description: t("toast.success.downloaded") });
@@ -171,18 +197,37 @@ export default function MergePdfPage() {
 
         {merging && <Progress value={progress} className="h-1.5" />}
 
+        {resultUrl && (
+          <iframe
+            src={resultUrl}
+            className="h-[480px] w-full rounded-lg border"
+            title="PDF preview"
+          />
+        )}
+
         <ToolActionBar
           primaryLabel={t("tool.merge-pdf.merge")}
           primaryIcon={<Merge className="h-4 w-4" />}
           onPrimary={merge}
           primaryDisabled={entries.length < 2 || merging}
-          onReset={entries.length ? () => setEntries([]) : undefined}
+          onReset={entries.length ? resetAll : undefined}
           resetLabel={t("action.clearAll")}
         >
           {entries.length === 1 && (
             <p className="text-center text-xs text-muted-foreground">
               {t("tool.merge-pdf.needTwo")}
             </p>
+          )}
+          {resultUrl && (
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full gap-2"
+              onClick={downloadMerged}
+            >
+              <Download className="h-4 w-4" />
+              {t("action.download")}
+            </Button>
           )}
         </ToolActionBar>
       </div>

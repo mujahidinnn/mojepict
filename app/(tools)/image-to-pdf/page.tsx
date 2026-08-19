@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PDFDocument } from "pdf-lib";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
-import { ArrowDown, ArrowUp, FileOutput, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Download, FileOutput, X } from "lucide-react";
 
 interface ImgEntry {
   id: string;
@@ -64,6 +64,17 @@ export default function ImageToPdfPage() {
   const [pageSize, setPageSize] = useState<PageSize>("auto");
   const [converting, setConverting] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // Revoke the generated preview's object URL when the component unmounts.
+  useEffect(() => {
+    return () => {
+      setPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return prev;
+      });
+    };
+  }, []);
 
   const addFiles = useCallback(
     (files: File[]) => {
@@ -95,6 +106,18 @@ export default function ImageToPdfPage() {
   const clearAll = () => {
     entries.forEach((e) => URL.revokeObjectURL(e.preview));
     setEntries([]);
+    setPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+  };
+
+  const downloadPdf = () => {
+    if (!previewUrl) return;
+    const a = document.createElement("a");
+    a.href = previewUrl;
+    a.download = "images.pdf";
+    a.click();
   };
 
   const convert = useCallback(async () => {
@@ -137,11 +160,10 @@ export default function ImageToPdfPage() {
       const bytes = await pdf.save();
       const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "images.pdf";
-      a.click();
-      URL.revokeObjectURL(url);
+      setPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return url;
+      });
 
       setProgress(100);
       toast({ title: t("common.success"), description: t("toast.success.downloaded") });
@@ -246,6 +268,14 @@ export default function ImageToPdfPage() {
 
             {converting && <Progress value={progress} className="h-1.5" />}
 
+            {previewUrl && (
+              <iframe
+                src={previewUrl}
+                className="h-[480px] w-full rounded-lg border"
+                title="PDF preview"
+              />
+            )}
+
             <ToolActionBar
               primaryLabel={t("tool.image-to-pdf.convert")}
               primaryIcon={<FileOutput className="h-4 w-4" />}
@@ -253,7 +283,14 @@ export default function ImageToPdfPage() {
               primaryDisabled={converting}
               onReset={clearAll}
               resetLabel={t("action.clearAll")}
-            />
+            >
+              {previewUrl && (
+                <Button type="button" variant="secondary" className="w-full gap-2" onClick={downloadPdf}>
+                  <Download className="h-4 w-4" />
+                  {t("action.download")}
+                </Button>
+              )}
+            </ToolActionBar>
           </>
         )}
       </div>

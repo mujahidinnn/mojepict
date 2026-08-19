@@ -69,6 +69,7 @@ import {
   Type,
   Unlock,
   Volume2,
+  Waves,
   Workflow,
   Zap,
 } from "lucide-react";
@@ -151,6 +152,7 @@ export const TOOL_ICONS: Record<string, LucideIcon> = {
   Megaphone,
   Mic,
   Volume2,
+  Waves,
 };
 
 /** Solid, saturated icon-tile background, meant to read as color at rest, not just on hover. */

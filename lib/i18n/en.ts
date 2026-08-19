@@ -177,6 +177,7 @@ export const en = {
   "tool.photobooth.label.frame": "Frame Color",
   "tool.photobooth.hint.empty": "Enter text to generate QR",
   "tool.photobooth.hint.camera": "Camera access denied.",
+  "tool.photobooth.hint.cameraUnavailable": "Camera is busy or unavailable.",
 
   "tool.image-splitter.name": "Image Splitter",
   "tool.image-splitter.description":
@@ -446,6 +447,23 @@ export const en = {
   "tool.gradient-generator.radial": "Radial",
   "tool.gradient-generator.angle": "Angle",
   "tool.gradient-generator.colors": "Colors",
+  "tool.wave-generator.name": "Wave & Shape Generator",
+  "tool.wave-generator.description": "Generate SVG wave dividers for your website and organic blob shapes for profile backgrounds, then download as SVG or PNG.",
+  "tool.wave-generator.mode.wave": "Wave",
+  "tool.wave-generator.mode.blob": "Blob",
+  "tool.wave-generator.layers": "Layers",
+  "tool.wave-generator.addLayer": "Add layer",
+  "tool.wave-generator.amplitude": "Amplitude",
+  "tool.wave-generator.frequency": "Frequency",
+  "tool.wave-generator.baseline": "Baseline",
+  "tool.wave-generator.opacity": "Opacity",
+  "tool.wave-generator.flip": "Flip (bottom divider)",
+  "tool.wave-generator.color": "Color",
+  "tool.wave-generator.randomize": "Randomize",
+  "tool.wave-generator.points": "Points",
+  "tool.wave-generator.irregularity": "Irregularity",
+  "tool.wave-generator.downloadSvg": "Download SVG",
+  "tool.wave-generator.downloadPng": "Download PNG",
 
   "tool.contrast-checker.name": "Contrast Checker",
   "tool.contrast-checker.description":
@@ -507,6 +525,7 @@ export const en = {
   "tool.split-pdf.splitAfter": "Split after page",
   "tool.split-pdf.split": "Split PDF",
   "tool.split-pdf.changeFile": "Change file",
+  "tool.split-pdf.downloadAll": "Download all",
 
   "tool.image-to-pdf.name": "Image to PDF",
   "tool.image-to-pdf.description":

@@ -582,6 +582,7 @@ export default function PhotoBoothPage() {
   const exportRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef(0);
   const streamRef = useRef<MediaStream | null>(null);
+  const cameraRequestIdRef = useRef(0);
   const thumbCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const lastSnapshotAtRef = useRef(0);
   const [snapshotUrl, setSnapshotUrl] = useState<string | null>(null);
@@ -910,8 +911,16 @@ export default function PhotoBoothPage() {
   };
 
   const startCamera = async (mode: "user" | "environment") => {
-    if (streamRef.current)
+    // Concurrency guard: if startCamera is called again (e.g. rapid
+    // flip-camera taps, or a mount-effect double-invoke) before this call's
+    // getUserMedia() resolves, only the most recent call may win. Stale
+    // calls stop whatever stream they acquired instead of assigning it, so
+    // no MediaStream handle is ever leaked/orphaned.
+    const requestId = ++cameraRequestIdRef.current;
+    if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -920,15 +929,34 @@ export default function PhotoBoothPage() {
           height: { ideal: 720 },
         },
       });
+      if (requestId !== cameraRequestIdRef.current) {
+        // A newer startCamera() call started in the meantime; this stream
+        // lost the race, so stop it immediately instead of leaking it.
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
+      // No other in-flight call can have written streamRef.current here:
+      // it was cleared at the top of this call, and any call that resolved
+      // in the meantime with an older requestId would have hit the guard
+      // above instead of reaching this assignment.
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
       }
     } catch (err) {
+      if (requestId !== cameraRequestIdRef.current) return;
+      // Only an explicit permission refusal is actually "access denied" -
+      // NotReadableError (camera busy/in use by another app), AbortError,
+      // OverconstrainedError, and NotFoundError are different failure modes
+      // and must not be mislabeled as a permission problem.
+      const name = err instanceof DOMException ? err.name : undefined;
+      const isPermissionDenied = name === "NotAllowedError" || name === "PermissionDeniedError";
       toast({
         variant: "destructive",
-        description: t("tool.photobooth.hint.camera"),
+        description: isPermissionDenied
+          ? t("tool.photobooth.hint.camera")
+          : t("tool.photobooth.hint.cameraUnavailable"),
       });
     }
   };

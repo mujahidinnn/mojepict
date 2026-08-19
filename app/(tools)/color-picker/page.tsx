@@ -4,9 +4,8 @@ import { useState } from "react";
 import { useI18n } from "@/lib/i18n/context";
 import { useToast } from "@/hooks/use-toast";
 import { ToolShell } from "@/components/tools/ToolShell";
+import { ColorPickerPanel } from "@/components/tools/ColorPickerPanel";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { hexToRgb, rgbToHsl } from "@/lib/color";
@@ -36,26 +35,7 @@ export default function ColorPickerPage() {
       description={t("tool.color-picker.description")}
     >
       <div className="flex flex-col gap-6 max-w-xl">
-        <div className="flex items-center gap-4">
-          <div className="relative h-16 w-16 rounded-xl border overflow-hidden shrink-0">
-            <div className="absolute inset-0" style={{ background: color }} />
-            <input
-              type="color"
-              value={color}
-              onChange={(e) => setColor(e.target.value)}
-              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <Label>Hex value</Label>
-            <Input
-              value={color.toUpperCase()}
-              onChange={(e) => setColor(e.target.value)}
-              className="font-mono w-36"
-              maxLength={7}
-            />
-          </div>
-        </div>
+        <ColorPickerPanel value={color} onChange={setColor} />
 
         <div className="flex flex-col gap-3">
           {formats.map(({ label, value }) => (
