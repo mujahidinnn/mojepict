@@ -1,4 +1,17 @@
+import { useId } from "react";
+import { MOJEPICT_LOGO_PATH, MOJEPICT_LOGO_VIEWBOX } from "@/components/icons/MojepictLogo";
+
+// Position/size the logo mark (its own viewBox is MOJEPICT_LOGO_VIEWBOX) inside
+// the front card's 110x110 slot at (152.5, 110), preserving its aspect ratio.
+// Rendered as a plain <path transform> rather than a nested <svg>: a nested
+// <svg clip-path> here mis-renders in Chromium once an ancestor also has an
+// opacity/filter (as the faded mobile copy of this illustration does).
+const LOGO_SCALE = 110 / MOJEPICT_LOGO_VIEWBOX.height;
+const LOGO_TX = 152.5 - MOJEPICT_LOGO_VIEWBOX.x * LOGO_SCALE;
+const LOGO_TY = 110 - MOJEPICT_LOGO_VIEWBOX.y * LOGO_SCALE;
+
 export function HeroIllustration() {
+  const clipId = useId();
   return (
     <svg
       viewBox="0 0 360 300"
@@ -33,7 +46,7 @@ export function HeroIllustration() {
       {/* front photo card, tilted opposite way, showing the Mojepict logo as its "photo" */}
       <g transform="rotate(6 210 150)">
         <defs>
-          <clipPath id="hero-front-card-clip">
+          <clipPath id={clipId}>
             <rect x="150" y="90" width="150" height="150" rx="16" />
           </clipPath>
         </defs>
@@ -46,15 +59,14 @@ export function HeroIllustration() {
           className="fill-card stroke-border"
           strokeWidth="1.5"
         />
-        <image
-          href="/mojepict-logo.png"
-          x="170"
-          y="110"
-          width="110"
-          height="110"
-          clipPath="url(#hero-front-card-clip)"
-          preserveAspectRatio="xMidYMid meet"
-        />
+        <g clipPath={`url(#${clipId})`} className="text-foreground">
+          <path
+            d={MOJEPICT_LOGO_PATH}
+            fillRule="evenodd"
+            fill="currentColor"
+            transform={`translate(${LOGO_TX} ${LOGO_TY}) scale(${LOGO_SCALE})`}
+          />
+        </g>
       </g>
 
       {/* crop-corner accents, echoing the image-cropper tool */}

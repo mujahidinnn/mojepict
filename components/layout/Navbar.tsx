@@ -22,7 +22,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Sidebar } from "./Sidebar";
-import Image from "next/image";
+import { MojepictLogo } from "@/components/icons/MojepictLogo";
+import { CATEGORIES, TOOLS } from "@/lib/tools";
 
 const SearchHint = () => (
   <span className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground">
@@ -49,6 +50,12 @@ export function Navbar() {
     window.dispatchEvent(new CustomEvent("mojepict:open-palette"));
   };
 
+  const slug = pathname.split("/").pop() ?? "";
+  const currentTool = TOOLS.find((tool) => tool.slug === slug);
+  const pageLabel = currentTool
+    ? t(`tool.${currentTool.id}.name` as any)
+    : slug.replace(/-/g, " ");
+
   return (
     <header className="sticky top-0 z-40 flex h-12 items-center gap-1 sm:gap-3 border-b bg-background/80 backdrop-blur-sm px-2 sm:px-4">
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
@@ -69,30 +76,31 @@ export function Navbar() {
       </Sheet>
 
       <Link href="/" className="flex min-w-0 items-center gap-1.5 lg:hidden">
-        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-foreground">
-          <Image
-            src="/mj.png"
-            alt="M"
-            width={30}
-            height={30}
-            className="object-contain"
-          />
-        </div>
+        <MojepictLogo size={20} className="shrink-0" />
         <span className="truncate text-sm font-semibold capitalize">
-          {pathname !== "/"
-            ? pathname.split("/").pop()?.replace(/-/g, " ")
-            : t("site.name")}
+          {pathname !== "/" ? pageLabel : t("site.name")}
         </span>
       </Link>
 
       {pathname !== "/" && (
-        <nav className="hidden lg:flex items-center gap-1 text-sm text-muted-foreground">
+        <nav
+          aria-label="Breadcrumb"
+          className="hidden lg:flex items-center gap-1 text-sm text-muted-foreground min-w-0"
+        >
           <Link href="/" className="hover:text-foreground transition-colors">
             {t("site.name")}
           </Link>
+          {currentTool && (
+            <>
+              <span>/</span>
+              <span className="capitalize">
+                {t(CATEGORIES[currentTool.category].labelKey as any)}
+              </span>
+            </>
+          )}
           <span>/</span>
-          <span className="text-foreground font-medium capitalize">
-            {pathname.split("/").pop()?.replace(/-/g, " ")}
+          <span className="truncate text-foreground font-medium capitalize">
+            {pageLabel}
           </span>
         </nav>
       )}

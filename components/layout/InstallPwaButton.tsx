@@ -21,6 +21,10 @@ export function InstallPwaButton() {
       (window.navigator as { standalone?: boolean }).standalone === true;
     setInstalled(isStandalone);
 
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
+
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setInstallEvent(e as BeforeInstallPromptEvent);

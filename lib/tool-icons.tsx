@@ -11,6 +11,7 @@ import {
   Brush,
   Cake,
   Calculator,
+  CalendarClock,
   CalendarDays,
   Camera,
   Clock,
@@ -38,7 +39,9 @@ import {
   Link,
   Link2,
   LucideIcon,
+  Megaphone,
   Merge,
+  Mic,
   PackageOpen,
   PaintbrushVertical,
   Palette,
@@ -55,6 +58,7 @@ import {
   Scaling,
   Scissors,
   Smartphone,
+  Split,
   Star,
   SquareCode,
   SwatchBook,
@@ -64,6 +68,7 @@ import {
   TrendingUp,
   Type,
   Unlock,
+  Volume2,
   Workflow,
   Zap,
 } from "lucide-react";
@@ -115,6 +120,7 @@ export const TOOL_ICONS: Record<string, LucideIcon> = {
   GitCompare,
   HeartPulse,
   Receipt,
+  Split,
   Blend,
   Contrast,
   Fingerprint,
@@ -141,6 +147,10 @@ export const TOOL_ICONS: Record<string, LucideIcon> = {
   Landmark,
   Target,
   HandCoins,
+  CalendarClock,
+  Megaphone,
+  Mic,
+  Volume2,
 };
 
 /** Solid, saturated icon-tile background, meant to read as color at rest, not just on hover. */
@@ -152,6 +162,7 @@ export const CATEGORY_COLORS: Record<string, string> = {
   text: "bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-sm shadow-amber-500/30",
   math: "bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-sm shadow-emerald-500/30",
   dev: "bg-gradient-to-br from-slate-600 to-slate-700 text-white shadow-sm shadow-slate-500/30",
+  productivity: "bg-gradient-to-br from-cyan-500 to-sky-600 text-white shadow-sm shadow-cyan-500/30",
 };
 
 /** Top accent border + hover glow for ToolCard, tinted per category. */
@@ -165,6 +176,8 @@ export const CATEGORY_GLOW: Record<string, string> = {
   text: "border-t-amber-400 hover:border-amber-300/70 hover:shadow-lg hover:shadow-amber-500/10 dark:border-t-amber-500 dark:hover:border-amber-800 dark:hover:shadow-amber-400/10",
   math: "border-t-emerald-400 hover:border-emerald-300/70 hover:shadow-lg hover:shadow-emerald-500/10 dark:border-t-emerald-500 dark:hover:border-emerald-800 dark:hover:shadow-emerald-400/10",
   dev: "border-t-slate-400 hover:border-slate-300/70 hover:shadow-lg hover:shadow-slate-500/10 dark:border-t-slate-500 dark:hover:border-slate-700 dark:hover:shadow-slate-400/10",
+  productivity:
+    "border-t-cyan-400 hover:border-cyan-300/70 hover:shadow-lg hover:shadow-cyan-500/10 dark:border-t-cyan-500 dark:hover:border-cyan-800 dark:hover:shadow-cyan-400/10",
 };
 
 /** Soft blurred wash behind a tool page's own header, tinted per category. */
@@ -176,6 +189,7 @@ export const CATEGORY_WASH: Record<string, string> = {
   text: "bg-amber-500",
   math: "bg-emerald-500",
   dev: "bg-slate-500",
+  productivity: "bg-cyan-500",
 };
 
 export function getToolIconComponent(iconName: string): LucideIcon {

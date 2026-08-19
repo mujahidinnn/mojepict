@@ -25,6 +25,7 @@ export const en = {
   "category.math": "Math",
   "category.color": "Color",
   "category.dev": "Developer",
+  "category.productivity": "Productivity",
 
   // --- Common ---
   "common.undo": "Undo",
@@ -434,6 +435,9 @@ export const en = {
   "tool.tip-calculator.tipAmount": "Tip amount",
   "tool.tip-calculator.total": "Total",
   "tool.tip-calculator.perPerson": "Per person",
+  "tool.split-bill.name": "Split Bill",
+  "tool.split-bill.description":
+    "Split a bill equally, by item with per-person assignment, or by custom percentage/shares, with tax, service charge, and discount handled automatically, then copy or export the result as an image, PDF, or CSV.",
 
   "tool.gradient-generator.name": "Gradient Generator",
   "tool.gradient-generator.description": "Build linear or radial CSS gradients and copy the code.",
@@ -768,14 +772,33 @@ export const en = {
   "layout.sidebar.madeBy": "Made by",
 
   // --- Command palette ---
-  "palette.placeholder": "Type a tool name...",
+  "palette.placeholder": "Search tools by name, category, or keyword...",
   "palette.noResults": "No tools found.",
+  "palette.noResultsHint": "Try a different keyword, or browse by category below.",
   "palette.hint": "Press Enter to open",
+  "palette.recent": "Recent",
+  "palette.popular": "Popular",
+  "palette.results": "Results",
+  "palette.resultsFor": "results for",
 
   // --- Empty / loading states ---
   "state.loading": "Loading...",
   "state.converting": "Converting...",
   "state.empty": "No file selected.",
+
+  // --- Productivity tools ---
+  "tool.schedule-maker.name": "Schedule Maker",
+  "tool.schedule-maker.description":
+    "Build a class, work, or event schedule from ready-made templates or from scratch, switch between table and card layouts, and export a clean, print-ready result to PNG, PDF, or CSV.",
+  "tool.broadcast-maker.name": "Broadcast Maker",
+  "tool.broadcast-maker.description":
+    "Write promo, announcement, invitation, or greeting broadcasts from categorized templates with fill-in variables, then copy, share, or export the result as an image, PDF, or text file.",
+  "tool.text-to-voice.name": "Text to Voice",
+  "tool.text-to-voice.description":
+    "Convert typed or uploaded text into natural speech right in the browser, with adjustable voice, speed, pitch, and volume.",
+  "tool.voice-to-text.name": "Voice to Text",
+  "tool.voice-to-text.description":
+    "Transcribe speech to text live in your browser with interim results, spoken punctuation commands, multi-language support, and an editable, timestamped transcript.",
 };
 
 export type I18nKey = keyof typeof en;

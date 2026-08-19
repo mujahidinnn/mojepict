@@ -22,6 +22,7 @@ export const id = {
   "category.math": "Matematika",
   "category.color": "Warna",
   "category.dev": "Developer",
+  "category.productivity": "Produktivitas",
 
   // --- Common ---
   "common.undo": "Urungkan",
@@ -432,6 +433,9 @@ export const id = {
   "tool.tip-calculator.tipAmount": "Jumlah tip",
   "tool.tip-calculator.total": "Total",
   "tool.tip-calculator.perPerson": "Per orang",
+  "tool.split-bill.name": "Bagi Tagihan",
+  "tool.split-bill.description":
+    "Bagi tagihan secara rata, per item dengan penugasan ke tiap orang, atau berdasarkan persentase/porsi kustom, dengan pajak, service charge, dan diskon dihitung otomatis, lalu salin atau ekspor hasilnya sebagai gambar, PDF, atau CSV.",
 
   "tool.gradient-generator.name": "Gradient Generator",
   "tool.gradient-generator.description": "Buat gradient CSS linear atau radial dan salin kodenya.",
@@ -761,11 +765,30 @@ export const id = {
   "layout.sidebar.footer": "Gratis digunakan · Tanpa iklan · Open source",
   "layout.sidebar.madeBy": "Dibuat oleh",
 
-  "palette.placeholder": "Ketik nama alat...",
+  "palette.placeholder": "Cari alat berdasarkan nama, kategori, atau kata kunci...",
   "palette.noResults": "Tidak ada alat yang ditemukan.",
+  "palette.noResultsHint": "Coba kata kunci lain, atau jelajahi berdasarkan kategori di bawah.",
   "palette.hint": "Tekan Enter untuk membuka",
+  "palette.recent": "Terakhir Dibuka",
+  "palette.popular": "Populer",
+  "palette.results": "Hasil",
+  "palette.resultsFor": "hasil untuk",
 
   "state.loading": "Memuat...",
   "state.converting": "Mengonversi...",
   "state.empty": "Belum ada file dipilih.",
+
+  // --- Alat Produktivitas ---
+  "tool.schedule-maker.name": "Pembuat Jadwal",
+  "tool.schedule-maker.description":
+    "Buat jadwal kuliah, kerja, atau acara dari template siap pakai atau dari nol, ganti tampilan tabel atau kartu, lalu ekspor hasil yang tetap rapi ke PNG, PDF, atau CSV.",
+  "tool.broadcast-maker.name": "Pembuat Broadcast",
+  "tool.broadcast-maker.description":
+    "Susun pesan broadcast promo, pengumuman, undangan, atau ucapan dari template per kategori dengan variabel isian, lalu salin, bagikan, atau ekspor sebagai gambar, PDF, atau teks.",
+  "tool.text-to-voice.name": "Ubah Teks ke Suara",
+  "tool.text-to-voice.description":
+    "Ubah teks yang diketik atau diunggah menjadi suara alami langsung di browser, dengan pilihan suara, kecepatan, nada, dan volume yang bisa diatur.",
+  "tool.voice-to-text.name": "Ubah Suara ke Teks",
+  "tool.voice-to-text.description":
+    "Transkrip suara ke teks secara langsung di browser dengan hasil sementara, perintah tanda baca via suara, dukungan banyak bahasa, dan transkrip yang bisa diedit dengan cap waktu.",
 };

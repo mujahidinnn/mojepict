@@ -1,4 +1,12 @@
-export type ToolCategory = "image" | "pdf" | "unit" | "text" | "math" | "color" | "dev";
+export type ToolCategory =
+  | "image"
+  | "pdf"
+  | "unit"
+  | "text"
+  | "math"
+  | "color"
+  | "dev"
+  | "productivity";
 
 export interface Tool {
   id: string;
@@ -297,6 +305,15 @@ export const TOOLS: Tool[] = [
     createdAt: "2026-08-18",
   },
   {
+    id: "split-bill",
+    slug: "split-bill",
+    icon: "Split",
+    category: "math",
+    createdAt: "2026-08-19",
+    featured: true,
+    popular: true,
+  },
+  {
     id: "hpp-calculator",
     slug: "hpp-calculator",
     icon: "Factory",
@@ -497,6 +514,44 @@ export const TOOLS: Tool[] = [
     featured: true,
     popular: true,
   },
+
+  // --- KATEGORI: PRODUCTIVITY ---
+  {
+    id: "schedule-maker",
+    slug: "schedule-maker",
+    icon: "CalendarClock",
+    category: "productivity",
+    createdAt: "2026-08-19",
+    featured: true,
+    popular: true,
+  },
+  {
+    id: "broadcast-maker",
+    slug: "broadcast-maker",
+    icon: "Megaphone",
+    category: "productivity",
+    createdAt: "2026-08-19",
+    featured: true,
+    popular: true,
+  },
+  {
+    id: "voice-to-text",
+    slug: "voice-to-text",
+    icon: "Mic",
+    category: "productivity",
+    createdAt: "2026-08-19",
+    featured: true,
+    popular: true,
+  },
+  {
+    id: "text-to-voice",
+    slug: "text-to-voice",
+    icon: "Volume2",
+    category: "productivity",
+    createdAt: "2026-08-19",
+    featured: true,
+    popular: true,
+  },
 ];
 
 /** A tool is "new" for this many days after its createdAt date. */
@@ -520,11 +575,13 @@ export const CATEGORIES: Record<
   math: { labelKey: "category.math", icon: "Calculator" },
   color: { labelKey: "category.color", icon: "Palette" },
   dev: { labelKey: "category.dev", icon: "Code2" },
+  productivity: { labelKey: "category.productivity", icon: "Workflow" },
 };
 
 export const CATEGORY_ORDER: ToolCategory[] = [
   "image",
   "pdf",
+  "productivity",
   "unit",
   "color",
   "text",

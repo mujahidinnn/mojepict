@@ -4,27 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n/context";
-import { TOOLS, CATEGORIES, ToolCategory, getToolBadge } from "@/lib/tools";
+import { TOOLS, CATEGORIES, CATEGORY_ORDER, getToolBadge } from "@/lib/tools";
 import { getToolIconComponent } from "@/lib/tool-icons";
 import { Badge } from "@/components/ui/badge";
 import { ImageIcon } from "lucide-react";
-import Image from "next/image";
 import { InstallPwaButton } from "@/components/layout/InstallPwaButton";
+import { MojepictLogo } from "@/components/icons/MojepictLogo";
 
 function Icon({ name, className }: { name: string; className?: string }) {
   const LIcon = getToolIconComponent(name);
   return <LIcon className={cn("h-4 w-4", className)} />;
 }
-
-const CATEGORY_ORDER: ToolCategory[] = [
-  "image",
-  "pdf",
-  "unit",
-  "color",
-  "text",
-  "math",
-  "dev",
-];
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -39,15 +29,7 @@ export function Sidebar() {
       )}
     >
       <div className="flex flex-wrap items-center gap-2 px-4 py-4 border-b border-[hsl(var(--sidebar-border))]">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-foreground shrink-0">
-          <Image
-            src="/mojepict-logo.png"
-            alt="M"
-            width={40}
-            height={40}
-            className="object-contain rounded-md"
-          />
-        </div>
+        <MojepictLogo size={32} className="shrink-0" />
         <span className="font-semibold text-sm tracking-tight">
           {t("site.name")}
         </span>

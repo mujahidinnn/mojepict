@@ -46,7 +46,22 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-grid opacity-60 dark:opacity-30" />
         </div>
 
-        <section className="relative px-4 sm:px-6 lg:px-8 pt-14 grid grid-cols-1 lg:grid-cols-[1fr_280px] items-center gap-8">
+        <section className="relative isolate overflow-x-hidden lg:overflow-visible px-4 sm:px-6 lg:px-8 pt-14 grid grid-cols-1 lg:grid-cols-[1fr_280px] items-center gap-8">
+          {/*
+            Mobile-only backdrop: same illustration, but faded and pushed
+            behind the copy so it reads as texture, not a competing focal
+            point. `isolate` above gives this section its own stacking
+            context, so `-z-10` here stays scoped behind the (unpositioned,
+            so normally-above-absolute) text column instead of escaping to
+            the page root and landing under the fixed hero-glow layer.
+            `pointer-events-none` keeps it from stealing taps.
+          */}
+          <div
+            aria-hidden
+            className="absolute right-0 -top-16 h-56 w-56 -z-10 opacity-[0.12] dark:opacity-[0.18] grayscale pointer-events-none lg:hidden"
+          >
+            <HeroIllustration />
+          </div>
           <div>
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight max-w-xl">
               {t("landing.hero.title")}{" "}
