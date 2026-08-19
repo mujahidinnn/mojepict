@@ -14,6 +14,16 @@ import type {
 import type { OrderedExcalidrawElement } from "@excalidraw/excalidraw/element/types";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useI18n } from "@/lib/i18n/context";
 import { FileDown, RotateCcw } from "lucide-react";
 
@@ -112,11 +122,17 @@ export default function DiagramMakerPage() {
     [],
   );
 
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
+
   const handleClear = () => {
     if (!apiRef.current) return;
-    if (!window.confirm(t("tool.diagram-maker.confirm-clear"))) return;
-    apiRef.current.resetScene();
+    setConfirmClearOpen(true);
+  };
+
+  const confirmClear = () => {
+    apiRef.current?.resetScene();
     localStorage.removeItem(STORAGE_KEY);
+    setConfirmClearOpen(false);
   };
 
   const theme = resolvedTheme === "dark" ? "dark" : "light";
@@ -177,6 +193,23 @@ export default function DiagramMakerPage() {
       <p className="mt-3 text-center text-xs text-muted-foreground">
         {t("tool.diagram-maker.footer")}
       </p>
+
+      <AlertDialog open={confirmClearOpen} onOpenChange={setConfirmClearOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("dialog.confirm.title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("tool.diagram-maker.confirm-clear")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("action.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmClear}>
+              {t("dialog.confirm.action")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </ToolShell>
   );
 }

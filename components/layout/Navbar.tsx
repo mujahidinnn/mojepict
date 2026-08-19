@@ -33,8 +33,10 @@ export function Navbar() {
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => setMounted(true), []);
+  useEffect(() => setSheetOpen(false), [pathname]);
 
   const openPalette = () => {
     window.dispatchEvent(new CustomEvent("mojepict:open-palette"));
@@ -42,7 +44,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 flex h-12 items-center gap-1 sm:gap-3 border-b bg-background/80 backdrop-blur-sm px-2 sm:px-4">
-      <Sheet>
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetTrigger asChild>
           <Button variant="ghost" size="icon" className="lg:hidden h-7 w-7">
             <Menu className="h-4 w-4" />

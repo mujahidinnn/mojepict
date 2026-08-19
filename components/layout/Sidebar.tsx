@@ -32,7 +32,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "flex flex-col h-screen border-r",
+        "flex flex-col h-full border-r",
         "bg-[hsl(var(--sidebar-bg))] border-[hsl(var(--sidebar-border))]",
         "w-[var(--sidebar-width)] shrink-0",
       )}

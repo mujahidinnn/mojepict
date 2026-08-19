@@ -1,6 +1,6 @@
 "use client";
 
-import { CSSProperties, ReactNode, useCallback, useRef, useState } from "react";
+import { CSSProperties, ReactNode, useCallback, useMemo, useRef, useState } from "react";
 import { toBlob } from "html-to-image";
 import { Download, Image as ImageIcon } from "lucide-react";
 import { ToolShell } from "@/components/tools/ToolShell";
@@ -428,6 +428,31 @@ export default function DeviceMockupPage() {
     );
   }
 
+  // Miniature copy of the exact same preview tree, scaled down for the
+  // Slider's touch-drag magnifier bubble (see components/ui/slider.tsx) -
+  // memoized so dragging one slider doesn't re-render this 3D DOM tree on
+  // every other page re-render, only when something it actually shows changes.
+  const loupePreview = useMemo(
+    () => (
+      <div style={{ transform: "scale(0.16)", transformOrigin: "center" }}>
+        <div style={{ padding, background: background.value }}>
+          <div style={{ perspective: 1600 }}>
+            <div
+              style={{
+                transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg)`,
+                transformStyle: "preserve-3d",
+              }}
+            >
+              {renderPreview()}
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [layout, device, comboId, bezel, screenshotUrl, browserUrl, background, padding, rotateX, rotateY, rotateZ],
+  );
+
   return (
     <ToolShell
       title={t("tool.device-mockup.name") || "Device Mockup Generator"}
@@ -610,6 +635,7 @@ export default function DeviceMockupPage() {
                   max={160}
                   step={4}
                   onValueChange={(v: number[]) => setPadding(v[0])}
+                  previewContent={loupePreview}
                 />
               </div>
 
@@ -644,6 +670,7 @@ export default function DeviceMockupPage() {
                     max={60}
                     step={1}
                     onValueChange={(v: number[]) => setRotateX(v[0])}
+                    previewContent={loupePreview}
                   />
                 </div>
 
@@ -658,6 +685,7 @@ export default function DeviceMockupPage() {
                     max={60}
                     step={1}
                     onValueChange={(v: number[]) => setRotateY(v[0])}
+                    previewContent={loupePreview}
                   />
                 </div>
 
@@ -672,6 +700,7 @@ export default function DeviceMockupPage() {
                     max={45}
                     step={1}
                     onValueChange={(v: number[]) => setRotateZ(v[0])}
+                    previewContent={loupePreview}
                   />
                 </div>
               </div>
