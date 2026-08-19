@@ -2,7 +2,6 @@
 
 import "@excalidraw/excalidraw/index.css";
 import { useTheme } from "next-themes";
-import { PDFDocument } from "pdf-lib";
 import { useCallback, useMemo, useRef, useState, useEffect } from "react";
 import type * as ExcalidrawModule from "@excalidraw/excalidraw";
 import type {
@@ -57,6 +56,7 @@ function PdfExportButton({
   const exportPdf = async () => {
     const dataUrl = canvas.toDataURL("image/png");
     const pngBytes = new Uint8Array(await (await fetch(dataUrl)).arrayBuffer());
+    const { PDFDocument } = await import("pdf-lib");
     const pdf = await PDFDocument.create();
     const embedded = await pdf.embedPng(pngBytes);
     const w = canvas.width * 0.75;

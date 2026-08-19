@@ -9,6 +9,7 @@ import { getToolIconComponent } from "@/lib/tool-icons";
 import { Badge } from "@/components/ui/badge";
 import { ImageIcon } from "lucide-react";
 import Image from "next/image";
+import { InstallPwaButton } from "@/components/layout/InstallPwaButton";
 
 function Icon({ name, className }: { name: string; className?: string }) {
   const LIcon = getToolIconComponent(name);
@@ -142,6 +143,7 @@ export function Sidebar() {
           >
             {t("nav.privacy")}
           </Link>
+          <InstallPwaButton />
         </div>
         <div className="flex items-center justify-between gap-2">
           <p className="text-[11px] text-muted-foreground">
@@ -162,16 +164,16 @@ export function Sidebar() {
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
-                d="M2 14C3.5 7 5 7 6.5 14C8 21 9.5 21 11 12C12.5 3 14 3 15.5 11C17 19 18.5 19 20 12C20.8 8.2 21.6 8 22.5 10"
+                d="M2 13L5.5 4L9 12L12.5 3L16 10L18.5 6"
                 stroke="currentColor"
-                strokeWidth="1.75"
+                strokeWidth="1.6"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
               <path
-                d="M25 16L30 15"
+                d="M22 15L29 15"
                 stroke="currentColor"
-                strokeWidth="1.75"
+                strokeWidth="1.6"
                 strokeLinecap="round"
               />
             </svg>

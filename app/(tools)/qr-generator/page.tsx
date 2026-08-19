@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { useI18n } from "@/lib/i18n/context";
 import { useToast } from "@/hooks/use-toast";
@@ -70,6 +70,31 @@ export default function QrGeneratorPage() {
     if (!canvas) return Promise.resolve(null);
     return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
   };
+
+  // Small independent QRCodeCanvas render (not a CSS-scaled clone of the big
+  // one) for the Slider's touch-drag magnifier bubble - cheap since it's a
+  // tiny fixed pixel size regardless of the real QR's size setting.
+  const LOUPE_QR_SIZE = 84;
+  const loupePreview = useMemo(() => {
+    if (!text) return null;
+    const loupeLogoSize = logo ? Math.max(8, Math.round(logoSize * (LOUPE_QR_SIZE / size))) : undefined;
+    return (
+      <div className="rounded-lg bg-white p-2 shadow-sm">
+        <QRCodeCanvas
+          value={text}
+          size={LOUPE_QR_SIZE}
+          fgColor={qrColor}
+          bgColor={bgColor}
+          level="H"
+          imageSettings={
+            logo && loupeLogoSize
+              ? { src: logo, x: undefined, y: undefined, height: loupeLogoSize, width: loupeLogoSize, excavate: true }
+              : undefined
+          }
+        />
+      </div>
+    );
+  }, [text, qrColor, bgColor, logo, logoSize, size]);
 
   return (
     <ToolShell
@@ -147,6 +172,7 @@ export default function QrGeneratorPage() {
                 max={1024}
                 step={16}
                 onValueChange={(val: number[]) => setSize(val[0])}
+                previewContent={loupePreview}
               />
             </div>
 
@@ -175,6 +201,7 @@ export default function QrGeneratorPage() {
                       min={20}
                       max={size / 3}
                       onValueChange={(val: number[]) => setLogoSize(val[0])}
+                      previewContent={loupePreview}
                     />
                     <Button
                       variant="ghost"

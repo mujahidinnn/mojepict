@@ -86,6 +86,7 @@ export default function GradientGeneratorPage() {
                   max={360}
                   step={1}
                   onValueChange={([v]) => setAngle(v)}
+                  previewContent={<div className="h-full w-full" style={{ backgroundImage: css }} />}
                 />
               </div>
             )}

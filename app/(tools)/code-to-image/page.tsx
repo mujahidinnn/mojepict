@@ -1,7 +1,7 @@
 "use client";
 
 import { Fira_Code, JetBrains_Mono } from "next/font/google";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Highlighter } from "shiki";
 import { toBlob } from "html-to-image";
 import { ToolShell } from "@/components/tools/ToolShell";
@@ -164,6 +164,38 @@ export default function CodeToImagePage() {
     toast({ title: t("common.success"), description: t("toast.success.downloaded") });
   };
 
+  // Miniature copy of the live preview for the Slider's touch-drag magnifier
+  // bubble (see components/ui/slider.tsx) - memoized so dragging one slider
+  // doesn't re-render Shiki's highlighted HTML on every unrelated re-render.
+  const loupePreview = useMemo(() => {
+    if (!highlighter) return null;
+    return (
+      <div style={{ transform: "scale(0.18)", transformOrigin: "center" }}>
+        <div className="inline-block" style={{ padding, background: background.value }}>
+          <div className="overflow-hidden rounded-xl shadow-2xl" style={{ minWidth: 320 }}>
+            {showWindowControls && (
+              <div className="flex items-center gap-1.5 px-4 py-3" style={{ background: themeColors.bg }}>
+                <span className="h-3 w-3 rounded-full bg-[#ff5f56]" />
+                <span className="h-3 w-3 rounded-full bg-[#ffbd2e]" />
+                <span className="h-3 w-3 rounded-full bg-[#27c93f]" />
+                {title && (
+                  <span className="mx-auto pr-12 text-xs opacity-60" style={{ color: themeColors.fg }}>
+                    {title}
+                  </span>
+                )}
+              </div>
+            )}
+            <div
+              className={cn("cti-code", showLineNumbers && "cti-line-numbers")}
+              style={{ fontFamily: font.stack, fontSize, lineHeight: 1.6 }}
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }, [highlighter, padding, background, showWindowControls, themeColors, title, showLineNumbers, font, fontSize, html]);
+
   return (
     <ToolShell
       title={t("tool.code-to-image.name")}
@@ -263,6 +295,7 @@ export default function CodeToImagePage() {
                 max={28}
                 step={1}
                 onValueChange={(v: number[]) => setFontSize(v[0])}
+                previewContent={loupePreview}
               />
             </div>
 
@@ -277,6 +310,7 @@ export default function CodeToImagePage() {
                 max={120}
                 step={4}
                 onValueChange={(v: number[]) => setPadding(v[0])}
+                previewContent={loupePreview}
               />
             </div>
 

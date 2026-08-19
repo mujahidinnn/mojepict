@@ -15,6 +15,7 @@ export const en = {
   "nav.support": "Support",
   "nav.about": "About",
   "nav.privacy": "Privacy Policy",
+  "nav.installApp": "Install App",
 
   // --- Categories ---
   "category.image": "Image",

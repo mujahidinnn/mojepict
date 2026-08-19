@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useI18n } from "@/lib/i18n/context";
 import { useToast } from "@/hooks/use-toast";
 import { Dropzone } from "@/components/tools/Dropzone";
@@ -99,6 +99,33 @@ export default function ImageSplitterPage() {
     sourceImageRef.current = null;
   };
 
+  // Cheap grid-lines-over-source-image overlay for the Slider's touch-drag
+  // magnifier bubble (see components/ui/slider.tsx) - the real split re-runs
+  // full canvas slicing per grid change already, so the bubble reuses the
+  // untouched source image instead of doubling that cost on every drag tick.
+  const loupePreview = useMemo(() => {
+    if (!image) return null;
+    return (
+      <div className="relative h-full w-full overflow-hidden">
+        <div
+          className="absolute inset-0"
+          style={{ backgroundImage: `url(${image})`, backgroundSize: "cover", backgroundPosition: "center" }}
+        />
+        <div
+          className="absolute inset-0 grid"
+          style={{
+            gridTemplateColumns: `repeat(${grid.cols}, 1fr)`,
+            gridTemplateRows: `repeat(${grid.rows}, 1fr)`,
+          }}
+        >
+          {Array.from({ length: grid.cols * grid.rows }, (_, i) => (
+            <div key={i} className="border border-white/70" />
+          ))}
+        </div>
+      </div>
+    );
+  }, [image, grid.cols, grid.rows]);
+
   return (
     <ToolShell
       title={t("tool.image-splitter.name")}
@@ -128,6 +155,7 @@ export default function ImageSplitterPage() {
                   step={1}
                   onValueChange={([v]) => setGrid({ ...grid, cols: v })}
                   className="py-2"
+                  previewContent={loupePreview}
                 />
               </div>
 
@@ -147,6 +175,7 @@ export default function ImageSplitterPage() {
                   step={1}
                   onValueChange={([v]) => setGrid({ ...grid, rows: v })}
                   className="py-2"
+                  previewContent={loupePreview}
                 />
               </div>
             </div>

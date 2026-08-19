@@ -13,6 +13,7 @@ export const id = {
   "nav.support": "Dukung",
   "nav.about": "Tentang",
   "nav.privacy": "Kebijakan Privasi",
+  "nav.installApp": "Install App",
 
   "category.image": "Gambar",
   "category.pdf": "PDF",

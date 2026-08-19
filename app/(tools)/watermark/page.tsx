@@ -28,6 +28,8 @@ export default function WatermarkPage() {
   const { toast } = useToast();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const thumbCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [snapshotUrl, setSnapshotUrl] = useState<string | null>(null);
 
   const [bgImage, setBgImage] = useState<string | null>(null);
   const [imageElement, setImageElement] = useState<HTMLImageElement | null>(
@@ -108,6 +110,22 @@ export default function WatermarkPage() {
       ctx.font = `${fontSize}px ${fontFamily}`;
       ctx.fillText(watermarkText, textPos.x, textPos.y);
       ctx.globalAlpha = 1;
+    }
+
+    // Downscaled snapshot for the Slider's touch-drag magnifier bubble (see
+    // components/ui/slider.tsx) - scaling down here, instead of calling
+    // toDataURL on the full-resolution canvas, keeps this cheap even while
+    // dragging over a large source photo.
+    if (!thumbCanvasRef.current) thumbCanvasRef.current = document.createElement("canvas");
+    const thumb = thumbCanvasRef.current;
+    const thumbScale = 96 / Math.max(canvas.width, canvas.height);
+    thumb.width = Math.max(1, Math.round(canvas.width * thumbScale));
+    thumb.height = Math.max(1, Math.round(canvas.height * thumbScale));
+    const tctx = thumb.getContext("2d");
+    if (tctx) {
+      tctx.clearRect(0, 0, thumb.width, thumb.height);
+      tctx.drawImage(canvas, 0, 0, thumb.width, thumb.height);
+      setSnapshotUrl(thumb.toDataURL());
     }
   }, [
     imageElement,
@@ -193,6 +211,11 @@ export default function WatermarkPage() {
       canvasRef.current ? canvasRef.current.toBlob(resolve, "image/png") : resolve(null),
     );
 
+  const loupePreview = snapshotUrl ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={snapshotUrl} alt="" className="h-full w-full object-cover" />
+  ) : null;
+
   const handleReset = () => {
     setBgImage(null);
     setImageElement(null);
@@ -256,6 +279,7 @@ export default function WatermarkPage() {
                     max={150}
                     step={1}
                     onValueChange={(val: number[]) => setFontSize(val[0])}
+                    previewContent={loupePreview}
                   />
                 </div>
                 <div className="space-y-2">
@@ -271,6 +295,7 @@ export default function WatermarkPage() {
                     max={1}
                     step={0.05}
                     onValueChange={(val: number[]) => setOpacity(val[0])}
+                    previewContent={loupePreview}
                   />
                 </div>
                 <div className="space-y-2">

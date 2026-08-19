@@ -7,7 +7,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useI18n } from "@/lib/i18n/context";
 import { Globe, Heart, Menu, Moon, Search, Sun, Zap } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -51,6 +58,12 @@ export function Navbar() {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-[var(--sidebar-width)] p-0">
+          <VisuallyHidden>
+            <SheetTitle>Navigation</SheetTitle>
+            <SheetDescription>
+              Browse and search all available tools
+            </SheetDescription>
+          </VisuallyHidden>
           <Sidebar />
         </SheetContent>
       </Sheet>

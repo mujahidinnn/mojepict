@@ -582,6 +582,9 @@ export default function PhotoBoothPage() {
   const exportRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef(0);
   const streamRef = useRef<MediaStream | null>(null);
+  const thumbCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const lastSnapshotAtRef = useRef(0);
+  const [snapshotUrl, setSnapshotUrl] = useState<string | null>(null);
 
   const [photos, setPhotos] = useState<string[]>([]);
   const [brightness, setBrightness] = useState(100);
@@ -1007,6 +1010,27 @@ export default function PhotoBoothPage() {
           }
 
           renderDecoration(ctx, targetW, targetH, refs.current.selectedFrame);
+
+          // Throttled downscaled snapshot for the Slider's touch-drag
+          // magnifier bubble (see components/ui/slider.tsx) - the main loop
+          // already redraws at ~60fps for the live camera feed, so this only
+          // refreshes a small thumbnail a few times a second instead of
+          // calling toDataURL on every frame.
+          const now = performance.now();
+          if (now - lastSnapshotAtRef.current > 150) {
+            lastSnapshotAtRef.current = now;
+            if (!thumbCanvasRef.current) thumbCanvasRef.current = document.createElement("canvas");
+            const thumb = thumbCanvasRef.current;
+            const thumbScale = 96 / Math.max(targetW, targetH);
+            thumb.width = Math.max(1, Math.round(targetW * thumbScale));
+            thumb.height = Math.max(1, Math.round(targetH * thumbScale));
+            const tctx = thumb.getContext("2d");
+            if (tctx) {
+              tctx.clearRect(0, 0, thumb.width, thumb.height);
+              tctx.drawImage(canvas, 0, 0, thumb.width, thumb.height);
+              setSnapshotUrl(thumb.toDataURL());
+            }
+          }
         }
       }
     } catch {
@@ -1156,6 +1180,11 @@ export default function PhotoBoothPage() {
 
   const gridFull = photos.length >= grid.cols * grid.rows;
 
+  const loupePreview = snapshotUrl ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={snapshotUrl} alt="" className="h-full w-full object-cover" />
+  ) : null;
+
   return (
     <ToolShell
       title={t("tool.photobooth.name")}
@@ -1190,6 +1219,7 @@ export default function PhotoBoothPage() {
                     min={50}
                     max={150}
                     onValueChange={(v) => setBrightness(v[0])}
+                    previewContent={loupePreview}
                   />
                 </div>
 
@@ -1202,6 +1232,7 @@ export default function PhotoBoothPage() {
                     min={50}
                     max={150}
                     onValueChange={(v) => setContrast(v[0])}
+                    previewContent={loupePreview}
                   />
                 </div>
 
@@ -1214,6 +1245,7 @@ export default function PhotoBoothPage() {
                     min={-100}
                     max={100}
                     onValueChange={(v) => setColorTemp(v[0])}
+                    previewContent={loupePreview}
                   />
                 </div>
 
@@ -1226,6 +1258,7 @@ export default function PhotoBoothPage() {
                     min={0}
                     max={100}
                     onValueChange={(v) => setVignette(v[0])}
+                    previewContent={loupePreview}
                   />
                 </div>
 
@@ -1239,6 +1272,7 @@ export default function PhotoBoothPage() {
                     max={10}
                     step={0.1}
                     onValueChange={(v) => setBlur(v[0])}
+                    previewContent={loupePreview}
                   />
                 </div>
 
