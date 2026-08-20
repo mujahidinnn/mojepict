@@ -131,12 +131,24 @@ export default function VoiceToTextPage() {
 
   const appendFinalChunk = useCallback((rawText: string) => {
     const cleaned = punctuationRef.current ? applyPunctuationCommands(rawText) : rawText;
-    const text = cleaned.trim();
+    // Trim only horizontal whitespace, not newlines - a chunk that's purely
+    // a "baris baru"/"paragraf baru" command resolves to "\n"/"\n\n", and a
+    // plain .trim() reduces that to "" so the whole command gets silently
+    // dropped. This happens often: a brief pause right before the command
+    // phrase is exactly what makes the recognizer split it into its own
+    // final result.
+    const text = cleaned.replace(/^[ \t]+|[ \t]+$/g, "");
     if (!text) return;
 
     setTranscript((prev) => {
       if (!prev) return text;
-      const needsSpace = !/[\s\n]$/.test(prev) && !text.startsWith("\n");
+      const needsSpace =
+        !/[\s\n]$/.test(prev) &&
+        !text.startsWith("\n") &&
+        // Punctuation commands ("titik"/"koma"/...) often arrive as their
+        // own final result too - they should hug the preceding word rather
+        // than pick up a stray leading space.
+        !/^[.,!?]/.test(text);
       return prev + (needsSpace ? " " : "") + text;
     });
     setSegments((prev) => [...prev, { id: crypto.randomUUID(), text, time: new Date() }]);

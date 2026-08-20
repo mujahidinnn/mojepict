@@ -5,6 +5,7 @@ import { PDFDocument } from "pdf-lib";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
 import { Dropzone } from "@/components/tools/Dropzone";
+import { PdfPreview } from "@/components/tools/PdfPreview";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
@@ -198,11 +199,7 @@ export default function MergePdfPage() {
         {merging && <Progress value={progress} className="h-1.5" />}
 
         {resultUrl && (
-          <iframe
-            src={resultUrl}
-            className="h-[480px] w-full rounded-lg border"
-            title="PDF preview"
-          />
+          <PdfPreview src={resultUrl} className="w-full rounded-lg border" />
         )}
 
         <ToolActionBar

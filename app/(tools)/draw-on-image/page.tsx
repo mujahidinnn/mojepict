@@ -272,9 +272,21 @@ export default function DrawOnImagePage() {
                   height: displaySize.height,
                 }}
               >
+                {/* Rendered as a plain <img>, not drawn into the library's canvas -
+                    react-canvas-draw rasterizes the background into the same
+                    low-res canvas buffer used for strokes, with no devicePixelRatio
+                    scaling, which blurs it on retina/high-DPI screens. A native
+                    <img> lets the browser scale the source crisply instead. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={bgImage}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-fill"
+                  draggable={false}
+                />
                 <CanvasDrawComponent
                   ref={canvasRef}
-                  imgSrc={bgImage}
+                  backgroundColor="transparent"
                   brushColor={brushColor}
                   brushRadius={brushRadius}
                   canvasWidth={displaySize.width}

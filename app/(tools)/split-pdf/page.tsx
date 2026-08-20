@@ -5,6 +5,7 @@ import { PDFDocument } from "pdf-lib";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
 import { Dropzone } from "@/components/tools/Dropzone";
+import { PdfPreview } from "@/components/tools/PdfPreview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -252,11 +253,7 @@ export default function SplitPdfPage() {
                         {t("action.download")}
                       </Button>
                     </div>
-                    <iframe
-                      src={result.url}
-                      className="h-[360px] w-full rounded-lg border"
-                      title={result.name}
-                    />
+                    <PdfPreview src={result.url} className="w-full rounded-lg border" />
                   </div>
                 ))}
                 {results.length > 1 && (

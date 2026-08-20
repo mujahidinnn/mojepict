@@ -123,6 +123,24 @@ export default function WaveGeneratorPage() {
     setBlobSeed(Math.floor(Math.random() * 1_000_000));
   };
 
+  const waveLoupePreview = (
+    <svg
+      viewBox={`0 0 ${WAVE_W} ${WAVE_H}`}
+      preserveAspectRatio="none"
+      className="h-full w-full"
+    >
+      {wavePaths.map((l) => (
+        <path key={l.id} d={l.d} fill={l.color} opacity={l.opacity} />
+      ))}
+    </svg>
+  );
+
+  const blobLoupePreview = (
+    <svg viewBox={`0 0 ${BLOB_SIZE} ${BLOB_SIZE}`} className="h-full w-full">
+      <path d={blobPath} fill={blobColor} />
+    </svg>
+  );
+
   const buildWaveSvg = () => {
     const paths = wavePaths
       .map((l) => `<path d="${l.d}" fill="${l.color}" opacity="${l.opacity}" />`)
@@ -239,6 +257,7 @@ export default function WaveGeneratorPage() {
                           max={80}
                           step={1}
                           onValueChange={([v]) => updateLayer(layer.id, { amplitude: v })}
+                          previewContent={waveLoupePreview}
                         />
                       </div>
 
@@ -255,6 +274,7 @@ export default function WaveGeneratorPage() {
                           max={5}
                           step={0.1}
                           onValueChange={([v]) => updateLayer(layer.id, { frequency: v })}
+                          previewContent={waveLoupePreview}
                         />
                       </div>
 
@@ -271,6 +291,7 @@ export default function WaveGeneratorPage() {
                           max={95}
                           step={1}
                           onValueChange={([v]) => updateLayer(layer.id, { baseline: v })}
+                          previewContent={waveLoupePreview}
                         />
                       </div>
 
@@ -287,6 +308,7 @@ export default function WaveGeneratorPage() {
                           max={100}
                           step={5}
                           onValueChange={([v]) => updateLayer(layer.id, { opacity: v / 100 })}
+                          previewContent={waveLoupePreview}
                         />
                       </div>
 
@@ -340,6 +362,7 @@ export default function WaveGeneratorPage() {
                     max={14}
                     step={1}
                     onValueChange={([v]) => setBlobPoints(v)}
+                    previewContent={blobLoupePreview}
                   />
                 </div>
 
@@ -356,6 +379,7 @@ export default function WaveGeneratorPage() {
                     max={45}
                     step={1}
                     onValueChange={([v]) => setBlobIrregularity(v)}
+                    previewContent={blobLoupePreview}
                   />
                 </div>
               </div>
