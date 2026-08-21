@@ -28,14 +28,32 @@ import { cn } from "@/lib/utils";
 import {
   Download,
   Globe,
+  Monitor,
   Play,
   Plus,
+  Smartphone,
   ShieldCheck,
+  Tablet,
   Upload,
   X,
 } from "lucide-react";
 
 type FileLang = "html" | "css" | "js" | "asset";
+type ViewportMode = "mobile" | "tablet" | "desktop";
+
+const VIEWPORT_WIDTHS: Record<ViewportMode, string> = {
+  mobile: "375px",
+  tablet: "768px",
+  desktop: "100%",
+};
+
+function detectViewportMode(): ViewportMode {
+  if (typeof window === "undefined") return "desktop";
+  const width = window.innerWidth;
+  if (width < 768) return "mobile";
+  if (width < 1024) return "tablet";
+  return "desktop";
+}
 
 interface SnippetFile {
   id: string;
@@ -245,6 +263,7 @@ export default function HtmlViewerPage() {
   const [runCount, setRunCount] = useState(0);
   const [preview, setPreview] = useState<PreviewResult>(() => buildPreviewDocument(defaultFiles()));
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [viewportMode, setViewportMode] = useState<ViewportMode>(detectViewportMode);
 
   const activeFile = files.find((f) => f.id === activeId) ?? files[0];
   const totalBytes = files.reduce((sum, f) => sum + f.content.length, 0);
@@ -479,12 +498,40 @@ export default function HtmlViewerPage() {
           </div>
 
           <div className="space-y-2 min-w-0">
-            <div className="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
               <span>{t("tool.html-viewer.preview")}</span>
-              <span className="flex items-center gap-1 font-normal normal-case text-muted-foreground">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                {t("tool.html-viewer.sandboxNote")}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1 font-normal normal-case text-muted-foreground">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  {t("tool.html-viewer.sandboxNote")}
+                </span>
+                <div className="flex shrink-0 items-center gap-0.5 rounded-md border bg-background/60 p-0.5">
+                  {(
+                    [
+                      { mode: "mobile", icon: Smartphone, label: t("tool.html-viewer.viewMobile") },
+                      { mode: "tablet", icon: Tablet, label: t("tool.html-viewer.viewTablet") },
+                      { mode: "desktop", icon: Monitor, label: t("tool.html-viewer.viewDesktop") },
+                    ] as const
+                  ).map(({ mode, icon: Icon, label }) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setViewportMode(mode)}
+                      title={label}
+                      aria-label={label}
+                      aria-pressed={viewportMode === mode}
+                      className={cn(
+                        "rounded p-1 transition-colors",
+                        viewportMode === mode
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                      )}
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center gap-2 rounded-t-lg border border-b-0 bg-muted/20 px-3 py-2">
@@ -503,13 +550,16 @@ export default function HtmlViewerPage() {
                 <span className="truncate text-xs text-muted-foreground">{preview.title}</span>
               </div>
             </div>
-            <iframe
-              key={runCount}
-              srcDoc={preview.doc}
-              sandbox="allow-scripts allow-modals"
-              title="Preview"
-              className="min-h-[420px] w-full rounded-b-xl border bg-white"
-            />
+            <div className="flex justify-center rounded-b-xl border bg-muted/10 p-0">
+              <iframe
+                key={runCount}
+                srcDoc={preview.doc}
+                sandbox="allow-scripts allow-modals"
+                title="Preview"
+                style={{ width: VIEWPORT_WIDTHS[viewportMode] }}
+                className="min-h-[420px] max-w-full rounded-b-xl border-0 bg-white transition-[width] duration-200"
+              />
+            </div>
           </div>
         </div>
       </div>

@@ -500,6 +500,9 @@ export const en = {
   "tool.html-viewer.asset": "Image asset",
   "tool.html-viewer.assetHint":
     "Reference this as \"{{name}}\" in an <img src>, <link rel=icon href>, or CSS url().",
+  "tool.html-viewer.viewMobile": "Mobile",
+  "tool.html-viewer.viewTablet": "Tablet",
+  "tool.html-viewer.viewDesktop": "Desktop",
 
   "tool.merge-pdf.name": "Merge PDF",
   "tool.merge-pdf.description":

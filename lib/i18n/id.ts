@@ -498,6 +498,9 @@ export const id = {
   "tool.html-viewer.asset": "Gambar",
   "tool.html-viewer.assetHint":
     "Rujuk file ini sebagai \"{{name}}\" di <img src>, <link rel=icon href>, atau CSS url().",
+  "tool.html-viewer.viewMobile": "Mobile",
+  "tool.html-viewer.viewTablet": "Tablet",
+  "tool.html-viewer.viewDesktop": "Desktop",
 
   "tool.merge-pdf.name": "Gabung PDF",
   "tool.merge-pdf.description":
