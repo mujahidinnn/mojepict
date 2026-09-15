@@ -456,6 +456,9 @@ export const id = {
   "tool.wave-generator.baseline": "Posisi Dasar",
   "tool.wave-generator.opacity": "Opasitas",
   "tool.wave-generator.flip": "Balik (pembatas bawah)",
+  "tool.wave-generator.position": "Posisi",
+  "tool.wave-generator.position.top": "Atas",
+  "tool.wave-generator.position.bottom": "Bawah",
   "tool.wave-generator.color": "Warna",
   "tool.wave-generator.randomize": "Acak",
   "tool.wave-generator.points": "Jumlah Titik",
@@ -558,6 +561,21 @@ export const id = {
   "tool.pdf-editor.hint": "Saat alat Pilih aktif, klik teks yang sudah ada di halaman untuk langsung mengeditnya. Atau pilih Teks/Highlight/Whiteout/Gambar untuk menambah yang baru. Perubahan berlaku per halaman dan diterapkan saat diunduh.",
   "tool.pdf-editor.changeFile": "Ganti file",
   "tool.pdf-editor.pagesLabel": "Halaman",
+
+  "tool.pdf-to-markdown.name": "PDF ke Markdown",
+  "tool.pdf-to-markdown.description":
+    "Pratinjau PDF, pilih halaman yang ingin dikonversi, lalu ubah jadi Markdown rapi - langsung di browser.",
+  "tool.pdf-to-markdown.dropzone.title": "Klik atau seret PDF di sini",
+  "tool.pdf-to-markdown.dropzone.subtitle": "File Anda tidak pernah meninggalkan browser",
+  "tool.pdf-to-markdown.invalidFile": "File ini sepertinya bukan PDF yang valid.",
+  "tool.pdf-to-markdown.rendering": "Memuat halaman…",
+  "tool.pdf-to-markdown.pagesLabel": "Halaman yang dikonversi",
+  "tool.pdf-to-markdown.selectAll": "Semua",
+  "tool.pdf-to-markdown.selectNone": "Tidak ada",
+  "tool.pdf-to-markdown.convert": "Konversi ke Markdown",
+  "tool.pdf-to-markdown.changeFile": "Ganti file",
+  "tool.pdf-to-markdown.resultLabel": "Markdown",
+  "tool.pdf-to-markdown.renderPreview": "Tampilkan pratinjau hasil render",
 
   "tool.slug-generator.name": "Slug Generator",
   "tool.slug-generator.description":

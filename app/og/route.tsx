@@ -7,6 +7,28 @@ export const runtime = "edge";
 const WIDTH = 1200;
 const HEIGHT = 630;
 
+const fontsPromise = Promise.all([
+  fetch(new URL("./Geist-Regular.ttf", import.meta.url)).then((res) =>
+    res.arrayBuffer(),
+  ),
+  fetch(new URL("./Geist-Bold.ttf", import.meta.url)).then((res) =>
+    res.arrayBuffer(),
+  ),
+]);
+
+function bufferToBase64(buf: ArrayBuffer) {
+  let binary = "";
+  const bytes = new Uint8Array(buf);
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+const logoDataUriPromise = fetch(
+  new URL("./mojepict-logo.png", import.meta.url),
+)
+  .then((res) => res.arrayBuffer())
+  .then((buf) => `data:image/png;base64,${bufferToBase64(buf)}`);
+
 function clamp(value: string | null, max: number) {
   return (value ?? "").slice(0, max);
 }
@@ -19,16 +41,16 @@ const CATEGORY_THEME: Record<
   string,
   { from: string; to: string; glow: string; accent: string }
 > = {
-  image: { from: "#3b82f6", to: "#2563eb", glow: "59,130,246", accent: "#93c5fd" },
-  pdf: { from: "#ef4444", to: "#e11d48", glow: "239,68,68", accent: "#fca5a5" },
-  unit: { from: "#8b5cf6", to: "#7c3aed", glow: "139,92,246", accent: "#c4b5fd" },
-  color: { from: "#ec4899", to: "#e11d48", glow: "236,72,153", accent: "#f9a8d4" },
-  text: { from: "#fbbf24", to: "#f97316", glow: "251,191,36", accent: "#fde68a" },
-  math: { from: "#10b981", to: "#0d9488", glow: "16,185,129", accent: "#6ee7b7" },
-  dev: { from: "#64748b", to: "#334155", glow: "100,116,139", accent: "#cbd5e1" },
+  image: { from: "#3b82f6", to: "#2563eb", glow: "59,130,246", accent: "#60a5fa" },
+  pdf: { from: "#ef4444", to: "#e11d48", glow: "239,68,68", accent: "#f87171" },
+  unit: { from: "#8b5cf6", to: "#7c3aed", glow: "139,92,246", accent: "#a78bfa" },
+  color: { from: "#ec4899", to: "#e11d48", glow: "236,72,153", accent: "#f472b6" },
+  text: { from: "#fbbf24", to: "#f97316", glow: "251,191,36", accent: "#fcd34d" },
+  math: { from: "#10b981", to: "#0d9488", glow: "16,185,129", accent: "#34d399" },
+  dev: { from: "#64748b", to: "#334155", glow: "100,116,139", accent: "#94a3b8" },
 };
 
-const DEFAULT_ACCENT = "#5eead4";
+const DEFAULT_ACCENT = "#2dd4bf";
 
 function getBackgroundImage(theme: (typeof CATEGORY_THEME)[string] | undefined) {
   if (theme) {
@@ -40,10 +62,10 @@ function getBackgroundImage(theme: (typeof CATEGORY_THEME)[string] | undefined) 
   }
   // Homepage / no category: the same multi-hue glow as the dashboard hero.
   return [
-    "radial-gradient(700px circle at 10% 10%, rgba(99,102,241,0.38), transparent 72%)",
-    "radial-gradient(640px circle at 90% 20%, rgba(236,72,153,0.32), transparent 72%)",
-    "radial-gradient(680px circle at 25% 90%, rgba(245,158,11,0.28), transparent 72%)",
-    "radial-gradient(640px circle at 85% 95%, rgba(16,185,129,0.28), transparent 72%)",
+    "radial-gradient(700px circle at 10% 10%, rgba(99,102,241,0.46), transparent 72%)",
+    "radial-gradient(640px circle at 90% 20%, rgba(236,72,153,0.4), transparent 72%)",
+    "radial-gradient(680px circle at 25% 90%, rgba(245,158,11,0.36), transparent 72%)",
+    "radial-gradient(640px circle at 85% 95%, rgba(16,185,129,0.36), transparent 72%)",
     "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)",
   ].join(", ");
 }
@@ -59,6 +81,8 @@ export async function GET(req: NextRequest) {
 
   const theme = CATEGORY_THEME[categoryKey];
   const accent = theme?.accent ?? DEFAULT_ACCENT;
+  const [geistRegular, geistBold] = await fontsPromise;
+  const logoDataUri = await logoDataUriPromise;
 
   return new ImageResponse(
     (
@@ -75,7 +99,7 @@ export async function GET(req: NextRequest) {
           backgroundSize: theme
             ? "auto, auto, 40px 40px, 40px 40px"
             : "auto, auto, auto, auto, 40px 40px, 40px 40px",
-          fontFamily: "Arial, sans-serif",
+          fontFamily: "Geist, Arial, sans-serif",
         }}
       >
         <div
@@ -120,7 +144,7 @@ export async function GET(req: NextRequest) {
               Mojepict
             </div>
           </div>
-          <div style={{ display: "flex", fontSize: 20, color: "#6b7280" }}>
+          <div style={{ display: "flex", fontSize: 24, color: "#94a3b8" }}>
             mojepict.vercel.app
           </div>
         </div>
@@ -131,30 +155,24 @@ export async function GET(req: NextRequest) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              width: 128,
-              height: 128,
-              borderRadius: 32,
+              width: 152,
+              height: 152,
+              borderRadius: 38,
               background: theme
                 ? `linear-gradient(135deg, ${theme.from}, ${theme.to})`
-                : "linear-gradient(135deg, #6366f1, #2563eb)",
+                : "#ffffff",
               marginRight: 48,
               flexShrink: 0,
-              boxShadow: `0 20px 60px -20px rgba(${theme?.glow ?? "99,102,241"},0.6)`,
+              overflow: "hidden",
+              boxShadow: theme
+                ? `0 20px 60px -20px rgba(${theme.glow},0.6)`
+                : "0 20px 60px -20px rgba(0,0,0,0.5)",
             }}
           >
             {iconName ? (
-              <OgIcon name={iconName} color="#ffffff" size={64} strokeWidth={2} />
+              <OgIcon name={iconName} color="#ffffff" size={78} strokeWidth={2} />
             ) : (
-              <div
-                style={{
-                  display: "flex",
-                  fontSize: 56,
-                  fontWeight: 800,
-                  color: "#ffffff",
-                }}
-              >
-                M
-              </div>
+              <img src={logoDataUri} width={152} height={152} />
             )}
           </div>
 
@@ -166,7 +184,7 @@ export async function GET(req: NextRequest) {
                 style={{
                   display: "flex",
                   alignSelf: "flex-start",
-                  fontSize: 24,
+                  fontSize: 30,
                   fontWeight: 700,
                   color: accent,
                   letterSpacing: 1,
@@ -182,7 +200,7 @@ export async function GET(req: NextRequest) {
             <div
               style={{
                 display: "flex",
-                fontSize: 66,
+                fontSize: 84,
                 fontWeight: 800,
                 color: "#ffffff",
                 lineHeight: 1.1,
@@ -193,7 +211,7 @@ export async function GET(req: NextRequest) {
             <div
               style={{
                 display: "flex",
-                fontSize: 30,
+                fontSize: 40,
                 fontWeight: 600,
                 color: accent,
                 marginTop: 22,
@@ -207,14 +225,23 @@ export async function GET(req: NextRequest) {
         <div
           style={{
             display: "flex",
-            fontSize: 22,
-            color: "#9ca3af",
+            fontSize: 28,
+            color: "#cbd5e1",
           }}
         >
           No Uploads · No Accounts · 100% Browser-Based
         </div>
       </div>
     ),
-    { width: WIDTH, height: HEIGHT },
+    {
+      width: WIDTH,
+      height: HEIGHT,
+      fonts: [
+        { name: "Geist", data: geistRegular, weight: 400, style: "normal" },
+        { name: "Geist", data: geistBold, weight: 600, style: "normal" },
+        { name: "Geist", data: geistBold, weight: 700, style: "normal" },
+        { name: "Geist", data: geistBold, weight: 800, style: "normal" },
+      ],
+    },
   );
 }

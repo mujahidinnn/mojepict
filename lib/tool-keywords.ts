@@ -553,6 +553,23 @@ export const TOOL_KEYWORDS: Record<string, ToolKeywordSet> = {
       "tanda tangan pdf online",
     ],
   },
+  "pdf-to-markdown": {
+    en: [
+      "pdf to markdown converter",
+      "convert pdf to markdown online",
+      "extract pdf pages to markdown",
+      "pdf to md free",
+      "pdf text to markdown",
+      "convert selected pdf pages to markdown",
+    ],
+    id: [
+      "convert pdf ke markdown",
+      "pdf ke markdown online",
+      "ekstrak halaman pdf ke markdown",
+      "pdf ke md gratis",
+      "ubah teks pdf jadi markdown",
+    ],
+  },
 
   // --- UNIT ---
   "unit-converter": {

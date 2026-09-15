@@ -10,12 +10,14 @@ import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Copy, Dices, Download, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Copy, Dices, Download, Plus, Trash2 } from "lucide-react";
 import { generateWavePath, generateBlobPath } from "@/lib/svg-shapes";
 import { downloadTextFile } from "@/lib/export-node";
 import { rasterizeToPngBlob } from "@/lib/copy-image";
 
 type Mode = "wave" | "blob";
+
+type Position = "top" | "bottom";
 
 interface WaveLayer {
   id: string;
@@ -25,6 +27,7 @@ interface WaveLayer {
   opacity: number;
   color: string;
   flip: boolean;
+  position: Position;
 }
 
 const WAVE_W = 1200;
@@ -33,8 +36,8 @@ const BLOB_SIZE = 400;
 const MAX_LAYERS = 4;
 
 const DEFAULT_LAYERS: WaveLayer[] = [
-  { id: "l1", amplitude: 24, frequency: 1.5, baseline: 55, opacity: 0.5, color: "#6366f1", flip: false },
-  { id: "l2", amplitude: 32, frequency: 2, baseline: 70, opacity: 1, color: "#4338ca", flip: false },
+  { id: "l1", amplitude: 24, frequency: 1.5, baseline: 55, opacity: 0.5, color: "#6366f1", flip: false, position: "bottom" },
+  { id: "l2", amplitude: 32, frequency: 2, baseline: 70, opacity: 1, color: "#4338ca", flip: false, position: "bottom" },
 ];
 
 function downloadBlob(blob: Blob, filename: string) {
@@ -67,6 +70,7 @@ export default function WaveGeneratorPage() {
           phase: 0,
           baseline: l.baseline / 100,
           flip: l.flip,
+          position: l.position,
         }),
       })),
     [layers]
@@ -98,6 +102,7 @@ export default function WaveGeneratorPage() {
         opacity: 0.6 + Math.random() * 0.4,
         color: "#818cf8",
         flip: false,
+        position: "bottom",
       },
     ]);
   };
@@ -310,6 +315,27 @@ export default function WaveGeneratorPage() {
                           onValueChange={([v]) => updateLayer(layer.id, { opacity: v / 100 })}
                           previewContent={waveLoupePreview}
                         />
+                      </div>
+
+                      <div className="space-y-1.5 pt-1">
+                        <Label className="text-xs text-muted-foreground">
+                          {t("tool.wave-generator.position")}
+                        </Label>
+                        <Tabs
+                          value={layer.position}
+                          onValueChange={(v) => updateLayer(layer.id, { position: v as Position })}
+                        >
+                          <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="top" className="gap-1">
+                              <ChevronUp className="h-3.5 w-3.5" />
+                              {t("tool.wave-generator.position.top")}
+                            </TabsTrigger>
+                            <TabsTrigger value="bottom" className="gap-1">
+                              <ChevronDown className="h-3.5 w-3.5" />
+                              {t("tool.wave-generator.position.bottom")}
+                            </TabsTrigger>
+                          </TabsList>
+                        </Tabs>
                       </div>
 
                       <div className="flex items-center justify-between pt-1">

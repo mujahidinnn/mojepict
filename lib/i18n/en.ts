@@ -458,6 +458,9 @@ export const en = {
   "tool.wave-generator.baseline": "Baseline",
   "tool.wave-generator.opacity": "Opacity",
   "tool.wave-generator.flip": "Flip (bottom divider)",
+  "tool.wave-generator.position": "Position",
+  "tool.wave-generator.position.top": "Top",
+  "tool.wave-generator.position.bottom": "Bottom",
   "tool.wave-generator.color": "Color",
   "tool.wave-generator.randomize": "Randomize",
   "tool.wave-generator.points": "Points",
@@ -560,6 +563,21 @@ export const en = {
   "tool.pdf-editor.hint": "With Select active, click any existing text on the page to edit it in place. Or pick Text/Highlight/Whiteout/Draw to add something new. Edits are per-page and apply when you download.",
   "tool.pdf-editor.changeFile": "Change file",
   "tool.pdf-editor.pagesLabel": "Pages",
+
+  "tool.pdf-to-markdown.name": "PDF to Markdown",
+  "tool.pdf-to-markdown.description":
+    "Preview a PDF, pick which pages to include, and convert them to clean Markdown - right in your browser.",
+  "tool.pdf-to-markdown.dropzone.title": "Click or drag a PDF here",
+  "tool.pdf-to-markdown.dropzone.subtitle": "Your file never leaves the browser",
+  "tool.pdf-to-markdown.invalidFile": "This doesn't look like a valid PDF file.",
+  "tool.pdf-to-markdown.rendering": "Rendering page…",
+  "tool.pdf-to-markdown.pagesLabel": "Pages to convert",
+  "tool.pdf-to-markdown.selectAll": "All",
+  "tool.pdf-to-markdown.selectNone": "None",
+  "tool.pdf-to-markdown.convert": "Convert to Markdown",
+  "tool.pdf-to-markdown.changeFile": "Change file",
+  "tool.pdf-to-markdown.resultLabel": "Markdown",
+  "tool.pdf-to-markdown.renderPreview": "Show rendered preview",
 
   "tool.slug-generator.name": "Slug Generator",
   "tool.slug-generator.description":

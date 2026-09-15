@@ -215,6 +215,13 @@ export const TOOLS: Tool[] = [
     featured: true,
     popular: true,
   },
+  {
+    id: "pdf-to-markdown",
+    slug: "pdf-to-markdown",
+    icon: "FileType",
+    category: "pdf",
+    createdAt: "2026-09-15",
+  },
 
   // --- KATEGORI: UNIT ---
   {

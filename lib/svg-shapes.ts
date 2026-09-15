@@ -49,14 +49,16 @@ export interface WaveOpts {
   phase: number;
   baseline: number;
   flip?: boolean;
+  position?: "top" | "bottom";
 }
 
 /**
  * Path for one wavy, fillable section-divider layer spanning `0..width`,
- * closed down to the bottom edge (getwaves.com-style divider).
+ * closed to either the bottom edge (bottom divider) or the top edge
+ * (top divider), per `position` (getwaves.com-style divider).
  */
 export function generateWavePath(width: number, height: number, opts: WaveOpts): string {
-  const { amplitude, frequency, phase, baseline, flip = false } = opts;
+  const { amplitude, frequency, phase, baseline, flip = false, position = "bottom" } = opts;
 
   const pointsPerPeriod = 14;
   const sampleCount = Math.max(24, Math.round(frequency * pointsPerPeriod));
@@ -73,7 +75,8 @@ export function generateWavePath(width: number, height: number, opts: WaveOpts):
   }
 
   const crestPath = catmullRomToBezierPath(points, false);
-  return `${crestPath}L ${width.toFixed(2)} ${height.toFixed(2)} L 0 ${height.toFixed(2)} Z`;
+  const edgeY = position === "top" ? 0 : height;
+  return `${crestPath}L ${width.toFixed(2)} ${edgeY.toFixed(2)} L 0 ${edgeY.toFixed(2)} Z`;
 }
 
 export interface BlobOpts {
