@@ -19,7 +19,8 @@ const fontsPromise = Promise.all([
 function bufferToBase64(buf: ArrayBuffer) {
   let binary = "";
   const bytes = new Uint8Array(buf);
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  for (let i = 0; i < bytes.length; i++)
+    binary += String.fromCharCode(bytes[i]);
   return btoa(binary);
 }
 
@@ -41,18 +42,56 @@ const CATEGORY_THEME: Record<
   string,
   { from: string; to: string; glow: string; accent: string }
 > = {
-  image: { from: "#3b82f6", to: "#2563eb", glow: "59,130,246", accent: "#60a5fa" },
+  image: {
+    from: "#3b82f6",
+    to: "#2563eb",
+    glow: "59,130,246",
+    accent: "#60a5fa",
+  },
   pdf: { from: "#ef4444", to: "#e11d48", glow: "239,68,68", accent: "#f87171" },
-  unit: { from: "#8b5cf6", to: "#7c3aed", glow: "139,92,246", accent: "#a78bfa" },
-  color: { from: "#ec4899", to: "#e11d48", glow: "236,72,153", accent: "#f472b6" },
-  text: { from: "#fbbf24", to: "#f97316", glow: "251,191,36", accent: "#fcd34d" },
-  math: { from: "#10b981", to: "#0d9488", glow: "16,185,129", accent: "#34d399" },
-  dev: { from: "#64748b", to: "#334155", glow: "100,116,139", accent: "#94a3b8" },
+  unit: {
+    from: "#8b5cf6",
+    to: "#7c3aed",
+    glow: "139,92,246",
+    accent: "#a78bfa",
+  },
+  color: {
+    from: "#ec4899",
+    to: "#e11d48",
+    glow: "236,72,153",
+    accent: "#f472b6",
+  },
+  text: {
+    from: "#fbbf24",
+    to: "#f97316",
+    glow: "251,191,36",
+    accent: "#fcd34d",
+  },
+  math: {
+    from: "#10b981",
+    to: "#0d9488",
+    glow: "16,185,129",
+    accent: "#34d399",
+  },
+  dev: {
+    from: "#64748b",
+    to: "#334155",
+    glow: "100,116,139",
+    accent: "#94a3b8",
+  },
+  productivity: {
+    from: "#06b6d4",
+    to: "#0284c7",
+    glow: "6,182,212",
+    accent: "#22d3ee",
+  },
 };
 
 const DEFAULT_ACCENT = "#2dd4bf";
 
-function getBackgroundImage(theme: (typeof CATEGORY_THEME)[string] | undefined) {
+function getBackgroundImage(
+  theme: (typeof CATEGORY_THEME)[string] | undefined,
+) {
   if (theme) {
     return [
       `radial-gradient(620px circle at 12% 15%, rgba(${theme.glow},0.35), transparent 70%)`,
@@ -85,30 +124,30 @@ export async function GET(req: NextRequest) {
   const logoDataUri = await logoDataUriPromise;
 
   return new ImageResponse(
-    (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        padding: "64px 90px",
+        background: "#0b0d12",
+        backgroundImage: getBackgroundImage(theme),
+        backgroundSize: theme
+          ? "auto, auto, 40px 40px, 40px 40px"
+          : "auto, auto, auto, auto, 40px 40px, 40px 40px",
+        fontFamily: "Geist, Arial, sans-serif",
+      }}
+    >
       <div
         style={{
-          width: "100%",
-          height: "100%",
           display: "flex",
-          flexDirection: "column",
+          alignItems: "center",
           justifyContent: "space-between",
-          padding: "64px 90px",
-          background: "#0b0d12",
-          backgroundImage: getBackgroundImage(theme),
-          backgroundSize: theme
-            ? "auto, auto, 40px 40px, 40px 40px"
-            : "auto, auto, auto, auto, 40px 40px, 40px 40px",
-          fontFamily: "Geist, Arial, sans-serif",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
+        {iconName ? (
           <div style={{ display: "flex", alignItems: "center" }}>
             <div
               style={{
@@ -130,13 +169,13 @@ export async function GET(req: NextRequest) {
                   color: "#0b0d12",
                 }}
               >
-                M
+                <img src={logoDataUri} width={52} height={52} />
               </div>
             </div>
             <div
               style={{
                 display: "flex",
-                fontSize: 22,
+                fontSize: 24,
                 fontWeight: 700,
                 color: "#e5e7eb",
               }}
@@ -144,95 +183,97 @@ export async function GET(req: NextRequest) {
               Mojepict
             </div>
           </div>
-          <div style={{ display: "flex", fontSize: 24, color: "#94a3b8" }}>
-            mojepict.vercel.app
-          </div>
+        ) : (
+          <div />
+        )}
+        <div style={{ display: "flex", fontSize: 26, color: "#94a3b8" }}>
+          mojepict.vercel.app
         </div>
+      </div>
 
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 152,
-              height: 152,
-              borderRadius: 38,
-              background: theme
-                ? `linear-gradient(135deg, ${theme.from}, ${theme.to})`
-                : "#ffffff",
-              marginRight: 48,
-              flexShrink: 0,
-              overflow: "hidden",
-              boxShadow: theme
-                ? `0 20px 60px -20px rgba(${theme.glow},0.6)`
-                : "0 20px 60px -20px rgba(0,0,0,0.5)",
-            }}
-          >
-            {iconName ? (
-              <OgIcon name={iconName} color="#ffffff" size={78} strokeWidth={2} />
-            ) : (
-              <img src={logoDataUri} width={152} height={152} />
-            )}
-          </div>
-
-          <div
-            style={{ display: "flex", flexDirection: "column", maxWidth: 820 }}
-          >
-            {eyebrow ? (
-              <div
-                style={{
-                  display: "flex",
-                  alignSelf: "flex-start",
-                  fontSize: 30,
-                  fontWeight: 700,
-                  color: accent,
-                  letterSpacing: 1,
-                  marginBottom: 14,
-                  padding: "6px 18px",
-                  borderRadius: 999,
-                  background: `rgba(${theme?.glow ?? "94,234,212"},0.15)`,
-                }}
-              >
-                {eyebrow.toUpperCase()}
-              </div>
-            ) : null}
-            <div
-              style={{
-                display: "flex",
-                fontSize: 84,
-                fontWeight: 800,
-                color: "#ffffff",
-                lineHeight: 1.1,
-              }}
-            >
-              {title}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                fontSize: 40,
-                fontWeight: 600,
-                color: accent,
-                marginTop: 22,
-              }}
-            >
-              {subtitle}
-            </div>
-          </div>
-        </div>
-
+      <div style={{ display: "flex", alignItems: "center" }}>
         <div
           style={{
             display: "flex",
-            fontSize: 28,
-            color: "#cbd5e1",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 152,
+            height: 152,
+            borderRadius: 38,
+            background: theme
+              ? `linear-gradient(135deg, ${theme.from}, ${theme.to})`
+              : "#ffffff",
+            marginRight: 48,
+            flexShrink: 0,
+            overflow: "hidden",
+            boxShadow: theme
+              ? `0 20px 60px -20px rgba(${theme.glow},0.6)`
+              : "0 20px 60px -20px rgba(0,0,0,0.5)",
           }}
         >
-          No Uploads · No Accounts · 100% Browser-Based
+          {iconName ? (
+            <OgIcon name={iconName} color="#ffffff" size={78} strokeWidth={2} />
+          ) : (
+            <img src={logoDataUri} width={152} height={152} />
+          )}
+        </div>
+
+        <div
+          style={{ display: "flex", flexDirection: "column", maxWidth: 820 }}
+        >
+          {eyebrow ? (
+            <div
+              style={{
+                display: "flex",
+                alignSelf: "flex-start",
+                fontSize: 30,
+                fontWeight: 700,
+                color: accent,
+                letterSpacing: 1,
+                marginBottom: 14,
+                padding: "6px 18px",
+                borderRadius: 999,
+                background: `rgba(${theme?.glow ?? "94,234,212"},0.15)`,
+              }}
+            >
+              {eyebrow.toUpperCase()}
+            </div>
+          ) : null}
+          <div
+            style={{
+              display: "flex",
+              fontSize: 84,
+              fontWeight: 800,
+              color: "#ffffff",
+              lineHeight: 1.1,
+            }}
+          >
+            {title}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              fontSize: 40,
+              fontWeight: 600,
+              color: accent,
+              marginTop: 22,
+            }}
+          >
+            {subtitle}
+          </div>
         </div>
       </div>
-    ),
+
+      <div
+        style={{
+          display: "flex",
+          fontSize: 28,
+          color: "#cbd5e1",
+        }}
+      >
+        No Uploads · No Accounts · 100% Browser-Based
+      </div>
+    </div>,
     {
       width: WIDTH,
       height: HEIGHT,
