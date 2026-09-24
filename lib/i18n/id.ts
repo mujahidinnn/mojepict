@@ -186,7 +186,7 @@ export const id = {
 
   "tool.unit-converter.name": "Konverter Satuan",
   "tool.unit-converter.description":
-    "Konversi panjang, luas, volume, berat, dan suhu — lengkap dengan tangga satuan seperti waktu sekolah dulu.",
+    "Konversi panjang, luas, volume, suhu, penyimpanan data, satuan fisika, basis bilangan, dan timestamp.",
   "tool.unit-converter.category.length": "Panjang",
   "tool.unit-converter.category.area": "Luas",
   "tool.unit-converter.category.liquidVolume": "Volume Cairan",
@@ -577,6 +577,22 @@ export const id = {
   "tool.pdf-to-markdown.resultLabel": "Markdown",
   "tool.pdf-to-markdown.renderPreview": "Tampilkan pratinjau hasil render",
 
+  "tool.rich-text-to-markdown.name": "Text Editor ke Markdown",
+  "tool.rich-text-to-markdown.description":
+    "Format teks di editor visual dan dapatkan Markdown yang rapi secara instan.",
+  "tool.rich-text-to-markdown.editor": "Editor",
+  "tool.rich-text-to-markdown.copy": "Salin",
+
+  "tool.word-to-pdf.name": "Word ke PDF",
+  "tool.word-to-pdf.description":
+    "Ubah dokumen Word (.docx) jadi PDF langsung di browser.",
+  "tool.word-to-pdf.dropzone.title": "Klik atau seret file .docx di sini",
+  "tool.word-to-pdf.dropzone.subtitle": "File Anda tidak pernah meninggalkan browser",
+  "tool.word-to-pdf.invalidFile": "Hanya file .docx yang valid yang didukung.",
+  "tool.word-to-pdf.convert": "Simpan sebagai PDF",
+  "tool.word-to-pdf.changeFile": "Ganti file",
+  "tool.word-to-pdf.hint": "Di dialog cetak, pilih \"Save as PDF\" sebagai tujuan dan matikan \"Headers and footers\".",
+
   "tool.slug-generator.name": "Slug Generator",
   "tool.slug-generator.description":
     "Ubah judul atau teks apa pun jadi slug yang rapi dan ramah URL.",
@@ -831,4 +847,42 @@ export const id = {
   "tool.voice-to-text.name": "Ubah Suara ke Teks",
   "tool.voice-to-text.description":
     "Transkrip suara ke teks secara langsung di browser dengan hasil sementara, perintah tanda baca via suara, dukungan banyak bahasa, dan transkrip yang bisa diedit dengan cap waktu.",
+  "tool.converter.name": "Konverter Universal",
+  "tool.converter.description":
+    "Ubah format gambar, PDF, Word, Markdown, CSV, dan JSON. Cukup jatuhkan file, formatnya terdeteksi otomatis, lalu pilih format tujuan.",
+  "tool.encoder-decoder.name": "Encoder & Decoder",
+  "tool.encoder-decoder.description":
+    "Base64, URL encode, decode JWT, dan hash dalam satu tempat. Pilih mode, hasil langsung muncul.",
+  "tool.text-tools.name": "Alat Teks",
+  "tool.text-tools.description":
+    "Ubah huruf besar/kecil atau jadikan teks apa pun sebagai slug URL yang rapi, dalam satu alat.",
+  "tool.code-generator.name": "Alat QR & Barcode",
+  "tool.code-generator.description":
+    "Buat QR code dan barcode, atau pindai QR code dari gambar.",
+  "tool.random-generator.name": "Generator Acak",
+  "tool.random-generator.description":
+    "Buat password aman, UUID, teks contoh, atau pilih pemenang secara acak.",
+  "tool.pdf-toolkit.name": "Alat PDF",
+  "tool.pdf-toolkit.description":
+    "Gabung, pisah, dan edit file PDF langsung di browser.",
+  "tool.image-toolkit.name": "Alat Gambar",
+  "tool.image-toolkit.description":
+    "Ubah ukuran, potong, kompres, dan bagi gambar dalam satu tempat.",
+  "tool.finance-calculator.name": "Kalkulator Keuangan",
+  "tool.finance-calculator.description":
+    "Kalkulator persentase, diskon, pajak, tip, patungan, HPP, margin laba, dan titik impas dalam satu alat.",
+  "tool.date-calculator.name": "Kalkulator Tanggal",
+  "tool.date-calculator.description":
+    "Hitung usia secara tepat atau selisih antara dua tanggal.",
+  "hub.mode": "Mode",
+  "hub.mode.unit-converter": "Satuan umum",
+  "converter.from": "Dari",
+  "converter.to": "Ke",
+  "converter.auto": "Deteksi otomatis",
+  "converter.swap": "Tukar format",
+  "converter.pickTarget": "Pilih format tujuan",
+  "converter.supported": "konversi didukung",
+  "converter.dropTitle": "Jatuhkan file apa saja untuk mendeteksi formatnya",
+  "converter.dropSubtitle": "Gambar, PDF, DOCX, CSV, JSON · atau pilih format di atas",
+  "converter.unsupported": "Format file ini belum didukung.",
 };

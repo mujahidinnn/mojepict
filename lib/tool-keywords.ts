@@ -4,6 +4,9 @@
  * as separate lists (not interleaved) so each language reads as its own
  * coherent block when rendered. Keyed by Tool.id (see lib/tools.ts).
  */
+import { CONVERTER_LEGACY } from "@/lib/converter-formats";
+import { HUB_MODES } from "@/lib/hubs";
+
 export interface ToolKeywordSet {
   en: string[];
   id: string[];
@@ -551,6 +554,35 @@ export const TOOL_KEYWORDS: Record<string, ToolKeywordSet> = {
       "anotasi pdf gratis",
       "edit dan isi pdf online",
       "tanda tangan pdf online",
+    ],
+  },
+  "word-to-pdf": {
+    en: [
+      "word to pdf converter",
+      "docx to pdf online",
+      "convert word document to pdf free",
+      "doc to pdf no upload",
+    ],
+    id: [
+      "word ke pdf",
+      "convert docx ke pdf online",
+      "ubah dokumen word jadi pdf gratis",
+      "docx ke pdf tanpa upload",
+    ],
+  },
+  "rich-text-to-markdown": {
+    en: [
+      "rich text to markdown",
+      "wysiwyg markdown editor",
+      "text editor to markdown converter",
+      "convert formatted text to markdown",
+      "online text editor markdown output",
+    ],
+    id: [
+      "text editor ke markdown",
+      "editor teks jadi markdown",
+      "ubah teks berformat ke markdown",
+      "editor wysiwyg markdown online",
     ],
   },
   "pdf-to-markdown": {
@@ -1405,3 +1437,17 @@ export const TOOL_KEYWORDS: Record<string, ToolKeywordSet> = {
     ],
   },
 };
+
+// Merged hubs inherit every keyword of the legacy tools they replaced, so
+// old search phrases ("csv to json", "hitung diskon") still find the hub.
+const HUB_SOURCES: Record<string, string[]> = {
+  ...HUB_MODES,
+  converter: Object.keys(CONVERTER_LEGACY),
+};
+for (const [hub, ids] of Object.entries(HUB_SOURCES)) {
+  const sets = [hub, ...ids].map((id) => TOOL_KEYWORDS[id]).filter(Boolean);
+  TOOL_KEYWORDS[hub] = {
+    en: Array.from(new Set(sets.flatMap((k) => k.en))),
+    id: Array.from(new Set(sets.flatMap((k) => k.id))),
+  };
+}

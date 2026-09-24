@@ -6,7 +6,7 @@ import { HeroIllustration } from "@/components/illustrations/HeroIllustration";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n/context";
 import { cn } from "@/lib/utils";
-import { TOOLS, getPopularTools } from "@/lib/tools";
+import { FEATURE_COUNT, TOOLS, getPopularTools } from "@/lib/tools";
 import { getRecentTools } from "@/hooks/use-recent-tools";
 import { Layers, Search, ShieldCheck, Sparkles } from "lucide-react";
 
@@ -97,7 +97,7 @@ export default function HomePage() {
         <section className="relative px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {[
             {
-              value: `${TOOLS.length}`,
+              value: `${FEATURE_COUNT}`,
               label: "Tools available",
               icon: Layers,
               tile: "bg-gradient-to-br from-indigo-500 to-blue-600 shadow-indigo-500/30",

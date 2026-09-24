@@ -8,6 +8,7 @@ import { recordRecentTool } from "@/hooks/use-recent-tools";
 import { TOOLS, getToolBadge } from "@/lib/tools";
 import { getCategoryColor, getCategoryWash, getToolIconComponent } from "@/lib/tool-icons";
 import { useI18n } from "@/lib/i18n/context";
+import { useEmbedded } from "@/components/tools/EmbeddedContext";
 import { cn } from "@/lib/utils";
 
 interface ToolShellProps {
@@ -28,11 +29,13 @@ export function ToolShell({
 }: ToolShellProps) {
   const pathname = usePathname();
   const { t } = useI18n();
+  const embedded = useEmbedded();
 
   useEffect(() => {
+    if (embedded) return;
     const slug = pathname?.replace(/^\//, "");
     if (slug) recordRecentTool(slug);
-  }, [pathname]);
+  }, [pathname, embedded]);
 
   const tool = TOOLS.find((t) => t.slug === pathname?.replace(/^\//, ""));
   const LIcon = tool && getToolIconComponent(tool.icon);
@@ -40,6 +43,8 @@ export function ToolShell({
   const wash = tool && getCategoryWash(tool.category);
   const autoBadge = tool && getToolBadge(tool);
   const badgeLabel = badge ?? (autoBadge ? t(`landing.badge.${autoBadge}` as any) : undefined);
+
+  if (embedded) return <>{children}</>;
 
   return (
     <div className="flex flex-col gap-6">

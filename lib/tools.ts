@@ -1,3 +1,6 @@
+import { CONVERTER_EDGES } from "@/lib/converter-formats";
+import { HUB_MODES } from "@/lib/hubs";
+
 export type ToolCategory =
   | "image"
   | "pdf"
@@ -41,42 +44,20 @@ export const TOOLS: Tool[] = [
     popular: true,
   },
   {
-    id: "image-compressor",
-    slug: "image-compressor",
-    icon: "PackageOpen",
-    category: "image",
-    createdAt: "2026-05-10",
+    id: "converter",
+    slug: "converter",
+    icon: "ArrowRightLeft",
+    category: "productivity",
+    createdAt: "2026-09-24",
     popular: true,
   },
   {
-    id: "image-converter",
-    slug: "image-converter",
-    icon: "ImageIcon",
-    category: "image",
-    createdAt: "2026-05-10",
-    popular: true,
-  },
-  {
-    id: "image-resizer",
-    slug: "image-resizer",
+    id: "image-toolkit",
+    slug: "image-toolkit",
     icon: "Scaling",
     category: "image",
-    createdAt: "2026-05-10",
+    createdAt: "2026-09-24",
     popular: true,
-  },
-  {
-    id: "image-cropper",
-    slug: "image-cropper",
-    icon: "Crop",
-    category: "image",
-    createdAt: "2026-05-10",
-  },
-  {
-    id: "image-splitter",
-    slug: "image-splitter",
-    icon: "Grid3X3",
-    category: "image",
-    createdAt: "2026-08-16",
   },
   {
     id: "watermark",
@@ -106,13 +87,6 @@ export const TOOLS: Tool[] = [
     id: "color-picker-image",
     slug: "color-picker-image",
     icon: "Pipette",
-    category: "image",
-    createdAt: "2026-08-16",
-  },
-  {
-    id: "svg-tracer",
-    slug: "svg-tracer",
-    icon: "PenTool",
     category: "image",
     createdAt: "2026-08-16",
   },
@@ -149,27 +123,13 @@ export const TOOLS: Tool[] = [
     popular: true,
   },
   {
-    id: "qr-generator",
-    slug: "qr-generator",
+    id: "code-generator",
+    slug: "code-generator",
     icon: "QrCode",
     category: "image",
-    createdAt: "2026-05-10",
+    createdAt: "2026-09-24",
     featured: true,
     popular: true,
-  },
-  {
-    id: "qr-scanner",
-    slug: "qr-scanner",
-    icon: "ScanQrCode",
-    category: "image",
-    createdAt: "2026-08-16",
-  },
-  {
-    id: "barcode-generator",
-    slug: "barcode-generator",
-    icon: "Barcode",
-    category: "image",
-    createdAt: "2026-08-18",
   },
   {
     id: "wave-generator",
@@ -183,44 +143,13 @@ export const TOOLS: Tool[] = [
 
   // --- KATEGORI: PDF ---
   {
-    id: "merge-pdf",
-    slug: "merge-pdf",
+    id: "pdf-toolkit",
+    slug: "pdf-toolkit",
     icon: "Merge",
     category: "pdf",
-    createdAt: "2026-08-18",
+    createdAt: "2026-09-24",
     featured: true,
     popular: true,
-  },
-  {
-    id: "split-pdf",
-    slug: "split-pdf",
-    icon: "Scissors",
-    category: "pdf",
-    createdAt: "2026-08-18",
-  },
-  {
-    id: "image-to-pdf",
-    slug: "image-to-pdf",
-    icon: "FileOutput",
-    category: "pdf",
-    createdAt: "2026-08-18",
-    popular: true,
-  },
-  {
-    id: "pdf-editor",
-    slug: "pdf-editor",
-    icon: "FilePenLine",
-    category: "pdf",
-    createdAt: "2026-08-18",
-    featured: true,
-    popular: true,
-  },
-  {
-    id: "pdf-to-markdown",
-    slug: "pdf-to-markdown",
-    icon: "FileType",
-    category: "pdf",
-    createdAt: "2026-09-15",
   },
 
   // --- KATEGORI: UNIT ---
@@ -229,21 +158,8 @@ export const TOOLS: Tool[] = [
     slug: "unit-converter",
     icon: "Ruler",
     category: "unit",
-    createdAt: "2026-05-10",
-  },
-  {
-    id: "data-converter",
-    slug: "data-converter",
-    icon: "Cpu",
-    category: "unit",
-    createdAt: "2026-05-10",
-  },
-  {
-    id: "physics-converter",
-    slug: "physics-converter",
-    icon: "Atom",
-    category: "unit",
-    createdAt: "2026-08-18",
+    createdAt: "2026-09-24",
+    popular: true,
   },
 
   // --- KATEGORI: TEXT ---
@@ -255,25 +171,11 @@ export const TOOLS: Tool[] = [
     createdAt: "2026-08-16",
   },
   {
-    id: "case-converter",
-    slug: "case-converter",
+    id: "text-tools",
+    slug: "text-tools",
     icon: "Type",
     category: "text",
-    createdAt: "2026-08-16",
-  },
-  {
-    id: "slug-generator",
-    slug: "slug-generator",
-    icon: "Link",
-    category: "text",
-    createdAt: "2026-08-18",
-  },
-  {
-    id: "lorem-ipsum",
-    slug: "lorem-ipsum",
-    icon: "Pilcrow",
-    category: "text",
-    createdAt: "2026-08-17",
+    createdAt: "2026-09-24",
   },
   {
     id: "text-diff",
@@ -292,66 +194,13 @@ export const TOOLS: Tool[] = [
 
   // --- KATEGORI: MATH ---
   {
-    id: "percentage-calculator",
-    slug: "percentage-calculator",
-    icon: "Percent",
-    category: "math",
-    createdAt: "2026-08-17",
-    popular: true,
-  },
-  {
-    id: "discount-calculator",
-    slug: "discount-calculator",
+    id: "finance-calculator",
+    slug: "finance-calculator",
     icon: "BadgePercent",
     category: "math",
-    createdAt: "2026-08-18",
-  },
-  {
-    id: "tax-calculator",
-    slug: "tax-calculator",
-    icon: "Landmark",
-    category: "math",
-    createdAt: "2026-08-18",
-  },
-  {
-    id: "tip-calculator",
-    slug: "tip-calculator",
-    icon: "Receipt",
-    category: "math",
-    createdAt: "2026-08-18",
-  },
-  {
-    id: "split-bill",
-    slug: "split-bill",
-    icon: "Split",
-    category: "math",
-    createdAt: "2026-08-19",
+    createdAt: "2026-09-24",
     featured: true,
     popular: true,
-  },
-  {
-    id: "hpp-calculator",
-    slug: "hpp-calculator",
-    icon: "Factory",
-    category: "math",
-    createdAt: "2026-08-18",
-    featured: true,
-    popular: true,
-  },
-  {
-    id: "profit-margin-calculator",
-    slug: "profit-margin-calculator",
-    icon: "TrendingUp",
-    category: "math",
-    createdAt: "2026-08-18",
-    popular: true,
-  },
-  {
-    id: "break-even-calculator",
-    slug: "break-even-calculator",
-    icon: "Target",
-    category: "math",
-    createdAt: "2026-08-18",
   },
   {
     id: "zakat-calculator",
@@ -371,25 +220,11 @@ export const TOOLS: Tool[] = [
     popular: true,
   },
   {
-    id: "age-calculator",
-    slug: "age-calculator",
-    icon: "Cake",
-    category: "math",
-    createdAt: "2026-08-17",
-  },
-  {
-    id: "date-difference-calculator",
-    slug: "date-difference-calculator",
+    id: "date-calculator",
+    slug: "date-calculator",
     icon: "CalendarDays",
     category: "math",
-    createdAt: "2026-08-18",
-  },
-  {
-    id: "random-picker",
-    slug: "random-picker",
-    icon: "Dices",
-    category: "math",
-    createdAt: "2026-08-18",
+    createdAt: "2026-09-24",
   },
 
   // --- KATEGORI: COLOR ---
@@ -426,19 +261,11 @@ export const TOOLS: Tool[] = [
 
   // --- KATEGORI: DEV ---
   {
-    id: "password-generator",
-    slug: "password-generator",
+    id: "random-generator",
+    slug: "random-generator",
     icon: "KeyRound",
     category: "dev",
-    createdAt: "2026-08-16",
-    popular: true,
-  },
-  {
-    id: "uuid-generator",
-    slug: "uuid-generator",
-    icon: "Fingerprint",
-    category: "dev",
-    createdAt: "2026-08-18",
+    createdAt: "2026-09-24",
     popular: true,
   },
   {
@@ -449,33 +276,12 @@ export const TOOLS: Tool[] = [
     createdAt: "2026-08-18",
   },
   {
-    id: "base64-encoder",
-    slug: "base64-encoder",
+    id: "encoder-decoder",
+    slug: "encoder-decoder",
     icon: "Binary",
     category: "dev",
-    createdAt: "2026-08-16",
+    createdAt: "2026-09-24",
     popular: true,
-  },
-  {
-    id: "url-encoder",
-    slug: "url-encoder",
-    icon: "Link2",
-    category: "dev",
-    createdAt: "2026-08-17",
-  },
-  {
-    id: "jwt-decoder",
-    slug: "jwt-decoder",
-    icon: "Unlock",
-    category: "dev",
-    createdAt: "2026-08-18",
-  },
-  {
-    id: "hash-generator",
-    slug: "hash-generator",
-    icon: "Hash",
-    category: "dev",
-    createdAt: "2026-08-16",
   },
   {
     id: "json-formatter",
@@ -483,28 +289,6 @@ export const TOOLS: Tool[] = [
     icon: "Code2",
     category: "dev",
     createdAt: "2026-08-16",
-  },
-  {
-    id: "csv-json-converter",
-    slug: "csv-json-converter",
-    icon: "Table2",
-    category: "dev",
-    createdAt: "2026-08-18",
-  },
-  {
-    id: "number-base-converter",
-    slug: "number-base-converter",
-    icon: "Binary",
-    category: "dev",
-    createdAt: "2026-08-18",
-  },
-  {
-    id: "timestamp-converter",
-    slug: "timestamp-converter",
-    icon: "Clock",
-    category: "dev",
-    createdAt: "2026-08-17",
-    popular: true,
   },
   {
     id: "regex-tester",
@@ -570,6 +354,23 @@ export const TOOLS: Tool[] = [
   },
 ];
 
+/** Popularity weight; drives sidebar/group order. */
+const score = (t: Tool) => (t.popular ? 2 : 0) + (t.featured ? 1 : 0);
+
+// Most popular first (stable, so ties keep authoring order); Photobooth is always pinned on top.
+TOOLS.sort((a, b) => Number(b.id === "photobooth") - Number(a.id === "photobooth") || score(b) - score(a));
+
+/**
+ * Features counted for a tool: each conversion pair of the Universal Converter
+ * and each mode of a hub is one feature; a standalone tool is one.
+ */
+export function getToolFeatureCount(tool: Tool): number {
+  if (tool.id === "converter") return CONVERTER_EDGES.length;
+  return HUB_MODES[tool.id]?.length ?? 1;
+}
+
+export const FEATURE_COUNT = TOOLS.reduce((n, tool) => n + getToolFeatureCount(tool), 0);
+
 /** A tool is "new" for this many days after its createdAt date. */
 export const NEW_WINDOW_DAYS = 90;
 
@@ -594,16 +395,14 @@ export const CATEGORIES: Record<
   productivity: { labelKey: "category.productivity", icon: "Workflow" },
 };
 
-export const CATEGORY_ORDER: ToolCategory[] = [
-  "image",
-  "pdf",
-  "productivity",
-  "unit",
-  "color",
-  "text",
-  "math",
-  "dev",
-];
+/** Categories ranked by total tool popularity; the one holding Photobooth stays first. */
+export const CATEGORY_ORDER: ToolCategory[] = (Object.keys(CATEGORIES) as ToolCategory[])
+  .map((cat) => {
+    const tools = TOOLS.filter((t) => t.category === cat);
+    return { cat, rank: tools.some((t) => t.id === "photobooth") ? Infinity : tools.reduce((n, t) => n + score(t), 0) };
+  })
+  .sort((x, y) => y.rank - x.rank)
+  .map((x) => x.cat);
 
 export function getToolsByCategory(category: ToolCategory): Tool[] {
   return TOOLS.filter((t) => t.category === category);

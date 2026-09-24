@@ -188,7 +188,7 @@ export const en = {
 
   "tool.unit-converter.name": "Unit Converter",
   "tool.unit-converter.description":
-    "Convert length, area, volume, mass, and temperature — complete with the classic step-ladder chart from school.",
+    "Convert length, area, volume, temperature, data storage, physics units, number bases and timestamps.",
   "tool.unit-converter.category.length": "Length",
   "tool.unit-converter.category.area": "Area",
   "tool.unit-converter.category.liquidVolume": "Liquid Volume",
@@ -579,6 +579,22 @@ export const en = {
   "tool.pdf-to-markdown.resultLabel": "Markdown",
   "tool.pdf-to-markdown.renderPreview": "Show rendered preview",
 
+  "tool.rich-text-to-markdown.name": "Text Editor to Markdown",
+  "tool.rich-text-to-markdown.description":
+    "Format text in a rich editor and get clean Markdown instantly.",
+  "tool.rich-text-to-markdown.editor": "Editor",
+  "tool.rich-text-to-markdown.copy": "Copy",
+
+  "tool.word-to-pdf.name": "Word to PDF",
+  "tool.word-to-pdf.description":
+    "Convert a Word (.docx) document to a text-based PDF: pick \"Save as PDF\" in the print dialog.",
+  "tool.word-to-pdf.dropzone.title": "Click or drag a .docx file here",
+  "tool.word-to-pdf.dropzone.subtitle": "Your file never leaves the browser",
+  "tool.word-to-pdf.invalidFile": "Only valid .docx files are supported.",
+  "tool.word-to-pdf.convert": "Convert to PDF",
+  "tool.word-to-pdf.changeFile": "Change file",
+  "tool.word-to-pdf.hint": "In the print dialog, choose \"Save as PDF\" as the destination and turn off \"Headers and footers\".",
+
   "tool.slug-generator.name": "Slug Generator",
   "tool.slug-generator.description":
     "Turn any title or text into a clean, URL-friendly slug.",
@@ -839,6 +855,44 @@ export const en = {
   "tool.voice-to-text.name": "Voice to Text",
   "tool.voice-to-text.description":
     "Transcribe speech to text live in your browser with interim results, spoken punctuation commands, multi-language support, and an editable, timestamped transcript.",
+  "tool.converter.name": "Universal Converter",
+  "tool.converter.description":
+    "Convert between images, PDF, Word, Markdown, CSV and JSON. Drop a file and the format is detected automatically, then pick any target format.",
+  "tool.encoder-decoder.name": "Encoder & Decoder",
+  "tool.encoder-decoder.description":
+    "Base64, URL encoding, JWT decoding and hashing in one place. Pick a mode and get the result instantly.",
+  "tool.text-tools.name": "Text Tools",
+  "tool.text-tools.description":
+    "Change text case or turn any text into a clean URL slug, all in one tool.",
+  "tool.code-generator.name": "QR & Barcode Tools",
+  "tool.code-generator.description":
+    "Generate QR codes and barcodes, or scan a QR code from an image.",
+  "tool.random-generator.name": "Random Generator",
+  "tool.random-generator.description":
+    "Generate secure passwords, UUIDs, placeholder text, or pick a random winner.",
+  "tool.pdf-toolkit.name": "PDF Toolkit",
+  "tool.pdf-toolkit.description":
+    "Merge, split and edit PDF files right in your browser.",
+  "tool.image-toolkit.name": "Image Toolkit",
+  "tool.image-toolkit.description":
+    "Resize, crop, compress and split images in one place.",
+  "tool.finance-calculator.name": "Finance Calculator",
+  "tool.finance-calculator.description":
+    "Percentage, discount, tax, tip, split bill, cost of goods, profit margin and break-even calculators in one tool.",
+  "tool.date-calculator.name": "Date Calculator",
+  "tool.date-calculator.description":
+    "Calculate exact age or the difference between two dates.",
+  "hub.mode": "Mode",
+  "hub.mode.unit-converter": "General units",
+  "converter.from": "From",
+  "converter.to": "To",
+  "converter.auto": "Auto-detect",
+  "converter.swap": "Swap formats",
+  "converter.pickTarget": "Choose target format",
+  "converter.supported": "conversions supported",
+  "converter.dropTitle": "Drop any file to detect its format",
+  "converter.dropSubtitle": "Images, PDF, DOCX, CSV, JSON · or choose a format above",
+  "converter.unsupported": "This file format is not supported.",
 };
 
 export type I18nKey = keyof typeof en;

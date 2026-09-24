@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { CATEGORIES, TOOLS } from "@/lib/tools";
 import { en } from "@/lib/i18n/en";
 import { TOOL_KEYWORDS } from "@/lib/tool-keywords";
+import { HUB_MODES } from "@/lib/hubs";
+import { CONVERTER_EDGES, FORMATS } from "@/lib/converter-formats";
+import { id as idDict } from "@/lib/i18n/id";
 
 export const SITE_URL = "https://mojepict.vercel.app";
 export const SITE_NAME = "Mojepict";
@@ -32,7 +35,27 @@ function toolCopy(id: string) {
   return { name, description };
 }
 
+/** Hubs list every mode / conversion pair, so searches for the old tool names still land here. */
+const HUB_CAP = 60;
+
+function hubFeatureNames(id: string): { en: string[]; id: string[] } | null {
+  if (id === "converter") {
+    const pairs = CONVERTER_EDGES.map((e) => [FORMATS[e.from].label, FORMATS[e.to].label]);
+    return {
+      en: pairs.map(([a, b]) => `${a} to ${b}`),
+      id: pairs.map(([a, b]) => `ubah ${a} ke ${b}`),
+    };
+  }
+  const modes = HUB_MODES[id]?.filter((m) => m !== id);
+  if (!modes) return null;
+  return {
+    en: modes.map((m) => en[`tool.${m}.name` as EnKey] as string).filter(Boolean),
+    id: modes.map((m) => (idDict as Record<string, string>)[`tool.${m}.name`]).filter(Boolean),
+  };
+}
+
 function getToolKeywords(id: string, name: string, category: string): string[] {
+  const features = hubFeatureNames(id);
   const baseEn = [
     name,
     `free ${name.toLowerCase()}`,
@@ -44,6 +67,15 @@ function getToolKeywords(id: string, name: string, category: string): string[] {
   const { en = [], id: idKeywords = [] } = TOOL_KEYWORDS[id] ?? {};
   // English block first, then Indonesian block — kept separate rather than
   // interleaved so each language reads as its own coherent group.
+  if (features) {
+    return Array.from(
+      new Set([
+        ...[...features.en, ...en].slice(0, HUB_CAP),
+        ...baseEn,
+        ...[...features.id, ...idKeywords].slice(0, HUB_CAP),
+      ]),
+    );
+  }
   return Array.from(new Set([...en, ...baseEn, ...idKeywords]));
 }
 
@@ -88,6 +120,8 @@ export function getToolJsonLd(slug: string) {
   const { name, description } = toolCopy(tool.id);
   if (!name || !description) return null;
 
+  const features = hubFeatureNames(tool.id);
+
   return {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -97,6 +131,7 @@ export function getToolJsonLd(slug: string) {
     applicationCategory: "BrowserApplication",
     operatingSystem: "Any (runs in browser)",
     keywords: getToolKeywords(tool.id, name, tool.category).join(", "),
+    ...(features && { featureList: features.en }),
     isAccessibleForFree: true,
     offers: {
       "@type": "Offer",

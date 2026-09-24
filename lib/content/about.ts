@@ -1,4 +1,4 @@
-import { TOOLS } from "@/lib/tools";
+import { FEATURE_COUNT } from "@/lib/tools";
 
 export interface AboutSection {
   heading: string;
@@ -17,7 +17,7 @@ export const aboutContent: Record<"en" | "id", AboutContent> = {
     eyebrow: "About",
     title: "Tools that respect your files and your time.",
     intro:
-      `Mojepict is a growing collection of ${TOOLS.length}+ free web tools for images, PDFs, units, colors, text, and everyday developer tasks. No installs, no accounts, just open a tool and start.`,
+      `Mojepict is a growing collection of ${FEATURE_COUNT}+ free web tools for images, PDFs, units, colors, text, and everyday developer tasks. No installs, no accounts, just open a tool and start.`,
     sections: [
       {
         heading: "Why it exists",
@@ -41,7 +41,7 @@ export const aboutContent: Record<"en" | "id", AboutContent> = {
     eyebrow: "Tentang",
     title: "Alat yang menghargai file dan waktumu.",
     intro:
-      `Mojepict adalah kumpulan ${TOOLS.length}+ alat web gratis yang terus bertambah, untuk gambar, PDF, satuan, warna, teks, hingga kebutuhan developer sehari-hari. Tanpa instal, tanpa akun, buka alatnya, langsung pakai.`,
+      `Mojepict adalah kumpulan ${FEATURE_COUNT}+ alat web gratis yang terus bertambah, untuk gambar, PDF, satuan, warna, teks, hingga kebutuhan developer sehari-hari. Tanpa instal, tanpa akun, buka alatnya, langsung pakai.`,
     sections: [
       {
         heading: "Kenapa dibuat",
