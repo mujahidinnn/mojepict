@@ -96,21 +96,35 @@ export default function PasswordGeneratorPage() {
       title={t("tool.password-generator.name")}
       description={t("tool.password-generator.description")}
     >
-      <div className="flex flex-col gap-6 max-w-xl">
-        <div className="flex items-center gap-2 rounded-xl border bg-muted/10 p-4">
-          <KeyRound className="h-4 w-4 shrink-0 text-muted-foreground" />
-          <code className="flex-1 truncate text-lg font-mono tracking-wide">
+      <div className="max-w-screen-lg flex flex-col gap-8">
+        {/* Password Display Card */}
+        <div className="flex items-center gap-3 rounded-xl border bg-muted/10 p-6">
+          <KeyRound className="h-5 w-5 shrink-0 text-muted-foreground" />
+          <code className="flex-1 truncate text-sm font-mono tracking-wide">
             {password}
           </code>
-          <Button size="icon" variant="ghost" onClick={copyPassword} aria-label={t("action.copy")}>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={copyPassword}
+            aria-label={t("action.copy")}
+            className="h-9 w-9 shrink-0"
+          >
             <Copy className="h-4 w-4" />
           </Button>
-          <Button size="icon" variant="ghost" onClick={regenerate} aria-label={t("tool.password-generator.generate")}>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={regenerate}
+            aria-label={t("tool.password-generator.generate")}
+            className="h-9 w-9 shrink-0"
+          >
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Strength Indicator */}
+        <div className="flex items-center gap-3">
           <div className="flex h-1.5 flex-1 gap-1">
             {[0, 1, 2, 3].map((i) => (
               <span
@@ -127,37 +141,54 @@ export default function PasswordGeneratorPage() {
           </span>
         </div>
 
-        <div className="space-y-3">
-          <div className="flex justify-between">
-            <Label className="text-xs font-medium">{t("tool.password-generator.length")}</Label>
-            <span className="text-xs font-mono">{length}</span>
-          </div>
-          <Slider
-            value={[length]}
-            min={8}
-            max={64}
-            step={1}
-            onValueChange={(v: number[]) => setLength(v[0])}
-          />
-        </div>
-
-        <div className="space-y-3">
-          {(Object.keys(CHARSETS) as CharsetKey[]).map((key) => (
-            <div key={key} className="flex items-center justify-between">
-              <Label htmlFor={`opt-${key}`} className="text-sm font-normal">
-                {t(`tool.password-generator.${key}` as any)}
+        {/* Options */}
+        <div className="space-y-4">
+          {/* Length Slider */}
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <Label className="text-sm font-medium">
+                {t("tool.password-generator.length")}
               </Label>
-              <Switch
-                id={`opt-${key}`}
-                checked={options[key]}
-                onCheckedChange={() => toggleOption(key)}
-              />
+              <span className="text-sm font-mono text-muted-foreground">{length}</span>
             </div>
-          ))}
+            <Slider
+              value={[length]}
+              min={8}
+              max={64}
+              step={1}
+              onValueChange={(v: number[]) => setLength(v[0])}
+            />
+          </div>
+
+          {/* Character Sets */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium block">
+              {t("tool.password-generator.characterSets")}
+            </Label>
+            <div className="space-y-2">
+              {(Object.keys(CHARSETS) as CharsetKey[]).map((key) => (
+                <div key={key} className="flex items-center justify-between py-2">
+                  <Label
+                    htmlFor={`opt-${key}`}
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    {t(`tool.password-generator.${key}` as any)}
+                  </Label>
+                  <Switch
+                    id={`opt-${key}`}
+                    checked={options[key]}
+                    onCheckedChange={() => toggleOption(key)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <Button onClick={regenerate} className="w-full gap-2">
-          <RefreshCw className="h-4 w-4" /> {t("tool.password-generator.generate")}
+        {/* Generate Button */}
+        <Button onClick={regenerate} className="w-full h-10 gap-2">
+          <RefreshCw className="h-4 w-4" />
+          {t("tool.password-generator.generate")}
         </Button>
       </div>
     </ToolShell>

@@ -13,6 +13,16 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      spacing: {
+        // Anti-slop design system spacing scale
+        // xs: 8px, sm: 16px, md: 24px, lg: 32px, xl: 40px
+        // Usage: gap-2 (xs), gap-3 (sm), gap-4 (md), gap-6 (lg), gap-8 (xl)
+        // Only these values are allowed for consistency
+      },
+      fontSize: {
+        // Anti-slop typography scale
+        // Enforce consistent sizes across app
+      },
       fontFamily: {
         sans: ["var(--font-geist-sans)", ...fontFamily.sans],
         mono: ["var(--font-geist-mono)", ...fontFamily.mono],
