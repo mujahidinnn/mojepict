@@ -4,8 +4,8 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/lib/i18n/context";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ThousandsInput } from "@/components/tools/ThousandsInput";
+import { FormGroup } from "@/components/tools/ToolTemplates";
 import { Factory } from "lucide-react";
 
 export default function HppCalculatorPage() {
@@ -37,54 +37,23 @@ export default function HppCalculatorPage() {
 
   return (
     <ToolShell title={t("tool.hpp-calculator.name")} description={t("tool.hpp-calculator.description")}>
-      <div className="flex flex-col gap-6 max-w-xl">
+      <div className="max-w-screen-lg flex flex-col gap-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">
-              {t("tool.hpp-calculator.materialCost")}
-            </Label>
-            <ThousandsInput
-              value={materialCost}
-              onChange={setMaterialCost}
-              className="h-11"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">
-              {t("tool.hpp-calculator.laborCost")}
-            </Label>
-            <ThousandsInput
-              value={laborCost}
-              onChange={setLaborCost}
-              className="h-11"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">
-              {t("tool.hpp-calculator.overheadCost")}
-            </Label>
-            <ThousandsInput
-              value={overheadCost}
-              onChange={setOverheadCost}
-              className="h-11"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">
-              {t("tool.hpp-calculator.units")}
-            </Label>
-            <ThousandsInput
-              value={units}
-              onChange={setUnits}
-              className="h-11"
-            />
-          </div>
+          <FormGroup label={t("tool.hpp-calculator.materialCost")}>
+            <ThousandsInput value={materialCost} onChange={setMaterialCost} className="h-11" />
+          </FormGroup>
+          <FormGroup label={t("tool.hpp-calculator.laborCost")}>
+            <ThousandsInput value={laborCost} onChange={setLaborCost} className="h-11" />
+          </FormGroup>
+          <FormGroup label={t("tool.hpp-calculator.overheadCost")}>
+            <ThousandsInput value={overheadCost} onChange={setOverheadCost} className="h-11" />
+          </FormGroup>
+          <FormGroup label={t("tool.hpp-calculator.units")}>
+            <ThousandsInput value={units} onChange={setUnits} className="h-11" />
+          </FormGroup>
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-xs font-medium text-muted-foreground">
-            {t("tool.hpp-calculator.margin")}
-          </Label>
+        <FormGroup label={t("tool.hpp-calculator.margin")}>
           <Input
             type="number"
             min="0"
@@ -93,20 +62,20 @@ export default function HppCalculatorPage() {
             onChange={(e) => setMargin(e.target.value)}
             className="h-11 max-w-[10rem]"
           />
-        </div>
+        </FormGroup>
 
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl border bg-muted/10 p-4">
+          <div className="rounded-xl border bg-muted/10 p-6">
             <span className="text-xs text-muted-foreground">{t("tool.hpp-calculator.totalCost")}</span>
             <p className="text-lg font-bold tracking-tight">{formatNumber(totalCost)}</p>
           </div>
-          <div className="rounded-xl border bg-muted/10 p-4">
+          <div className="rounded-xl border bg-muted/10 p-6">
             <span className="text-xs text-muted-foreground">{t("tool.hpp-calculator.profitPerUnit")}</span>
             <p className="text-lg font-bold tracking-tight">{formatNumber(profitPerUnit)}</p>
           </div>
         </div>
 
-        <div className="col-span-2 rounded-xl border bg-primary/5 border-primary/10 p-6 flex items-center gap-4">
+        <div className="rounded-xl border bg-primary/5 border-primary/10 p-6 flex items-center gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
             <Factory className="h-6 w-6" />
           </div>

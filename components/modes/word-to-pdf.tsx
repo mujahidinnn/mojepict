@@ -65,7 +65,7 @@ export default function WordToPdfPage({ initialFile }: { initialFile?: File } = 
           subtitle={t("tool.word-to-pdf.dropzone.subtitle")}
         />
       ) : (
-        <div className="space-y-4">
+        <div className="max-w-screen-lg space-y-4">
           <ToolActionBar
             primaryLabel={t("tool.word-to-pdf.convert")}
             primaryIcon={<Download className="h-4 w-4" />}

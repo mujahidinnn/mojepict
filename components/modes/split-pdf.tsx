@@ -1,18 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { PDFDocument } from "pdf-lib";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
 import { Dropzone } from "@/components/tools/Dropzone";
 import { PdfPreview } from "@/components/tools/PdfPreview";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
 import { Download, FileText, Scissors } from "lucide-react";
+import { TwoColumnLayout, InputSection, OutputSection, FormGroup } from "@/components/tools/ToolTemplates";
 
 type SplitMode = "range" | "half";
 
@@ -160,7 +161,7 @@ export default function SplitPdfPage() {
 
   return (
     <ToolShell title={t("tool.split-pdf.name")} description={t("tool.split-pdf.description")}>
-      <div className="flex flex-col gap-6 max-w-xl">
+      <div className="max-w-screen-lg flex flex-col gap-8">
         {!file ? (
           <Dropzone
             accept="application/pdf"
@@ -172,89 +173,79 @@ export default function SplitPdfPage() {
           />
         ) : (
           <>
-            <div className="flex items-center gap-3 rounded-lg border bg-muted/10 px-3 py-2">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-red-500 to-rose-600 text-white">
-                <FileText className="h-4 w-4" />
-              </div>
-              <div className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate text-sm font-medium">{file.name}</span>
-                <span className="text-xs text-muted-foreground">
-                  {pageCount} {t("tool.split-pdf.pages")}
-                </span>
-              </div>
-            </div>
-
-            <Tabs value={mode} onValueChange={(v) => setMode(v as SplitMode)}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="range">{t("tool.split-pdf.mode.range")}</TabsTrigger>
-                <TabsTrigger value="half">{t("tool.split-pdf.mode.half")}</TabsTrigger>
-              </TabsList>
-            </Tabs>
-
-            {mode === "range" ? (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-muted-foreground">
-                    {t("tool.split-pdf.from")}
-                  </Label>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={pageCount ?? 1}
-                    value={from}
-                    onChange={(e) => setFrom(Number(e.target.value))}
-                    className="h-11"
-                  />
+            <TwoColumnLayout>
+              <InputSection label="Source">
+                <div className="flex items-center gap-3 rounded-lg border bg-muted/10 p-4">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-red-500 to-rose-600 text-white">
+                    <FileText className="h-4 w-4" />
+                  </div>
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate text-sm font-medium">{file.name}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {pageCount} {t("tool.split-pdf.pages")}
+                    </span>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-muted-foreground">
-                    {t("tool.split-pdf.to")}
-                  </Label>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={pageCount ?? 1}
-                    value={to}
-                    onChange={(e) => setTo(Number(e.target.value))}
-                    className="h-11"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground">
-                  {t("tool.split-pdf.splitAfter")}
-                </Label>
-                <Input
-                  type="number"
-                  min={1}
-                  max={(pageCount ?? 2) - 1}
-                  value={splitAt}
-                  onChange={(e) => setSplitAt(Number(e.target.value))}
-                  className="h-11"
-                />
-              </div>
-            )}
 
-            {results.length > 0 && (
-              <div className="flex flex-col gap-4">
+                <Tabs value={mode} onValueChange={(v) => setMode(v as SplitMode)}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="range">{t("tool.split-pdf.mode.range")}</TabsTrigger>
+                    <TabsTrigger value="half">{t("tool.split-pdf.mode.half")}</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+
+                {mode === "range" ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormGroup label={t("tool.split-pdf.from")}>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={pageCount ?? 1}
+                        value={from}
+                        onChange={(e) => setFrom(Number(e.target.value))}
+                      />
+                    </FormGroup>
+                    <FormGroup label={t("tool.split-pdf.to")}>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={pageCount ?? 1}
+                        value={to}
+                        onChange={(e) => setTo(Number(e.target.value))}
+                      />
+                    </FormGroup>
+                  </div>
+                ) : (
+                  <FormGroup label={t("tool.split-pdf.splitAfter")}>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={(pageCount ?? 2) - 1}
+                      value={splitAt}
+                      onChange={(e) => setSplitAt(Number(e.target.value))}
+                    />
+                  </FormGroup>
+                )}
+              </InputSection>
+
+              <OutputSection label="Result">
                 {results.map((result) => (
-                  <div key={result.url} className="flex flex-col gap-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="truncate text-sm font-medium">{result.name}</span>
+                  <Fragment key={result.url}>
+                    <Card className="p-6 flex items-center justify-between bg-muted/10">
+                      <div className="flex-1 overflow-hidden pr-4">
+                        <p className="truncate text-sm font-medium">{result.name}</p>
+                      </div>
                       <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        className="shrink-0 gap-2"
+                        size="icon"
+                        variant="ghost"
+                        className="h-9 w-9 shrink-0"
                         onClick={() => triggerDownload(result.url, result.name)}
                       >
-                        <Download className="h-3.5 w-3.5" />
-                        {t("action.download")}
+                        <Download className="h-4 w-4" />
                       </Button>
-                    </div>
+                    </Card>
                     <PdfPreview src={result.url} className="w-full rounded-lg border" />
-                  </div>
+                  </Fragment>
                 ))}
                 {results.length > 1 && (
                   <Button
@@ -267,8 +258,8 @@ export default function SplitPdfPage() {
                     {t("tool.split-pdf.downloadAll")}
                   </Button>
                 )}
-              </div>
-            )}
+              </OutputSection>
+            </TwoColumnLayout>
 
             <ToolActionBar
               primaryLabel={t("tool.split-pdf.split")}

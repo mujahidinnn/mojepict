@@ -5,7 +5,7 @@ import { differenceInCalendarDays, intervalToDuration } from "date-fns";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolEmptyState } from "@/components/tools/ToolEmptyState";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Label } from "@/components/ui/label";
+import { FormGroup } from "@/components/tools/ToolTemplates";
 import { useI18n } from "@/lib/i18n/context";
 import { CalendarDays } from "lucide-react";
 
@@ -51,20 +51,14 @@ export default function DateDifferenceCalculatorPage() {
       title={t("tool.date-difference-calculator.name")}
       description={t("tool.date-difference-calculator.description")}
     >
-      <div className="flex flex-col gap-6 max-w-xl">
+      <div className="max-w-screen-lg flex flex-col gap-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">
-              {t("tool.date-difference-calculator.startDate")}
-            </Label>
+          <FormGroup label={t("tool.date-difference-calculator.startDate")}>
             <DatePicker value={startDate} onChange={setStartDate} />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">
-              {t("tool.date-difference-calculator.endDate")}
-            </Label>
+          </FormGroup>
+          <FormGroup label={t("tool.date-difference-calculator.endDate")}>
             <DatePicker value={endDate} onChange={setEndDate} />
-          </div>
+          </FormGroup>
         </div>
 
         {result ? (
@@ -73,7 +67,7 @@ export default function DateDifferenceCalculatorPage() {
               {stats.map(([label, value]) => (
                 <div
                   key={label}
-                  className="flex flex-col items-center gap-1 rounded-xl border bg-muted/10 p-4"
+                  className="flex flex-col items-center gap-2 rounded-xl border bg-muted/10 p-6"
                 >
                   <span className="text-3xl font-bold tracking-tight">{value}</span>
                   <span className="text-xs text-muted-foreground">{label}</span>
@@ -89,7 +83,7 @@ export default function DateDifferenceCalculatorPage() {
               ].map(([label, value]) => (
                 <div
                   key={label as string}
-                  className="flex items-center gap-3 rounded-xl border bg-muted/10 p-4"
+                  className="flex items-center gap-3 rounded-xl border bg-muted/10 p-6"
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
                     <CalendarDays className="h-5 w-5" />

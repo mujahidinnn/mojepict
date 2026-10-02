@@ -209,7 +209,7 @@ export default function ImageConverterPage({
         sidebar={
           <>
             <div className={`flex flex-col gap-2 text-left${to ? " hidden" : ""}`}>
-              <Label htmlFor="format-select" className="text-xs font-medium">
+              <Label htmlFor="format-select" className="text-sm font-medium">
                 Output Format
               </Label>
               <Select
@@ -239,7 +239,7 @@ export default function ImageConverterPage({
               resetDisabled={!file}
             >
               {converting && (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Skeleton className="h-3 w-24" />
                   <Progress value={progress} className="h-1.5" />
                 </div>

@@ -5,10 +5,15 @@ import { useI18n } from "@/lib/i18n/context";
 import { useToast } from "@/hooks/use-toast";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Copy, Trash2, Link2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
+import {
+  TwoColumnLayout,
+  InputSection,
+  OutputSection,
+  ResultCard,
+} from "@/components/tools/ToolTemplates";
 
 type Mode = "encode" | "decode";
 
@@ -33,9 +38,9 @@ export default function UrlEncoderPage() {
     }
   }, [input, mode]);
 
-  const copyResult = () => {
-    if (!output) return;
-    navigator.clipboard.writeText(output);
+  const copyResult = (content: string) => {
+    if (!content) return;
+    navigator.clipboard.writeText(content);
     toast({ description: t("toast.success.copied") });
   };
 
@@ -44,64 +49,52 @@ export default function UrlEncoderPage() {
       title={t("tool.url-encoder.name")}
       description={t("tool.url-encoder.description")}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <Link2 className="h-3 w-3" /> {t("tool.url-encoder.input-label")}
-            </Label>
-            <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)}>
-              <TabsList className="h-8">
-                <TabsTrigger value="encode" className="text-xs px-3 py-1">
-                  {t("tool.url-encoder.encode")}
-                </TabsTrigger>
-                <TabsTrigger value="decode" className="text-xs px-3 py-1">
-                  {t("tool.url-encoder.decode")}
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-          <Textarea
-            placeholder={t("tool.url-encoder.placeholder")}
-            className="min-h-[400px] resize-none text-base p-4 font-mono"
-            value={input}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-              setInput(e.target.value)
-            }
-          />
-        </div>
-
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-              {t("tool.url-encoder.output-label")}
-            </Label>
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={copyResult}
-                disabled={!output}
-              >
-                <Copy className="h-4 w-4 mr-2" /> {t("action.copy")}
-              </Button>
+      <TwoColumnLayout>
+        <InputSection
+          label={t("tool.url-encoder.input-label")}
+          action={
+            <div className="flex items-center gap-2">
+              <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)}>
+                <TabsList className="h-8">
+                  <TabsTrigger value="encode" className="text-xs px-3 py-1">
+                    {t("tool.url-encoder.encode")}
+                  </TabsTrigger>
+                  <TabsTrigger value="decode" className="text-xs px-3 py-1">
+                    {t("tool.url-encoder.decode")}
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setInput("")}
                 disabled={!input}
+                className="h-8 px-2"
               >
-                <Trash2 className="h-4 w-4 mr-2" /> {t("common.clear")}
+                <Trash2 className="h-4 w-4 mr-1.5" />
+                {t("common.clear")}
               </Button>
             </div>
-          </div>
+          }
+        >
           <Textarea
-            readOnly
-            value={isInvalid ? t("tool.url-encoder.invalid") : output}
-            className="min-h-[400px] resize-none text-base p-4 font-mono bg-muted/20"
+            placeholder={t("tool.url-encoder.placeholder")}
+            className="min-h-96 p-4 resize-none font-mono"
+            value={input}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+              setInput(e.target.value)
+            }
           />
-        </div>
-      </div>
+        </InputSection>
+
+        <OutputSection label={t("tool.url-encoder.output-label")}>
+          <ResultCard
+            content={isInvalid ? t("tool.url-encoder.invalid") : output || "..."}
+            onCopy={copyResult}
+            disabled={isInvalid || !output}
+          />
+        </OutputSection>
+      </TwoColumnLayout>
     </ToolShell>
   );
 }

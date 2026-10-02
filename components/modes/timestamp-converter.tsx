@@ -70,8 +70,8 @@ export default function TimestampConverterPage() {
       title={t("tool.timestamp-converter.name")}
       description={t("tool.timestamp-converter.description")}
     >
-      <div className="flex flex-col gap-6 max-w-xl">
-        <div className="flex items-center gap-3 rounded-xl border bg-muted/10 p-4">
+      <div className="max-w-screen-lg flex flex-col gap-8">
+        <div className="flex items-center gap-3 rounded-xl border bg-muted/10 p-6">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-slate-600 to-slate-700 text-white">
             <Clock className="h-5 w-5" />
           </div>
@@ -86,14 +86,15 @@ export default function TimestampConverterPage() {
           <Button
             variant="ghost"
             size="icon"
+            className="h-9 w-9 shrink-0"
             onClick={() => now !== null && copy(String(Math.floor(now / 1000)))}
           >
             <Copy className="h-4 w-4" />
           </Button>
         </div>
 
-        <div className="space-y-3 rounded-xl border p-4">
-          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+        <div className="space-y-4 rounded-xl border p-6">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
             {t("tool.timestamp-converter.toDate")}
           </Label>
           <div className="flex gap-2">
@@ -119,7 +120,7 @@ export default function TimestampConverterPage() {
             </Select>
           </div>
           {timestampInput.trim() && (
-            <div className="flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2">
+            <div className="flex items-center justify-between rounded-lg border bg-muted/10 p-4">
               <span className="text-sm font-mono truncate">
                 {parsedDate ? parsedDate.toString() : t("tool.timestamp-converter.invalid")}
               </span>
@@ -127,18 +128,18 @@ export default function TimestampConverterPage() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 shrink-0"
+                  className="h-9 w-9 shrink-0"
                   onClick={() => copy(parsedDate.toISOString())}
                 >
-                  <Copy className="h-3.5 w-3.5" />
+                  <Copy className="h-4 w-4" />
                 </Button>
               )}
             </div>
           )}
         </div>
 
-        <div className="space-y-3 rounded-xl border p-4">
-          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+        <div className="space-y-4 rounded-xl border p-6">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
             {t("tool.timestamp-converter.toTimestamp")}
           </Label>
           <div className="flex gap-2">
@@ -152,17 +153,17 @@ export default function TimestampConverterPage() {
             />
           </div>
           {parsedTimestamp && (
-            <div className="flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2">
+            <div className="flex items-center justify-between rounded-lg border bg-muted/10 p-4">
               <span className="text-sm font-mono">
                 {Math.floor(parsedTimestamp.getTime() / 1000)} ({parsedTimestamp.getTime()} ms)
               </span>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 shrink-0"
+                className="h-9 w-9 shrink-0"
                 onClick={() => copy(String(Math.floor(parsedTimestamp.getTime() / 1000)))}
               >
-                <Copy className="h-3.5 w-3.5" />
+                <Copy className="h-4 w-4" />
               </Button>
             </div>
           )}

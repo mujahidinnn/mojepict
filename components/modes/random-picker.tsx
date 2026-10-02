@@ -38,7 +38,7 @@ function DiceTab() {
   return (
     <div className="flex flex-col items-center gap-6">
       <div className="flex items-center gap-3">
-        <Label className="text-xs font-medium text-muted-foreground">
+        <Label className="text-sm font-medium">
           {t("tool.random-picker.diceCount")}
         </Label>
         <Input
@@ -115,7 +115,7 @@ function CoinTab() {
           <div
             className="absolute inset-0 flex items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 text-white shadow-lg [backface-visibility:hidden]"
           >
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-2">
               <Coins className="h-10 w-10" />
               <span className="text-sm font-bold uppercase tracking-wide">
                 {t("tool.random-picker.heads")}
@@ -125,7 +125,7 @@ function CoinTab() {
           <div
             className="absolute inset-0 flex items-center justify-center rounded-full bg-gradient-to-br from-slate-400 to-slate-600 text-white shadow-lg [backface-visibility:hidden] [transform:rotateY(180deg)]"
           >
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-2">
               <Coins className="h-10 w-10" />
               <span className="text-sm font-bold uppercase tracking-wide">
                 {t("tool.random-picker.tails")}
@@ -161,8 +161,8 @@ function NumberTab() {
   return (
     <div className="flex flex-col items-center gap-6">
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label className="text-xs font-medium text-muted-foreground">
+        <div className="space-y-3">
+          <Label className="text-sm font-medium">
             {t("tool.random-picker.min")}
           </Label>
           <Input
@@ -172,8 +172,8 @@ function NumberTab() {
             className="h-11"
           />
         </div>
-        <div className="space-y-2">
-          <Label className="text-xs font-medium text-muted-foreground">
+        <div className="space-y-3">
+          <Label className="text-sm font-medium">
             {t("tool.random-picker.max")}
           </Label>
           <Input
@@ -225,12 +225,12 @@ function ListTab() {
   };
 
   return (
-    <div className="flex flex-col gap-4 max-w-xl mx-auto w-full">
+    <div className="flex w-full flex-col gap-4">
       <Textarea
         value={items}
         onChange={(e) => setItems(e.target.value)}
         placeholder={t("tool.random-picker.listPlaceholder")}
-        className="min-h-[140px] resize-none"
+        className="min-h-96 p-4 resize-none"
       />
 
       {picked && (
@@ -240,7 +240,7 @@ function ListTab() {
       )}
 
       {shuffled && (
-        <ol className="flex flex-col gap-1 rounded-xl border bg-muted/10 p-4 text-sm">
+        <ol className="flex flex-col gap-2 rounded-xl border bg-muted/10 p-4 text-sm">
           {shuffled.map((item, i) => (
             <li key={i} className="flex gap-2">
               <span className="text-muted-foreground">{i + 1}.</span> {item}
@@ -275,9 +275,9 @@ export default function RandomPickerPage() {
       title={t("tool.random-picker.name")}
       description={t("tool.random-picker.description")}
     >
-      <div className="flex flex-col gap-6">
+      <div className="max-w-screen-lg flex flex-col gap-8">
         <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
-          <TabsList className="grid w-full max-w-lg grid-cols-4">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="dice">{t("tool.random-picker.tab.dice")}</TabsTrigger>
             <TabsTrigger value="coin">{t("tool.random-picker.tab.coin")}</TabsTrigger>
             <TabsTrigger value="number">{t("tool.random-picker.tab.number")}</TabsTrigger>
@@ -285,7 +285,7 @@ export default function RandomPickerPage() {
           </TabsList>
         </Tabs>
 
-        <div className="rounded-xl border bg-muted/5 p-8">
+        <div className="rounded-xl border bg-muted/5 p-6">
           {tab === "dice" && <DiceTab />}
           {tab === "coin" && <CoinTab />}
           {tab === "number" && <NumberTab />}

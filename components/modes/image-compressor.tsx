@@ -13,6 +13,7 @@ import {
   ProcessingMode,
   ProcessingModeToggle,
 } from "@/components/tools/ProcessingModeToggle";
+import { FormGroup } from "@/components/tools/ToolTemplates";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -161,10 +162,10 @@ export default function ImageCompressorPage() {
           <>
             <ProcessingModeToggle mode={mode} onChange={setMode} />
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex justify-between">
-                <Label className="text-xs font-medium">Quality</Label>
-                <span className="text-xs font-mono">{quality}%</span>
+                <Label className="text-sm font-medium">Quality</Label>
+                <span className="text-sm font-mono text-muted-foreground">{quality}%</span>
               </div>
               <Slider
                 value={[quality]}
@@ -176,8 +177,7 @@ export default function ImageCompressorPage() {
             </div>
 
             {mode === "ai" && (
-              <div className="space-y-2">
-                <Label className="text-xs font-medium">Output format</Label>
+              <FormGroup label="Output format">
                 <Select
                   value={format}
                   onValueChange={(v) => setFormat(v as Format)}
@@ -191,11 +191,11 @@ export default function ImageCompressorPage() {
                     <SelectItem value="image/webp">WebP</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+              </FormGroup>
             )}
 
             {file && (
-              <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+              <div className="flex flex-col gap-2 text-xs text-muted-foreground">
                 <span>Original: {(origSize / 1024).toFixed(1)} KB</span>
                 {compressedSize && (
                   <span className="text-green-600">

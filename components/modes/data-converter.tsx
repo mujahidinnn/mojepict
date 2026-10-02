@@ -3,10 +3,7 @@
 import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n/context";
 import { ToolShell } from "@/components/tools/ToolShell";
-import { ToolWorkspace } from "@/components/tools/ToolWorkspace";
-import { ToolActionBar } from "@/components/tools/ToolActionBar";
-import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -16,8 +13,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ArrowLeftRight, Copy, Info } from "lucide-react";
+import { ArrowLeftRight, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { SingleColumnLayout, FormGroup, ResultCard } from "@/components/tools/ToolTemplates";
 
 const DATA_UNITS = [
   { label: "Bit (b)", value: "bit", ratio: 0.125 },
@@ -71,137 +69,105 @@ export default function DataConverterPage() {
     });
   };
 
+  const formattedResult =
+    result % 1 === 0 ? result.toString() : result.toFixed(4).replace(/\.?0+$/, "");
+
   return (
     <ToolShell
       title={t("tool.data-converter.name")}
       description={t("tool.data-converter.description")}
     >
-      <ToolWorkspace
-        sidebar={
-          <>
-            <ToolActionBar
-              onReset={handleReset}
-              resetLabel={t("tool.unit-converter.reset-value")}
-            />
+      <SingleColumnLayout>
+        <div className="flex justify-end">
+          <Button variant="ghost" size="sm" className="h-8 px-2" onClick={handleReset}>
+            {t("tool.unit-converter.reset-value")}
+          </Button>
+        </div>
 
-            <div className="p-3 bg-primary/5 border border-primary/10 rounded-lg">
-              <p className="text-[11px] leading-relaxed text-muted-foreground italic">
-                {t("tool.data-converter.note")}
-              </p>
-            </div>
-          </>
-        }
-      >
-        <Card className="border shadow-sm bg-card">
-          <CardContent className="p-6 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-end">
-              <div className="space-y-3">
-                <Label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">
-                  {t("common.from")}
-                </Label>
-                <div className="space-y-2">
-                  <Input
-                    type="number"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    className="text-lg font-semibold h-12 focus-visible:ring-primary"
-                  />
-                  <Select value={fromUnit} onValueChange={setFromUnit}>
-                    <SelectTrigger className="w-full h-11 bg-background">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {DATA_UNITS.map((unit) => (
-                        <SelectItem key={unit.value} value={unit.value}>
-                          {unit.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+        <Card className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-end">
+            <FormGroup label={t("common.from")}>
+              <div className="space-y-2">
+                <Input
+                  type="number"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  className="text-lg font-semibold"
+                />
+                <Select value={fromUnit} onValueChange={setFromUnit}>
+                  <SelectTrigger className="w-full bg-background">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DATA_UNITS.map((unit) => (
+                      <SelectItem key={unit.value} value={unit.value}>
+                        {unit.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+            </FormGroup>
 
-              <div className="pb-1 hidden md:block">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  title={t("common.swap")}
-                  onClick={handleSwap}
-                  className="rounded-full hover:bg-primary/10 hover:text-primary transition-colors h-12 w-12"
-                >
-                  <ArrowLeftRight className="h-5 w-5" />
-                </Button>
-              </div>
-
-              <div className="space-y-3">
-                <Label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">
-                  {t("common.to")}
-                </Label>
-                <div className="space-y-2">
-                  <div className="relative">
-                    <Input
-                      readOnly
-                      value={
-                        result % 1 === 0
-                          ? result
-                          : result.toFixed(4).replace(/\.?0+$/, "")
-                      }
-                      className="text-lg font-semibold h-12 bg-muted/30 pr-10 border-dashed"
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-1 top-1 h-10 w-10 text-muted-foreground hover:text-primary"
-                      onClick={() => copyToClipboard(result.toString())}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <Select value={toUnit} onValueChange={setToUnit}>
-                    <SelectTrigger className="w-full h-11 bg-background">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {DATA_UNITS.map((unit) => (
-                        <SelectItem key={unit.value} value={unit.value}>
-                          {unit.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+            <div className="pb-1 hidden md:block">
+              <Button
+                variant="ghost"
+                size="icon"
+                title={t("common.swap")}
+                onClick={handleSwap}
+                className="h-9 w-9"
+              >
+                <ArrowLeftRight className="h-4 w-4" />
+              </Button>
             </div>
 
-            <div className="pt-4">
-              <div className="bg-muted/30 rounded-xl border p-4 space-y-3">
-                <div className="flex items-center gap-2 text-primary font-medium text-sm">
-                  <Info className="h-4 w-4" />
-                  {t("tool.unit-converter.quick-ref")}
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-[11px]">
-                  <div className="p-2 border rounded bg-background/50">
-                    <p className="text-muted-foreground">1 GB</p>
-                    <p className="font-bold">1,024 MB</p>
-                  </div>
-                  <div className="p-2 border rounded bg-background/50">
-                    <p className="text-muted-foreground">1 TB</p>
-                    <p className="font-bold">1,024 GB</p>
-                  </div>
-                  <div className="p-2 border rounded bg-background/50">
-                    <p className="text-muted-foreground">1 MB</p>
-                    <p className="font-bold">1,024 KB</p>
-                  </div>
-                  <div className="p-2 border rounded bg-background/50">
-                    <p className="text-muted-foreground">1 Byte</p>
-                    <p className="font-bold">8 Bits</p>
-                  </div>
-                </div>
+            <FormGroup label={t("common.to")}>
+              <div className="space-y-2">
+                <ResultCard content={formattedResult} onCopy={copyToClipboard} />
+                <Select value={toUnit} onValueChange={setToUnit}>
+                  <SelectTrigger className="w-full bg-background">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DATA_UNITS.map((unit) => (
+                      <SelectItem key={unit.value} value={unit.value}>
+                        {unit.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
-          </CardContent>
+            </FormGroup>
+          </div>
         </Card>
-      </ToolWorkspace>
+
+        <div className="rounded-xl border bg-muted/10 p-4 space-y-3">
+          <div className="flex items-center gap-2 text-primary font-medium text-sm">
+            <Info className="h-4 w-4" />
+            {t("tool.unit-converter.quick-ref")}
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+            <div className="p-4 border rounded bg-background/50">
+              <p className="text-muted-foreground">1 GB</p>
+              <p className="font-bold">1,024 MB</p>
+            </div>
+            <div className="p-4 border rounded bg-background/50">
+              <p className="text-muted-foreground">1 TB</p>
+              <p className="font-bold">1,024 GB</p>
+            </div>
+            <div className="p-4 border rounded bg-background/50">
+              <p className="text-muted-foreground">1 MB</p>
+              <p className="font-bold">1,024 KB</p>
+            </div>
+            <div className="p-4 border rounded bg-background/50">
+              <p className="text-muted-foreground">1 Byte</p>
+              <p className="font-bold">8 Bits</p>
+            </div>
+          </div>
+        </div>
+
+        <p className="text-xs italic text-muted-foreground">{t("tool.data-converter.note")}</p>
+      </SingleColumnLayout>
     </ToolShell>
   );
 }

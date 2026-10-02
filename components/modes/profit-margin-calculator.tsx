@@ -4,9 +4,9 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/lib/i18n/context";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThousandsInput } from "@/components/tools/ThousandsInput";
+import { FormGroup } from "@/components/tools/ToolTemplates";
 import { TrendingUp } from "lucide-react";
 
 type Mode = "fromPrice" | "fromMargin";
@@ -45,7 +45,7 @@ export default function ProfitMarginCalculatorPage() {
       title={t("tool.profit-margin-calculator.name")}
       description={t("tool.profit-margin-calculator.description")}
     >
-      <div className="flex flex-col gap-6 max-w-xl">
+      <div className="max-w-screen-lg flex flex-col gap-8">
         <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)}>
           <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 h-auto">
             <TabsTrigger value="fromPrice" className="text-xs py-2">
@@ -58,24 +58,15 @@ export default function ProfitMarginCalculatorPage() {
         </Tabs>
 
         <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">
-              {t("tool.profit-margin-calculator.cost")}
-            </Label>
+          <FormGroup label={t("tool.profit-margin-calculator.cost")}>
             <ThousandsInput value={cost} onChange={setCost} className="h-11" />
-          </div>
+          </FormGroup>
           {mode === "fromPrice" ? (
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground">
-                {t("tool.profit-margin-calculator.price")}
-              </Label>
+            <FormGroup label={t("tool.profit-margin-calculator.price")}>
               <ThousandsInput value={price} onChange={setPrice} className="h-11" />
-            </div>
+            </FormGroup>
           ) : (
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground">
-                {t("tool.profit-margin-calculator.targetMargin")}
-              </Label>
+            <FormGroup label={t("tool.profit-margin-calculator.targetMargin")}>
               <Input
                 type="number"
                 min="0"
@@ -84,16 +75,16 @@ export default function ProfitMarginCalculatorPage() {
                 onChange={(e) => setTargetMargin(e.target.value)}
                 className="h-11"
               />
-            </div>
+            </FormGroup>
           )}
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl border bg-muted/10 p-4">
+          <div className="rounded-xl border bg-muted/10 p-6">
             <span className="text-xs text-muted-foreground">{t("tool.profit-margin-calculator.profit")}</span>
             <p className="text-lg font-bold tracking-tight">{formatNumber(result.profit)}</p>
           </div>
-          <div className="rounded-xl border bg-muted/10 p-4">
+          <div className="rounded-xl border bg-muted/10 p-6">
             <span className="text-xs text-muted-foreground">{t("tool.profit-margin-calculator.markup")}</span>
             <p className="text-lg font-bold tracking-tight">{formatNumber(result.markup)}%</p>
           </div>

@@ -3,7 +3,6 @@
 import { ToolShell } from "@/components/tools/ToolShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -11,11 +10,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FormGroup, ResultCard } from "@/components/tools/ToolTemplates";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
 import {
   ArrowLeftRight,
-  Copy,
   Flame,
   Gauge,
   GaugeCircle,
@@ -139,7 +138,7 @@ export default function PhysicsConverterPage() {
       title={t("tool.physics-converter.name")}
       description={t("tool.physics-converter.description")}
     >
-      <div className="flex max-w-xl flex-col gap-6">
+      <div className="max-w-screen-lg flex flex-col gap-8">
         <div className="flex flex-wrap gap-2">
           {CATEGORIES.map((c) => {
             const Icon = CATEGORY_ICON[c];
@@ -149,7 +148,7 @@ export default function PhysicsConverterPage() {
                 type="button"
                 size="sm"
                 variant={category === c ? "default" : "outline"}
-                className="gap-1.5"
+                className="gap-2"
                 onClick={() => onCategoryChange(c)}
               >
                 <Icon className="h-3.5 w-3.5" />
@@ -160,8 +159,7 @@ export default function PhysicsConverterPage() {
         </div>
 
         <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-3">
-          <div className="flex flex-col gap-2">
-            <Label>{t("common.from")}</Label>
+          <FormGroup label={t("common.from")}>
             <Select value={fromUnit} onValueChange={setFromUnit}>
               <SelectTrigger>
                 <SelectValue />
@@ -174,12 +172,11 @@ export default function PhysicsConverterPage() {
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          <Button variant="ghost" size="icon" onClick={swap} className="mb-0.5">
+          </FormGroup>
+          <Button variant="ghost" size="icon" onClick={swap} className="h-9 w-9">
             <ArrowLeftRight className="h-4 w-4" />
           </Button>
-          <div className="flex flex-col gap-2">
-            <Label>{t("common.to")}</Label>
+          <FormGroup label={t("common.to")}>
             <Select value={toUnit} onValueChange={setToUnit}>
               <SelectTrigger>
                 <SelectValue />
@@ -192,36 +189,24 @@ export default function PhysicsConverterPage() {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </FormGroup>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <Label>{t("common.value")}</Label>
+        <FormGroup label={t("common.value")}>
           <Input
             type="number"
             value={inputVal}
             onChange={(e) => setInputVal(e.target.value)}
             placeholder="0"
           />
-        </div>
+        </FormGroup>
 
         {result && (
-          <div className="flex items-center justify-between rounded-lg border bg-muted/40 px-4 py-3">
-            <div>
-              <p className="mb-0.5 text-xs text-muted-foreground">
-                {t("common.result")}
-              </p>
-              <p className="font-mono text-2xl font-semibold">
-                {result}{" "}
-                <span className="text-sm font-normal text-muted-foreground">
-                  {toUnitLabel}
-                </span>
-              </p>
-            </div>
-            <Button variant="ghost" size="icon" onClick={copyResult}>
-              <Copy className="h-4 w-4" />
-            </Button>
-          </div>
+          <ResultCard
+            label={t("common.result")}
+            content={`${result} ${toUnitLabel}`}
+            onCopy={copyResult}
+          />
         )}
       </div>
     </ToolShell>

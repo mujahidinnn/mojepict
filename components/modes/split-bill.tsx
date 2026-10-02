@@ -250,7 +250,7 @@ export default function SplitBillPage() {
         sidebar={
           <>
             <div className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-xs font-medium">Bill Title</Label>
                 <Input
                   value={billTitle}
@@ -260,11 +260,11 @@ export default function SplitBillPage() {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Participants ({participants.length})
                 </Label>
-                <div className="space-y-1.5">
+                <div className="space-y-3">
                   {participants.map((p) => (
                     <div key={p.id} className="flex items-center gap-2">
                       <Input
@@ -293,14 +293,14 @@ export default function SplitBillPage() {
 
               <Separator />
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Split Mode
                 </Label>
                 <Tabs value={mode} onValueChange={(v) => setMode(v as SplitMode)}>
                   <TabsList className="grid w-full grid-cols-3">
                     {MODES.map((m) => (
-                      <TabsTrigger key={m.id} value={m.id} className="gap-1.5 text-xs">
+                      <TabsTrigger key={m.id} value={m.id} className="gap-2 text-xs">
                         <m.icon className="h-3.5 w-3.5" />
                         {m.label}
                       </TabsTrigger>
@@ -310,20 +310,20 @@ export default function SplitBillPage() {
               </div>
 
               {mode === "equal" && (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-xs font-medium">Bill Subtotal</Label>
                   <ThousandsInput value={manualSubtotal} onChange={setManualSubtotal} className="h-11" placeholder="0" />
                 </div>
               )}
 
               {mode === "shares" && (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-xs font-medium">Bill Subtotal</Label>
                   <ThousandsInput value={manualSubtotal} onChange={setManualSubtotal} className="h-11" placeholder="0" />
                   <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Shares (weight or %)
                   </Label>
-                  <div className="space-y-1.5">
+                  <div className="space-y-3">
                     {participants.map((p) => {
                       const raw = shares[p.id] ?? "";
                       const weight = raw.trim() === "" ? 1 : Math.max(0, parseFloat(raw) || 0);
@@ -355,16 +355,16 @@ export default function SplitBillPage() {
               )}
 
               {mode === "items" && (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Items ({items.length})
                     </Label>
                     <span className="text-[10px] text-muted-foreground">Subtotal: {formatMoney(subtotal)}</span>
                   </div>
-                  <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
+                  <div className="max-h-80 space-y-3 overflow-y-auto pr-1">
                     {items.map((it) => (
-                      <div key={it.id} className="space-y-2 rounded-md border border-input p-2.5">
+                      <div key={it.id} className="space-y-3 rounded-md border border-input p-4">
                         <div className="flex items-center gap-2">
                           <Input
                             value={it.name}
@@ -388,7 +388,7 @@ export default function SplitBillPage() {
                             placeholder="Price"
                             className="h-8 flex-1 text-xs"
                           />
-                          <div className="flex shrink-0 items-center gap-1">
+                          <div className="flex shrink-0 items-center gap-2">
                             <button
                               type="button"
                               onClick={() => updateItem(it.id, { qty: Math.max(1, it.qty - 1) })}
@@ -441,12 +441,12 @@ export default function SplitBillPage() {
 
               <Separator />
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Charges
                 </Label>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
+                  <div className="space-y-3">
                     <Label className="text-xs font-medium">Tax (%)</Label>
                     <Input
                       type="number"
@@ -457,7 +457,7 @@ export default function SplitBillPage() {
                       className="h-9 text-xs"
                     />
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-3">
                     <Label className="text-xs font-medium">Service (%)</Label>
                     <Input
                       type="number"
@@ -469,13 +469,13 @@ export default function SplitBillPage() {
                     />
                   </div>
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-3">
                   <Label className="text-xs font-medium">Discount (flat amount)</Label>
                   <ThousandsInput value={discount} onChange={setDiscount} className="h-9 text-xs" placeholder="0" />
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Export format
                 </Label>

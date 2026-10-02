@@ -134,14 +134,17 @@ export default function ImageSplitterPage() {
       <ToolWorkspace
         sidebar={
           <>
-            <div className="space-y-6 text-left">
-              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2 border-b pb-2">
-                <Grid3X3 className="h-4 w-4 text-primary" /> Grid Configuration
-              </Label>
+            <div className="space-y-4 text-left">
+              <div className="flex items-center gap-2">
+                <Grid3X3 className="h-4 w-4 text-primary" />
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Grid Configuration
+                </Label>
+              </div>
 
               <div className="space-y-4">
                 <div className="flex justify-between items-end">
-                  <span className="text-sm font-semibold">
+                  <span className="text-sm font-medium">
                     {t("tool.image-splitter.cols")}
                   </span>
                   <span className="text-2xl font-black text-primary leading-none">
@@ -161,7 +164,7 @@ export default function ImageSplitterPage() {
 
               <div className="space-y-4">
                 <div className="flex justify-between items-end">
-                  <span className="text-sm font-semibold">
+                  <span className="text-sm font-medium">
                     {t("tool.image-splitter.rows")}
                   </span>
                   <span className="text-2xl font-black text-primary leading-none">
@@ -182,7 +185,7 @@ export default function ImageSplitterPage() {
 
             <ToolActionBar
               primaryLabel={t("tool.image-splitter.download-all")}
-              primaryIcon={<Download className="h-5 w-5" />}
+              primaryIcon={<Download className="h-4 w-4" />}
               onPrimary={downloadAll}
               primaryDisabled={pieces.length === 0 || isProcessing}
               resetLabel={t("common.clear")}
@@ -196,7 +199,7 @@ export default function ImageSplitterPage() {
           <ImageZoomPreview>
             {pieces.length > 0 && !isProcessing ? (
               <div
-                className="grid gap-2 max-w-3xl mx-auto"
+                className="grid gap-2 max-w-screen-lg mx-auto"
                 style={{
                   gridTemplateColumns: `repeat(${grid.cols}, 1fr)`,
                 }}
@@ -217,8 +220,8 @@ export default function ImageSplitterPage() {
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center py-20">
-                <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+              <div className="flex flex-col items-center gap-4 p-6">
+                <Loader2 className="h-10 w-10 animate-spin text-primary" />
                 <p className="text-sm font-medium animate-pulse text-muted-foreground">
                   {t("state.loading")}
                 </p>
