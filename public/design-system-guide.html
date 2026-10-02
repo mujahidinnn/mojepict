@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mojepict Design System – Anti-Slop Edition</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.6;
+      color: #1a1a1a;
+      background: #ffffff;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .subtitle {
+      font-size: 1.125rem;
+      color: #666;
+      margin-bottom: 3rem;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+      border-bottom: 2px solid #f0f0f0;
+      padding-bottom: 0.5rem;
+    }
+
+    h3 {
+      font-size: 1rem;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      font-weight: 600;
+    }
+
+    p {
+      margin-bottom: 1rem;
+      color: #333;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      background: #fafafa;
+    }
+
+    th,
+    td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    th {
+      background: #f0f0f0;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    tr:hover {
+      background: #f5f5f5;
+    }
+
+    code {
+      background: #f5f5f5;
+      padding: 0.125rem 0.375rem;
+      border-radius: 3px;
+      font-family: "Monaco", "Courier New", monospace;
+      font-size: 0.875rem;
+      color: #c41d7f;
+    }
+
+    pre {
+      background: #1a1a1a;
+      color: #a0a0a0;
+      padding: 1rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 1rem 0;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+
+    pre code {
+      background: none;
+      color: inherit;
+      padding: 0;
+    }
+
+    .do-dont {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin: 1rem 0;
+    }
+
+    .do,
+    .dont {
+      padding: 1rem;
+      border-radius: 6px;
+      border-left: 4px solid;
+    }
+
+    .do {
+      background: #f0f9ff;
+      border-left-color: #10b981;
+    }
+
+    .do::before {
+      content: "✓ Do";
+      font-weight: 600;
+      color: #10b981;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .dont {
+      background: #fef2f2;
+      border-left-color: #ef4444;
+    }
+
+    .dont::before {
+      content: "✗ Don't";
+      font-weight: 600;
+      color: #ef4444;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .spacing-demo {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+
+    .spacing-box {
+      aspect-ratio: 1;
+      background: linear-gradient(135deg, #3b82f6, #06b6d4);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-align: center;
+      padding: 0.5rem;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #dbeafe;
+      color: #1e40af;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin: 0.5rem 0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #0a0a0a;
+        color: #e5e5e5;
+      }
+
+      code {
+        background: #2a2a2a;
+        color: #ff79c6;
+      }
+
+      table {
+        background: #1a1a1a;
+      }
+
+      th,
+      td {
+        border-bottom-color: #333;
+      }
+
+      th {
+        background: #222;
+        color: #e5e5e5;
+      }
+
+      tr:hover {
+        background: #1a1a1a;
+      }
+
+      .do {
+        background: #0c3d26;
+      }
+
+      .dont {
+        background: #451a1a;
+      }
+
+      .badge {
+        background: #1e3a8a;
+        color: #93c5fd;
+      }
+    }
+
+    ul, ol {
+      margin-left: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+    }
+
+    .check {
+      color: #10b981;
+      font-weight: 600;
+    }
+
+    .x {
+      color: #ef4444;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Mojepict Design System</h1>
+    <p class="subtitle">Anti-Slop Edition – Consistent. Minimal. Measurable.</p>
+
+    <h2>📐 Spacing Scale</h2>
+    <p>Use <strong>ONLY</strong> these values. No custom spacing.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Token</th>
+          <th>Value</th>
+          <th>Tailwind Class</th>
+          <th>Usage</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>xs</code></td>
+          <td>0.5rem (8px)</td>
+          <td><code>gap-2</code></td>
+          <td>Icon gaps, tight spacing</td>
+        </tr>
+        <tr>
+          <td><code>sm</code></td>
+          <td>1rem (16px)</td>
+          <td><code>gap-3</code></td>
+          <td>Labels-to-input, mini sections</td>
+        </tr>
+        <tr>
+          <td><code>md</code></td>
+          <td>1.5rem (24px)</td>
+          <td><code>gap-4</code></td>
+          <td>Section separation, padding</td>
+        </tr>
+        <tr>
+          <td><code>lg</code></td>
+          <td>2rem (32px)</td>
+          <td><code>gap-6</code></td>
+          <td>Major layout gaps</td>
+        </tr>
+        <tr>
+          <td><code>xl</code></td>
+          <td>2.5rem (40px)</td>
+          <td><code>gap-8</code></td>
+          <td>Top-level sections</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Visual Demo</h3>
+    <div class="spacing-demo">
+      <div>
+        <div class="spacing-box" style="width: 8px; height: 24px;"></div>
+        <p><code>gap-2</code><br>8px</p>
+      </div>
+      <div>
+        <div class="spacing-box" style="width: 16px; height: 24px;"></div>
+        <p><code>gap-3</code><br>16px</p>
+      </div>
+      <div>
+        <div class="spacing-box" style="width: 24px; height: 24px;"></div>
+        <p><code>gap-4</code><br>24px</p>
+      </div>
+    </div>
+
+    <h2>✍️ Typography Scale</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Context</th>
+          <th>Size</th>
+          <th>Weight</th>
+          <th>Tailwind</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Page Title (h1)</td>
+          <td>30px</td>
+          <td>600</td>
+          <td><code>text-[30px] font-semibold</code></td>
+        </tr>
+        <tr>
+          <td>Section Header (h2)</td>
+          <td>20px</td>
+          <td>600</td>
+          <td><code>text-[20px] font-semibold</code></td>
+        </tr>
+        <tr>
+          <td>Body / Default</td>
+          <td>14px</td>
+          <td>400</td>
+          <td><code>text-sm</code></td>
+        </tr>
+        <tr>
+          <td>Caption / Hint</td>
+          <td>12px</td>
+          <td>400</td>
+          <td><code>text-xs</code></td>
+        </tr>
+        <tr>
+          <td>Tiny / Metadata</td>
+          <td>10px</td>
+          <td>500</td>
+          <td><code>text-[10px] font-medium</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>🎛️ Component Sizing</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th>Height</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Input / Select</td>
+          <td>36px (2.25rem)</td>
+          <td>All form controls</td>
+        </tr>
+        <tr>
+          <td>Button (regular)</td>
+          <td>36px</td>
+          <td>Match input height</td>
+        </tr>
+        <tr>
+          <td>Button (icon-only)</td>
+          <td>36px</td>
+          <td><code>h-9 w-9</code></td>
+        </tr>
+        <tr>
+          <td>Card Padding</td>
+          <td>24px</td>
+          <td><code>p-6</code></td>
+        </tr>
+        <tr>
+          <td>Textarea Min-height</td>
+          <td>384px</td>
+          <td><code>min-h-96</code> (24 lines × 16px)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>🎯 Layout Patterns</h2>
+
+    <h3>Two-Column (Input | Output)</h3>
+    <p>For converters, image processors, calculators with split views.</p>
+    <pre><code>&lt;TwoColumnLayout&gt;
+  &lt;InputSection label="Input"&gt;
+    &lt;Textarea className="min-h-96 p-4 resize-none" /&gt;
+  &lt;/InputSection&gt;
+
+  &lt;OutputSection label="Output"&gt;
+    &lt;ResultCard label="Name" content={result} onCopy={copy} /&gt;
+  &lt;/OutputSection&gt;
+&lt;/TwoColumnLayout&gt;</code></pre>
+
+    <h3>Single-Column (Full Width)</h3>
+    <p>For generators, calculators, small tools.</p>
+    <pre><code>&lt;div className="max-w-screen-lg flex flex-col gap-8"&gt;
+  &lt;div className="space-y-4"&gt;
+    &lt;Label&gt;Setting&lt;/Label&gt;
+    &lt;Slider /&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+    <h3>Result Card (Copy-able Output)</h3>
+    <pre><code>&lt;ResultCard
+  label="Converter Name"
+  content={result}
+  onCopy={copyResult}
+  disabled={!result}
+/&gt;</code></pre>
+
+    <h2>✅ Do's & Don'ts</h2>
+
+    <div class="do-dont">
+      <div class="do">
+        Use spacing scale exclusively:
+        <ul style="margin-top: 0.5rem;">
+          <li><code>gap-3</code>, <code>gap-4</code>, <code>gap-6</code></li>
+          <li><code>space-y-3</code>, <code>space-y-4</code></li>
+          <li><code>p-4</code>, <code>p-6</code></li>
+        </ul>
+      </div>
+      <div class="dont">
+        Avoid custom spacing:
+        <ul style="margin-top: 0.5rem;">
+          <li><code>gap-1</code>, <code>gap-5</code>, <code>gap-7</code></li>
+          <li><code>p-2</code>, <code>p-3</code>, <code>p-7</code></li>
+          <li><code>mt-</code>, <code>mb-</code>, <code>ml-</code>, <code>mr-</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="do-dont">
+      <div class="do">
+        Use Tailwind's semantic colors:
+        <ul style="margin-top: 0.5rem;">
+          <li><code>text-primary</code></li>
+          <li><code>bg-muted/10</code></li>
+          <li><code>text-muted-foreground</code></li>
+        </ul>
+      </div>
+      <div class="dont">
+        Avoid hardcoded colors:
+        <ul style="margin-top: 0.5rem;">
+          <li><code>dark:text-red-500</code></li>
+          <li><code>bg-blue-600</code></li>
+          <li><code>text-[#ff0000]</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>📝 Refactoring Checklist</h2>
+    <p>For each component being standardized:</p>
+    <ul>
+      <li>☐ Identify: two-column or single-column layout</li>
+      <li>☐ Replace layout divs with templates</li>
+      <li>☐ Fix spacing: remove custom gaps, use scale only</li>
+      <li>☐ Textarea: <code>min-h-96 p-4 resize-none</code></li>
+      <li>☐ Labels: <code>text-xs font-semibold text-muted-foreground</code></li>
+      <li>☐ Cards: <code>p-6</code> and use <code>ResultCard</code></li>
+      <li>☐ Buttons: <code>h-9 w-9</code> for icons, <code>h-8 px-2</code> for compact</li>
+      <li>☐ Max-width: <code>max-w-screen-lg</code> (no custom widths)</li>
+      <li>☐ Test responsive (mobile, tablet, desktop)</li>
+    </ul>
+
+    <h2>🚀 Next Steps</h2>
+    <p><span class="badge">Phase 1</span> Refactor 5 most-used tools</p>
+    <p><span class="badge">Phase 2</span> Complete two-column converters</p>
+    <p><span class="badge">Phase 3</span> Complete single-column generators</p>
+
+    <hr style="margin: 2rem 0; border: none; border-top: 1px solid #e0e0e0;" />
+
+    <p style="font-size: 0.875rem; color: #999;">
+      See <code>DESIGN_SYSTEM.md</code> for full spec | <code>DESIGN_MIGRATION.md</code> for component list
+    </p>
+  </div>
+</body>
+</html>

@@ -5,10 +5,14 @@ import { useI18n } from "@/lib/i18n/context";
 import { useToast } from "@/hooks/use-toast";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Copy, Trash2, Type } from "lucide-react";
+import { Trash2 } from "lucide-react";
+import {
+  TwoColumnLayout,
+  InputSection,
+  OutputSection,
+  ResultCard,
+} from "@/components/tools/ToolTemplates";
 
 export default function CaseConverterPage() {
   const { t } = useI18n();
@@ -66,64 +70,45 @@ export default function CaseConverterPage() {
       title={t("tool.case-converter.name")}
       description={t("tool.case-converter.description")}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <Type className="h-3 w-3" />{" "}
-              {t("tool.case-converter.input-label")}
-            </Label>
+      <TwoColumnLayout>
+        <InputSection
+          label={t("tool.case-converter.input-label")}
+          action={
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setText("")}
               disabled={!text}
+              className="h-8 px-2"
             >
-              <Trash2 className="h-4 w-4 mr-2" /> {t("common.clear")}
+              <Trash2 className="h-4 w-4 mr-1.5" />
+              {t("common.clear")}
             </Button>
-          </div>
+          }
+        >
           <Textarea
             placeholder={t("tool.case-converter.placeholder")}
-            className="min-h-[400px] resize-none text-base p-4"
+            className="min-h-96 p-4 resize-none"
             value={text}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-              setText(e.target.value)
-            }
+            onChange={(e) => setText(e.target.value)}
           />
-        </div>
+        </InputSection>
 
-        <div className="space-y-4">
-          <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-            {t("tool.case-converter.output-label")}
-          </Label>
-          <div className="grid grid-cols-1 gap-3">
-            {converters.map((conv) => {
-              const result = text ? conv.fn(text) : "";
-              return (
-                <Card
-                  key={conv.name}
-                  className="p-4 flex items-center justify-between bg-muted/20 border-2"
-                >
-                  <div className="flex flex-col gap-1 overflow-hidden mr-4">
-                    <span className="text-[10px] font-bold text-muted-foreground">
-                      {conv.name}
-                    </span>
-                    <p className="text-sm truncate">{result || "..."}</p>
-                  </div>
-                  <Button
-                    size="icon"
-                    variant="secondary"
-                    onClick={() => copyResult(result)}
-                    disabled={!result}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+        <OutputSection label={t("tool.case-converter.output-label")}>
+          {converters.map((conv) => {
+            const result = text ? conv.fn(text) : "";
+            return (
+              <ResultCard
+                key={conv.name}
+                label={conv.name}
+                content={result || "..."}
+                onCopy={copyResult}
+                disabled={!result}
+              />
+            );
+          })}
+        </OutputSection>
+      </TwoColumnLayout>
     </ToolShell>
   );
 }
