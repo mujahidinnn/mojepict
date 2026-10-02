@@ -3,7 +3,7 @@
 import { ToolShell } from "@/components/tools/ToolShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormGroup } from "@/components/tools/ToolTemplates";
 import {
   Select,
   SelectContent,
@@ -238,18 +238,18 @@ function LadderStairs({
   }
 
   return (
-    <div className="rounded-lg border bg-muted/20 p-4">
-      <p className="mb-3 text-xs font-medium text-muted-foreground">
+    <div className="rounded-lg border bg-muted/20 p-6 flex flex-col gap-3">
+      <p className="text-xs font-medium text-muted-foreground">
         {t("tool.unit-converter.ladderTitle")}
       </p>
-      <div className="flex items-end gap-1.5 overflow-x-auto pb-1">
+      <div className="flex items-end gap-2 overflow-x-auto pb-1">
         {symbols.map((sym, i) => {
           const isFrom = i === fromIdx;
           const isTo = i === toIdx;
           return (
             <div
               key={sym}
-              className="flex flex-col items-center gap-1"
+              className="flex flex-col items-center gap-2"
               style={{ marginTop: i * 10 }}
             >
               <span
@@ -283,7 +283,7 @@ function LadderStairs({
           );
         })}
       </div>
-      <p className="mt-3 text-xs text-muted-foreground">{caption}</p>
+      <p className="text-xs text-muted-foreground">{caption}</p>
     </div>
   );
 }
@@ -406,7 +406,7 @@ export default function UnitConverterPage() {
       title={t("tool.unit-converter.name")}
       description={t("tool.unit-converter.description")}
     >
-      <div className="flex max-w-2xl flex-col gap-6">
+      <div className="max-w-screen-lg flex flex-col gap-8">
         <div className="flex flex-wrap gap-2">
           {ALL_CATEGORIES.map((c) => {
             const Icon = CATEGORY_ICON[c];
@@ -416,7 +416,7 @@ export default function UnitConverterPage() {
                 type="button"
                 size="sm"
                 variant={category === c ? "default" : "outline"}
-                className="gap-1.5"
+                className="gap-2"
                 onClick={() => onCategoryChange(c)}
               >
                 <Icon className="h-3.5 w-3.5" />
@@ -435,14 +435,13 @@ export default function UnitConverterPage() {
             t={t}
           />
         ) : (
-          <p className="rounded-lg border bg-muted/20 p-4 text-xs text-muted-foreground">
+          <p className="rounded-lg border bg-muted/20 p-6 text-xs text-muted-foreground">
             {t("tool.unit-converter.temperatureNote")}
           </p>
         )}
 
         <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-3">
-          <div className="flex flex-col gap-2">
-            <Label>{t("common.from")}</Label>
+          <FormGroup label={t("common.from")}>
             {isLadder ? (
               <LadderUnitSelect
                 category={category}
@@ -454,12 +453,14 @@ export default function UnitConverterPage() {
             ) : (
               <TempUnitSelect value={tempFrom} onChange={setTempFrom} />
             )}
-          </div>
-          <Button variant="ghost" size="icon" onClick={swap} className="mb-0.5">
-            <ArrowLeftRight className="h-4 w-4" />
-          </Button>
+          </FormGroup>
           <div className="flex flex-col gap-2">
-            <Label>{t("common.to")}</Label>
+            <span className="invisible text-sm font-medium">&nbsp;</span>
+            <Button variant="ghost" size="icon" onClick={swap} className="h-9 w-9">
+              <ArrowLeftRight className="h-4 w-4" />
+            </Button>
+          </div>
+          <FormGroup label={t("common.to")}>
             {isLadder ? (
               <LadderUnitSelect
                 category={category}
@@ -471,23 +472,22 @@ export default function UnitConverterPage() {
             ) : (
               <TempUnitSelect value={tempTo} onChange={setTempTo} />
             )}
-          </div>
+          </FormGroup>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <Label>{t("common.value")}</Label>
+        <FormGroup label={t("common.value")}>
           <Input
             type="number"
             value={inputVal}
             onChange={(e) => setInputVal(e.target.value)}
             placeholder="0"
           />
-        </div>
+        </FormGroup>
 
         {result && (
-          <div className="flex items-center justify-between rounded-lg border bg-muted/40 px-4 py-3">
-            <div>
-              <p className="mb-0.5 text-xs text-muted-foreground">
+          <div className="flex items-center justify-between rounded-xl border bg-muted/40 p-6">
+            <div className="flex flex-col gap-2">
+              <p className="text-xs text-muted-foreground">
                 {t("common.result")}
               </p>
               <p className="font-mono text-2xl font-semibold">
@@ -497,7 +497,7 @@ export default function UnitConverterPage() {
                 </span>
               </p>
             </div>
-            <Button variant="ghost" size="icon" onClick={copyResult}>
+            <Button variant="ghost" size="icon" onClick={copyResult} className="h-9 w-9">
               <Copy className="h-4 w-4" />
             </Button>
           </div>

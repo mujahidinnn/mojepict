@@ -11,6 +11,7 @@ import { CopyImageButton } from "@/components/tools/CopyImageButton";
 import { ToolEmptyState } from "@/components/tools/ToolEmptyState";
 import { Dropzone } from "@/components/tools/Dropzone";
 import { ImageZoomPreview } from "@/components/tools/ImageZoomPreview";
+import { FormGroup } from "@/components/tools/ToolTemplates";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,10 +20,6 @@ import {
   Download,
   QrCode,
   Trash2,
-  Type,
-  Palette,
-  Maximize,
-  ImageIcon,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
@@ -79,7 +76,7 @@ export default function QrGeneratorPage() {
     if (!text) return null;
     const loupeLogoSize = logo ? Math.max(8, Math.round(logoSize * (LOUPE_QR_SIZE / size))) : undefined;
     return (
-      <div className="rounded-lg bg-white p-2 shadow-sm">
+      <div className="rounded-lg bg-white p-4 shadow-sm">
         <QRCodeCanvas
           value={text}
           size={LOUPE_QR_SIZE}
@@ -107,11 +104,7 @@ export default function QrGeneratorPage() {
       <ToolWorkspace
         sidebar={
           <>
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <Type className="h-3.5 w-3.5" />{" "}
-                {t("tool.qr-generator.input-label") || "Text or Link"}
-              </Label>
+            <FormGroup label={t("tool.qr-generator.input-label") || "Text or Link"}>
               <Input
                 value={text}
                 onChange={(e) => setText(e.target.value)}
@@ -119,14 +112,10 @@ export default function QrGeneratorPage() {
                   t("tool.qr-generator.placeholder") || "https://mojepict.com"
                 }
               />
-            </div>
+            </FormGroup>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                  <Palette className="h-3.5 w-3.5" />{" "}
-                  {t("tool.qr-generator.qr-color") || "QR Color"}
-                </Label>
+              <FormGroup label={t("tool.qr-generator.qr-color") || "QR Color"}>
                 <div className="flex items-center gap-2 border rounded-md p-1 bg-background">
                   <input
                     type="color"
@@ -138,12 +127,8 @@ export default function QrGeneratorPage() {
                     {qrColor}
                   </span>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                  <Palette className="h-3.5 w-3.5" />{" "}
-                  {t("tool.qr-generator.bg-color") || "Background"}
-                </Label>
+              </FormGroup>
+              <FormGroup label={t("tool.qr-generator.bg-color") || "Background"}>
                 <div className="flex items-center gap-2 border rounded-md p-1 bg-background">
                   <input
                     type="color"
@@ -155,16 +140,15 @@ export default function QrGeneratorPage() {
                     {bgColor}
                   </span>
                 </div>
-              </div>
+              </FormGroup>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                  <Maximize className="h-3.5 w-3.5" />{" "}
+                <Label className="text-sm font-medium">
                   {t("tool.qr-generator.size") || "QR Size"}
                 </Label>
-                <span className="text-xs font-mono">{size}px</span>
+                <span className="text-xs font-mono text-muted-foreground">{size}px</span>
               </div>
               <Slider
                 value={[size]}
@@ -178,9 +162,8 @@ export default function QrGeneratorPage() {
 
             <Separator />
 
-            <div className="space-y-4">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <ImageIcon className="h-3.5 w-3.5" />{" "}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium block">
                 {t("tool.qr-generator.logo-label") || "Logo (Optional)"}
               </Label>
               <div className="flex flex-col gap-3">
@@ -191,10 +174,10 @@ export default function QrGeneratorPage() {
                 />
 
                 {logo && (
-                  <div className="space-y-3 pt-2">
+                  <div className="space-y-3">
                     <div className="flex justify-between">
-                      <Label className="text-xs">Logo Size</Label>
-                      <span className="text-xs font-mono">{logoSize}px</span>
+                      <Label className="text-xs text-muted-foreground">Logo Size</Label>
+                      <span className="text-xs font-mono text-muted-foreground">{logoSize}px</span>
                     </div>
                     <Slider
                       value={[logoSize]}
@@ -206,10 +189,10 @@ export default function QrGeneratorPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full h-7 gap-1 text-xs text-destructive"
+                      className="w-full h-8 px-2 gap-2 text-xs text-destructive"
                       onClick={() => setLogo(null)}
                     >
-                      <Trash2 className="h-3 w-3" />
+                      <Trash2 className="h-3.5 w-3.5" />
                       {t("common.remove-logo")}
                     </Button>
                   </div>
@@ -224,7 +207,7 @@ export default function QrGeneratorPage() {
               primaryDisabled={!text}
             >
               <CopyImageButton getBlob={getQrBlob} disabled={!text} />
-              <p className="text-[10px] text-center text-muted-foreground px-4">
+              <p className="text-[10px] text-center text-muted-foreground">
                 {t("tool.qr-generator.footer") ||
                   "High-quality PNG output with optional logo integration."}
               </p>

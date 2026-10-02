@@ -11,7 +11,7 @@ import { ToolActionBar } from "@/components/tools/ToolActionBar";
 import { ToolEmptyState } from "@/components/tools/ToolEmptyState";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { QrCode, Copy, ExternalLink, Search, Loader2 } from "lucide-react";
+import { QrCode, Copy, ExternalLink, Loader2 } from "lucide-react";
 import Image from "next/image";
 
 export default function QRScannerPage() {
@@ -108,14 +108,14 @@ export default function QRScannerPage() {
               <Button
                 onClick={copyToClipboard}
                 variant="secondary"
-                className="w-full gap-2"
+                className="w-full h-10 gap-2"
                 disabled={!scanResult}
               >
                 <Copy className="h-4 w-4" /> {t("tool.qr-scanner.copy-button")}
               </Button>
 
               {scanResult && isURL(scanResult) && (
-                <Button asChild className="w-full gap-2">
+                <Button asChild className="w-full h-10 gap-2">
                   <a href={scanResult} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="h-4 w-4" />{" "}
                     {t("tool.qr-scanner.open-link")}
@@ -126,9 +126,9 @@ export default function QRScannerPage() {
           }
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                <QrCode className="h-3 w-3" /> {t("common.input-image")}
+            <div className="space-y-3">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                {t("common.input-image")}
               </Label>
               {imagePreview ? (
                 <ImageZoomPreview onRemove={handleReset} removeLabel={t("action.clear")}>
@@ -156,23 +156,23 @@ export default function QRScannerPage() {
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                <Search className="h-3 w-3" /> {t("tool.qr-scanner.result-label")}
+            <div className="space-y-3">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                {t("tool.qr-scanner.result-label")}
               </Label>
               <div className="flex min-h-[360px] flex-col justify-between rounded-xl border bg-muted/10 p-6">
                 {scanResult ? (
-                  <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+                  <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
                     <div className="p-4 bg-background border rounded-lg break-all font-mono text-sm shadow-inner min-h-[150px]">
                       {scanResult}
                     </div>
 
                     {scanResult.startsWith("WIFI:") && (
-                      <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-md">
-                        <p className="text-xs font-bold text-blue-400 uppercase">
+                      <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-md space-y-3">
+                        <p className="text-xs font-semibold text-blue-400 uppercase tracking-wide">
                           {t("tool.qr-scanner.wifi-detected")}
                         </p>
-                        <p className="text-sm mt-1">
+                        <p className="text-sm">
                           {t("tool.qr-scanner.wifi-hint")}
                         </p>
                       </div>

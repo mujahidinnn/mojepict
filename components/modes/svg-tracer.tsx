@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
 import { rasterizeToPngBlob } from "@/lib/copy-image";
-import { Download, Loader2, PenTool, Upload } from "lucide-react";
+import { Download, Loader2, PenTool } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
@@ -93,9 +93,9 @@ export default function SvgTracerPage({ initialFile }: { initialFile?: File } = 
         }
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <Upload className="h-3 w-3" /> {t("common.input-image")}
+          <div className="space-y-3">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              {t("common.input-image")}
             </Label>
             {imagePreview ? (
               <ImageZoomPreview onRemove={handleReset} removeLabel={t("action.clear")}>
@@ -118,9 +118,9 @@ export default function SvgTracerPage({ initialFile }: { initialFile?: File } = 
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <PenTool className="h-3 w-3" /> {t("tool.svg-tracer.result-label")}
+          <div className="space-y-3">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              {t("tool.svg-tracer.result-label")}
             </Label>
             <ImageZoomPreview>
               {isProcessing ? (

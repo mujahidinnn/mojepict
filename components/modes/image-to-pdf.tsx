@@ -6,8 +6,8 @@ import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
 import { Dropzone } from "@/components/tools/Dropzone";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { FormGroup } from "@/components/tools/ToolTemplates";
 import {
   Select,
   SelectContent,
@@ -196,7 +196,7 @@ export default function ImageToPdfPage({ initialFile }: { initialFile?: File } =
       title={t("tool.image-to-pdf.name")}
       description={t("tool.image-to-pdf.description")}
     >
-      <div className="flex flex-col gap-6 max-w-2xl">
+      <div className="flex flex-col gap-6 max-w-screen-lg">
         <Dropzone
           accept="image/*"
           multiple
@@ -221,8 +221,8 @@ export default function ImageToPdfPage({ initialFile }: { initialFile?: File } =
                     alt={entry.file.name}
                     className="h-full w-full object-cover"
                   />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
-                    <div className="flex gap-1">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
+                    <div className="flex gap-2">
                       <Button
                         variant="secondary"
                         size="icon"
@@ -258,12 +258,9 @@ export default function ImageToPdfPage({ initialFile }: { initialFile?: File } =
               ))}
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground">
-                {t("tool.image-to-pdf.pageSize")}
-              </Label>
+            <FormGroup label={t("tool.image-to-pdf.pageSize")}>
               <Select value={pageSize} onValueChange={(v) => setPageSize(v as PageSize)}>
-                <SelectTrigger className="h-11">
+                <SelectTrigger className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -274,7 +271,7 @@ export default function ImageToPdfPage({ initialFile }: { initialFile?: File } =
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormGroup>
 
             {converting && <Progress value={progress} className="h-1.5" />}
 

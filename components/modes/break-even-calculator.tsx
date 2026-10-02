@@ -3,8 +3,8 @@
 import { useMemo, useState } from "react";
 import { useI18n } from "@/lib/i18n/context";
 import { ToolShell } from "@/components/tools/ToolShell";
-import { Label } from "@/components/ui/label";
 import { ThousandsInput } from "@/components/tools/ThousandsInput";
+import { FormGroup } from "@/components/tools/ToolTemplates";
 import { Target } from "lucide-react";
 
 export default function BreakEvenCalculatorPage() {
@@ -35,31 +35,22 @@ export default function BreakEvenCalculatorPage() {
       title={t("tool.break-even-calculator.name")}
       description={t("tool.break-even-calculator.description")}
     >
-      <div className="flex flex-col gap-6 max-w-xl">
+      <div className="max-w-screen-lg flex flex-col gap-8">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">
-              {t("tool.break-even-calculator.fixedCost")}
-            </Label>
+          <FormGroup label={t("tool.break-even-calculator.fixedCost")}>
             <ThousandsInput value={fixedCost} onChange={setFixedCost} className="h-11" />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">
-              {t("tool.break-even-calculator.variableCost")}
-            </Label>
+          </FormGroup>
+          <FormGroup label={t("tool.break-even-calculator.variableCost")}>
             <ThousandsInput value={variableCost} onChange={setVariableCost} className="h-11" />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">
-              {t("tool.break-even-calculator.pricePerUnit")}
-            </Label>
+          </FormGroup>
+          <FormGroup label={t("tool.break-even-calculator.pricePerUnit")}>
             <ThousandsInput value={pricePerUnit} onChange={setPricePerUnit} className="h-11" />
-          </div>
+          </FormGroup>
         </div>
 
         {isValid ? (
           <>
-            <div className="rounded-xl border bg-muted/10 p-4">
+            <div className="rounded-xl border bg-muted/10 p-6">
               <span className="text-xs text-muted-foreground">
                 {t("tool.break-even-calculator.contributionMargin")}
               </span>
@@ -67,8 +58,8 @@ export default function BreakEvenCalculatorPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl border bg-primary/5 border-primary/10 p-6">
-                <div className="flex items-center gap-2 mb-1">
+              <div className="rounded-xl border bg-primary/5 border-primary/10 p-6 flex flex-col gap-2">
+                <div className="flex items-center gap-2">
                   <Target className="h-4 w-4 text-primary" />
                   <span className="text-xs text-muted-foreground">
                     {t("tool.break-even-calculator.bepUnits")}
@@ -78,8 +69,8 @@ export default function BreakEvenCalculatorPage() {
                   {formatNumber(Math.ceil(bepUnits))}
                 </p>
               </div>
-              <div className="rounded-xl border bg-primary/5 border-primary/10 p-6">
-                <div className="flex items-center gap-2 mb-1">
+              <div className="rounded-xl border bg-primary/5 border-primary/10 p-6 flex flex-col gap-2">
+                <div className="flex items-center gap-2">
                   <Target className="h-4 w-4 text-primary" />
                   <span className="text-xs text-muted-foreground">
                     {t("tool.break-even-calculator.bepRevenue")}
@@ -92,7 +83,7 @@ export default function BreakEvenCalculatorPage() {
             </div>
           </>
         ) : (
-          <div className="flex min-h-[100px] items-center justify-center rounded-xl border bg-muted/10 p-4 text-center">
+          <div className="flex min-h-[100px] items-center justify-center rounded-xl border bg-muted/10 p-6 text-center">
             <p className="text-sm text-muted-foreground">{t("tool.break-even-calculator.invalid")}</p>
           </div>
         )}

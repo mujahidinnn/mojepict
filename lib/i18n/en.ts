@@ -292,6 +292,7 @@ export const en = {
   "tool.password-generator.description":
     "Generate strong, random passwords with custom length and character sets.",
   "tool.password-generator.length": "Length",
+  "tool.password-generator.characterSets": "Character Sets",
   "tool.password-generator.uppercase": "Uppercase (A-Z)",
   "tool.password-generator.lowercase": "Lowercase (a-z)",
   "tool.password-generator.numbers": "Numbers (0-9)",

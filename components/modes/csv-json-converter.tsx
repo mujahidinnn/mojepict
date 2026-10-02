@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
-import { ArrowRightLeft, Copy, Download, Table2, Trash2 } from "lucide-react";
+import { ArrowRightLeft, Copy, Download, Trash2 } from "lucide-react";
+import { TwoColumnLayout, InputSection, OutputSection } from "@/components/tools/ToolTemplates";
 
 type Mode = "csv-to-json" | "json-to-csv";
 
@@ -182,57 +182,49 @@ export default function CsvJsonConverterPage({
           </TabsList>
         </Tabs>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="space-y-4 text-left">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                <Table2 className="h-3 w-3" /> {inputLabel}
-              </Label>
-              <Button variant="ghost" size="sm" onClick={() => setInput("")} disabled={!input}>
-                <Trash2 className="h-4 w-4 mr-2" /> {t("common.clear")}
+        <TwoColumnLayout>
+          <InputSection
+            label={inputLabel}
+            action={
+              <Button variant="ghost" size="sm" onClick={() => setInput("")} disabled={!input} className="h-8 px-2">
+                <Trash2 className="h-4 w-4 mr-1.5" /> {t("common.clear")}
               </Button>
-            </div>
+            }
+          >
             <Textarea
               placeholder={t("tool.csv-json-converter.placeholder")}
-              className="min-h-[420px] font-mono text-sm resize-none p-4"
+              className="min-h-96 p-4 resize-none font-mono text-sm"
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />
-            <div className="flex gap-3">
-              <Button className="flex-1 gap-2" onClick={convert} disabled={!input}>
-                <ArrowRightLeft className="h-4 w-4" /> {t("action.convert")}
+            <Button className="w-full h-10 gap-2" onClick={convert} disabled={!input}>
+              <ArrowRightLeft className="h-4 w-4" /> {t("action.convert")}
+            </Button>
+          </InputSection>
+
+          <OutputSection label={outputLabel}>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" size="sm" className="h-8 px-2" onClick={swap} disabled={!output}>
+                <ArrowRightLeft className="h-4 w-4 mr-1.5" />
+                {t("tool.csv-json-converter.useAsInput")}
+              </Button>
+              <Button variant="outline" size="sm" className="h-8 px-2" onClick={download} disabled={!output}>
+                <Download className="h-4 w-4 mr-1.5" /> {t("action.download")}
+              </Button>
+              <Button variant="outline" size="sm" className="h-8 px-2" onClick={copy} disabled={!output}>
+                <Copy className="h-4 w-4 mr-1.5" /> {t("action.copy")}
               </Button>
             </div>
-          </div>
-
-          <div className="space-y-4 text-left">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                <Table2 className="h-3 w-3" /> {outputLabel}
-              </Label>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={swap} disabled={!output}>
-                  <ArrowRightLeft className="h-4 w-4 mr-2" />
-                  {t("tool.csv-json-converter.useAsInput")}
-                </Button>
-                <Button variant="outline" size="sm" onClick={download} disabled={!output}>
-                  <Download className="h-4 w-4 mr-2" /> {t("action.download")}
-                </Button>
-                <Button variant="outline" size="sm" onClick={copy} disabled={!output}>
-                  <Copy className="h-4 w-4 mr-2" /> {t("action.copy")}
-                </Button>
-              </div>
-            </div>
-            <Card className="min-h-[420px] bg-muted/10 border-2 overflow-hidden relative">
+            <Card className="min-h-96 bg-muted/10 overflow-hidden relative">
               <Textarea
                 readOnly
-                className="min-h-[420px] h-full border-0 bg-transparent font-mono text-sm resize-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="min-h-96 h-full border-0 bg-transparent font-mono text-sm resize-none p-4 focus-visible:ring-0 focus-visible:ring-offset-0"
                 value={output}
                 placeholder="..."
               />
             </Card>
-          </div>
-        </div>
+          </OutputSection>
+        </TwoColumnLayout>
       </div>
     </ToolShell>
   );

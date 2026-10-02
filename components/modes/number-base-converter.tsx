@@ -6,8 +6,9 @@ import { useToast } from "@/hooks/use-toast";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
 import { Copy } from "lucide-react";
+import { SingleColumnLayout, FormGroup } from "@/components/tools/ToolTemplates";
 
 type Base = 2 | 8 | 10 | 16;
 
@@ -46,8 +47,8 @@ export default function NumberBaseConverterPage() {
       title={t("tool.number-base-converter.name")}
       description={t("tool.number-base-converter.description")}
     >
-      <div className="flex flex-col gap-6 max-w-xl">
-        <div className="flex flex-col gap-4 rounded-xl border bg-muted/10 p-4">
+      <SingleColumnLayout>
+        <Card className="p-6 space-y-4">
           {BASES.map(({ base, label, prefix }) => {
             const isActive = base === activeBase;
             const displayValue = isActive
@@ -56,10 +57,10 @@ export default function NumberBaseConverterPage() {
                 ? decimal.toString(base)
                 : "";
             return (
-              <div key={base} className="space-y-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">
-                  {t(`tool.number-base-converter.base.${base}` as any) || label} ({t("tool.number-base-converter.baseLabel").replace("{{base}}", String(base))})
-                </Label>
+              <FormGroup
+                key={base}
+                label={`${t(`tool.number-base-converter.base.${base}` as any) || label} (${t("tool.number-base-converter.baseLabel").replace("{{base}}", String(base))})`}
+              >
                 <div className="flex items-center gap-2">
                   <span className="w-8 shrink-0 text-xs text-muted-foreground font-mono">
                     {prefix}
@@ -90,18 +91,18 @@ export default function NumberBaseConverterPage() {
                     onClick={() => copy(displayValue)}
                     disabled={!displayValue}
                   >
-                    <Copy className="h-3.5 w-3.5" />
+                    <Copy className="h-4 w-4" />
                   </Button>
                 </div>
-              </div>
+              </FormGroup>
             );
           })}
-        </div>
+        </Card>
 
         {!isValid && rawValue.trim() && (
           <p className="text-sm text-destructive">{t("tool.number-base-converter.invalid")}</p>
         )}
-      </div>
+      </SingleColumnLayout>
     </ToolShell>
   );
 }

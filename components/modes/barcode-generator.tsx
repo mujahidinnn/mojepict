@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FormGroup } from "@/components/tools/ToolTemplates";
 import { ToolWorkspace } from "@/components/tools/ToolWorkspace";
 import { useI18n } from "@/lib/i18n/context";
 import { Download } from "lucide-react";
@@ -125,10 +126,7 @@ export default function BarcodeGeneratorPage() {
       <ToolWorkspace
         sidebar={
           <>
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground">
-                {t("tool.barcode-generator.format")}
-              </Label>
+            <FormGroup label={t("tool.barcode-generator.format")}>
               <Select value={format} onValueChange={setFormat}>
                 <SelectTrigger className="h-11">
                   <SelectValue />
@@ -141,38 +139,29 @@ export default function BarcodeGeneratorPage() {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </FormGroup>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground">
-                  {t("tool.barcode-generator.lineColor")}
-                </Label>
+              <FormGroup label={t("tool.barcode-generator.lineColor")}>
                 <Input
                   type="color"
                   value={lineColor}
                   onChange={(e) => setLineColor(e.target.value)}
                   className="h-11 p-1"
                 />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground">
-                  {t("tool.barcode-generator.background")}
-                </Label>
+              </FormGroup>
+              <FormGroup label={t("tool.barcode-generator.background")}>
                 <Input
                   type="color"
                   value={background}
                   onChange={(e) => setBackground(e.target.value)}
                   className="h-11 p-1"
                 />
-              </div>
+              </FormGroup>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground">
-                  {t("tool.barcode-generator.barWidth")}
-                </Label>
+              <FormGroup label={t("tool.barcode-generator.barWidth")}>
                 <Input
                   type="number"
                   min={1}
@@ -181,11 +170,8 @@ export default function BarcodeGeneratorPage() {
                   onChange={(e) => setWidth(Number(e.target.value))}
                   className="h-11"
                 />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground">
-                  {t("tool.barcode-generator.height")}
-                </Label>
+              </FormGroup>
+              <FormGroup label={t("tool.barcode-generator.height")}>
                 <Input
                   type="number"
                   min={40}
@@ -194,21 +180,21 @@ export default function BarcodeGeneratorPage() {
                   onChange={(e) => setHeight(Number(e.target.value))}
                   className="h-11"
                 />
-              </div>
+              </FormGroup>
             </div>
 
-            <div className="flex items-center justify-between rounded-lg border p-3">
-              <Label className="text-sm">{t("tool.barcode-generator.showText")}</Label>
+            <div className="flex items-center justify-between rounded-lg border p-4">
+              <Label className="text-sm font-normal">{t("tool.barcode-generator.showText")}</Label>
               <Switch checked={displayValue} onCheckedChange={setDisplayValue} />
             </div>
 
-            <div className="flex flex-col gap-2 pt-2">
-              <Button className="w-full gap-2" onClick={downloadPng} disabled={error}>
+            <div className="flex flex-col gap-2">
+              <Button className="w-full h-10 gap-2" onClick={downloadPng} disabled={error}>
                 <Download className="h-4 w-4" /> PNG
               </Button>
               <Button
                 variant="outline"
-                className="w-full gap-2"
+                className="w-full h-10 gap-2"
                 onClick={downloadSvg}
                 disabled={error}
               >
@@ -220,17 +206,14 @@ export default function BarcodeGeneratorPage() {
         }
       >
         <div className="flex flex-col gap-4">
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">
-              {t("tool.barcode-generator.value")}
-            </Label>
+          <FormGroup label={t("tool.barcode-generator.value")}>
             <Input
               value={value}
               onChange={(e) => setValue(e.target.value)}
               placeholder={t("tool.barcode-generator.valuePlaceholder")}
               className="h-11 font-mono"
             />
-          </div>
+          </FormGroup>
 
           <div className="flex min-h-[280px] items-center justify-center overflow-x-auto rounded-xl border bg-muted/10 p-6">
             {error ? (

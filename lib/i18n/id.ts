@@ -289,6 +289,7 @@ export const id = {
   "tool.password-generator.description":
     "Buat password acak yang kuat dengan panjang dan jenis karakter kustom.",
   "tool.password-generator.length": "Panjang",
+  "tool.password-generator.characterSets": "Jenis Karakter",
   "tool.password-generator.uppercase": "Huruf Besar (A-Z)",
   "tool.password-generator.lowercase": "Huruf Kecil (a-z)",
   "tool.password-generator.numbers": "Angka (0-9)",

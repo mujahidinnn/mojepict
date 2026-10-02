@@ -5,9 +5,9 @@ import { useI18n } from "@/lib/i18n/context";
 import { useToast } from "@/hooks/use-toast";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FormGroup } from "@/components/tools/ToolTemplates";
 import { Copy, Percent, TrendingDown, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -49,7 +49,7 @@ export default function PercentageCalculatorPage() {
       title={t("tool.percentage-calculator.name")}
       description={t("tool.percentage-calculator.description")}
     >
-      <div className="flex flex-col gap-6 max-w-xl">
+      <div className="max-w-screen-lg flex flex-col gap-8">
         <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)}>
           <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto">
             <TabsTrigger value="of" className="text-xs py-2">
@@ -64,25 +64,23 @@ export default function PercentageCalculatorPage() {
           </TabsList>
         </Tabs>
 
-        <div className="grid grid-cols-2 gap-4 items-end">
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">X</Label>
+        <div className="grid grid-cols-2 gap-4">
+          <FormGroup label="X">
             <Input
               type="number"
               value={x}
               onChange={(e) => setX(e.target.value)}
               className="text-lg font-semibold h-12"
             />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">Y</Label>
+          </FormGroup>
+          <FormGroup label="Y">
             <Input
               type="number"
               value={y}
               onChange={(e) => setY(e.target.value)}
               className="text-lg font-semibold h-12"
             />
-          </div>
+          </FormGroup>
         </div>
 
         <div className="rounded-xl border bg-muted/10 p-6 flex items-center justify-between gap-4">
@@ -129,6 +127,7 @@ export default function PercentageCalculatorPage() {
             size="icon"
             onClick={copyResult}
             disabled={result === null}
+            className="h-9 w-9"
           >
             <Copy className="h-4 w-4" />
           </Button>

@@ -515,7 +515,7 @@ export default function PdfEditorPage() {
   return (
     <ToolShell title={t("tool.pdf-editor.name")} description={t("tool.pdf-editor.description")}>
       {!file ? (
-        <div className="max-w-xl">
+        <div className="max-w-screen-lg">
           <Dropzone
             accept="application/pdf"
             onFile={handleFile}
@@ -528,14 +528,14 @@ export default function PdfEditorPage() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 items-start">
           <div className="min-w-0 flex flex-col gap-3">
-            <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/10 p-2">
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/10 p-4">
               {TOOLS.map(({ id, icon: Icon, label }) => (
                 <Button
                   key={id}
                   type="button"
                   size="sm"
                   variant={activeTool === id ? "default" : "outline"}
-                  className="gap-1.5"
+                  className="gap-2"
                   onClick={() => setActiveTool(id)}
                 >
                   <Icon className="h-4 w-4" />
@@ -547,7 +547,7 @@ export default function PdfEditorPage() {
                   type="button"
                   size="sm"
                   variant="outline"
-                  className="gap-1.5"
+                  className="gap-2"
                   onClick={undoLast}
                   disabled={!pageAnnotations.length}
                 >
@@ -558,7 +558,7 @@ export default function PdfEditorPage() {
             </div>
 
             {activeTool === "text" && (
-              <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-muted/10 p-2 text-xs">
+              <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-muted/10 p-4 text-xs">
                 <span className="font-medium text-muted-foreground">
                   {t("tool.pdf-editor.color")}
                 </span>
@@ -590,7 +590,7 @@ export default function PdfEditorPage() {
             )}
 
             {activeTool === "highlight" && (
-              <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-muted/10 p-2 text-xs">
+              <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-muted/10 p-4 text-xs">
                 <span className="font-medium text-muted-foreground">
                   {t("tool.pdf-editor.color")}
                 </span>
@@ -611,7 +611,7 @@ export default function PdfEditorPage() {
             )}
 
             {activeTool === "pen" && (
-              <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-muted/10 p-2 text-xs">
+              <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-muted/10 p-4 text-xs">
                 <span className="font-medium text-muted-foreground">
                   {t("tool.pdf-editor.color")}
                 </span>
@@ -801,6 +801,7 @@ export default function PdfEditorPage() {
                 <Button
                   variant="outline"
                   size="icon"
+                  className="h-9 w-9"
                   disabled={currentPage <= 1 || rendering}
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 >
@@ -812,6 +813,7 @@ export default function PdfEditorPage() {
                 <Button
                   variant="outline"
                   size="icon"
+                  className="h-9 w-9"
                   disabled={currentPage >= numPages || rendering}
                   onClick={() => setCurrentPage((p) => Math.min(numPages, p + 1))}
                 >
@@ -822,7 +824,7 @@ export default function PdfEditorPage() {
           </div>
 
           <div className="flex flex-col gap-4 lg:sticky lg:top-6">
-            <div className="flex items-center gap-3 rounded-lg border bg-muted/10 px-3 py-2">
+            <div className="flex items-center gap-3 rounded-lg border bg-muted/10 p-4">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-red-500 to-rose-600 text-white">
                 <FileText className="h-4 w-4" />
               </div>
@@ -835,10 +837,10 @@ export default function PdfEditorPage() {
             </div>
             {numPages > 1 && (
               <div className="flex min-h-0 flex-col gap-2">
-                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   {t("tool.pdf-editor.pagesLabel")}
                 </Label>
-                <div className="grid max-h-[50vh] grid-cols-3 gap-2 overflow-y-auto rounded-lg border bg-muted/10 p-2 sm:grid-cols-4 lg:grid-cols-2">
+                <div className="grid max-h-[50vh] grid-cols-3 gap-2 overflow-y-auto rounded-lg border bg-muted/10 p-4 sm:grid-cols-4 lg:grid-cols-2">
                   {Array.from({ length: numPages }, (_, i) => i + 1).map((pageNum) => (
                     <button
                       key={pageNum}
@@ -869,7 +871,7 @@ export default function PdfEditorPage() {
                 </div>
               </div>
             )}
-            <Label className="text-[11px] text-muted-foreground">
+            <Label className="text-[10px] text-muted-foreground">
               {t("tool.pdf-editor.hint")}
             </Label>
             <ToolActionBar

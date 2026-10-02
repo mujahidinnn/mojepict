@@ -4,9 +4,9 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/lib/i18n/context";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThousandsInput } from "@/components/tools/ThousandsInput";
+import { FormGroup } from "@/components/tools/ToolTemplates";
 import { Landmark } from "lucide-react";
 
 type Mode = "exclusive" | "inclusive";
@@ -36,7 +36,7 @@ export default function TaxCalculatorPage() {
 
   return (
     <ToolShell title={t("tool.tax-calculator.name")} description={t("tool.tax-calculator.description")}>
-      <div className="flex flex-col gap-6 max-w-xl">
+      <div className="max-w-screen-lg flex flex-col gap-8">
         <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)}>
           <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 h-auto">
             <TabsTrigger value="exclusive" className="text-xs py-2">
@@ -49,16 +49,10 @@ export default function TaxCalculatorPage() {
         </Tabs>
 
         <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">
-              {t("tool.tax-calculator.amount")}
-            </Label>
+          <FormGroup label={t("tool.tax-calculator.amount")}>
             <ThousandsInput value={amount} onChange={setAmount} className="h-11" />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">
-              {t("tool.tax-calculator.rate")}
-            </Label>
+          </FormGroup>
+          <FormGroup label={t("tool.tax-calculator.rate")}>
             <Input
               type="number"
               min="0"
@@ -66,15 +60,15 @@ export default function TaxCalculatorPage() {
               onChange={(e) => setRate(e.target.value)}
               className="h-11"
             />
-          </div>
+          </FormGroup>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl border bg-muted/10 p-4">
+          <div className="rounded-xl border bg-muted/10 p-6">
             <span className="text-xs text-muted-foreground">{t("tool.tax-calculator.base")}</span>
             <p className="text-lg font-bold tracking-tight">{formatNumber(base)}</p>
           </div>
-          <div className="rounded-xl border bg-muted/10 p-4">
+          <div className="rounded-xl border bg-muted/10 p-6">
             <span className="text-xs text-muted-foreground">{t("tool.tax-calculator.taxAmount")}</span>
             <p className="text-lg font-bold tracking-tight">{formatNumber(taxAmount)}</p>
           </div>

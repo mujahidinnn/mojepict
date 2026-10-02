@@ -7,10 +7,12 @@ import { ToolActionBar } from "@/components/tools/ToolActionBar";
 import { Dropzone } from "@/components/tools/Dropzone";
 import { PdfPreview } from "@/components/tools/PdfPreview";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
 import { ArrowDown, ArrowUp, Download, FileText, Merge, X } from "lucide-react";
+import { TwoColumnLayout, InputSection, OutputSection } from "@/components/tools/ToolTemplates";
 
 interface PdfEntry {
   id: string;
@@ -133,74 +135,96 @@ export default function MergePdfPage() {
 
   return (
     <ToolShell title={t("tool.merge-pdf.name")} description={t("tool.merge-pdf.description")}>
-      <div className="flex flex-col gap-6 max-w-2xl">
-        <Dropzone
-          accept="application/pdf"
-          multiple
-          onFiles={addFiles}
-          title={t("tool.merge-pdf.dropzone.title")}
-          subtitle={t("tool.merge-pdf.dropzone.subtitle")}
-          icon={<Merge className="h-6 w-6 text-primary" />}
-          className="min-h-[200px]"
-        />
+      <div className="max-w-screen-lg flex flex-col gap-8">
+        <TwoColumnLayout>
+          <InputSection label="Files">
+            <Dropzone
+              accept="application/pdf"
+              multiple
+              onFiles={addFiles}
+              title={t("tool.merge-pdf.dropzone.title")}
+              subtitle={t("tool.merge-pdf.dropzone.subtitle")}
+              icon={<Merge className="h-6 w-6 text-primary" />}
+              className="min-h-[200px]"
+            />
 
-        {entries.length > 0 && (
-          <div className="flex flex-col gap-2">
-            <p className="text-xs font-medium text-muted-foreground">
-              {t("tool.merge-pdf.fileCount").replace("{{count}}", String(entries.length))}
-            </p>
-            {entries.map((entry, index) => (
-              <div
-                key={entry.id}
-                className="flex items-center gap-3 rounded-lg border bg-muted/10 px-3 py-2"
-              >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-red-500 to-rose-600 text-white">
-                  <FileText className="h-4 w-4" />
-                </div>
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate text-sm font-medium">{entry.file.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {formatBytes(entry.file.size)}
-                  </span>
-                </div>
-                <div className="flex shrink-0 items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    disabled={index === 0}
-                    onClick={() => move(index, -1)}
-                  >
-                    <ArrowUp className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    disabled={index === entries.length - 1}
-                    onClick={() => move(index, 1)}
-                  >
-                    <ArrowDown className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-destructive hover:text-destructive"
-                    onClick={() => remove(entry.id)}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
+            {entries.length > 0 && (
+              <div className="space-y-3">
+                <p className="text-xs font-medium text-muted-foreground">
+                  {t("tool.merge-pdf.fileCount").replace("{{count}}", String(entries.length))}
+                </p>
+                <div className="space-y-2">
+                  {entries.map((entry, index) => (
+                    <div
+                      key={entry.id}
+                      className="flex items-center gap-3 rounded-lg border bg-muted/10 p-4"
+                    >
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-red-500 to-rose-600 text-white">
+                        <FileText className="h-4 w-4" />
+                      </div>
+                      <div className="flex min-w-0 flex-1 flex-col">
+                        <span className="truncate text-sm font-medium">{entry.file.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatBytes(entry.file.size)}
+                        </span>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9"
+                          disabled={index === 0}
+                          onClick={() => move(index, -1)}
+                        >
+                          <ArrowUp className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9"
+                          disabled={index === entries.length - 1}
+                          onClick={() => move(index, 1)}
+                        >
+                          <ArrowDown className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 text-destructive hover:text-destructive"
+                          onClick={() => remove(entry.id)}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+            )}
+          </InputSection>
 
-        {merging && <Progress value={progress} className="h-1.5" />}
-
-        {resultUrl && (
-          <PdfPreview src={resultUrl} className="w-full rounded-lg border" />
-        )}
+          <OutputSection label="Result">
+            {merging && <Progress value={progress} className="h-1.5" />}
+            {resultUrl && (
+              <>
+                <Card className="p-6 flex items-center justify-between bg-muted/10">
+                  <div className="flex-1 overflow-hidden pr-4">
+                    <p className="text-sm font-medium truncate">merged.pdf</p>
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={downloadMerged}
+                    className="h-9 w-9 shrink-0"
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </Card>
+                <PdfPreview src={resultUrl} className="w-full rounded-lg border" />
+              </>
+            )}
+          </OutputSection>
+        </TwoColumnLayout>
 
         <ToolActionBar
           primaryLabel={t("tool.merge-pdf.merge")}
@@ -214,17 +238,6 @@ export default function MergePdfPage() {
             <p className="text-center text-xs text-muted-foreground">
               {t("tool.merge-pdf.needTwo")}
             </p>
-          )}
-          {resultUrl && (
-            <Button
-              type="button"
-              variant="secondary"
-              className="w-full gap-2"
-              onClick={downloadMerged}
-            >
-              <Download className="h-4 w-4" />
-              {t("action.download")}
-            </Button>
           )}
         </ToolActionBar>
       </div>

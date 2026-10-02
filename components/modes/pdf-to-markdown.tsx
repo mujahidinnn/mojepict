@@ -229,7 +229,7 @@ export default function PdfToMarkdownPage({ initialFile }: { initialFile?: File 
       description={t("tool.pdf-to-markdown.description")}
     >
       {!file ? (
-        <div className="max-w-xl">
+        <div className="max-w-screen-lg">
           <Dropzone
             accept="application/pdf"
             onFile={handleFile}
@@ -240,7 +240,7 @@ export default function PdfToMarkdownPage({ initialFile }: { initialFile?: File 
           />
         </div>
       ) : (
-        <div className="flex flex-col gap-6">
+        <div className="max-w-screen-lg flex flex-col gap-8">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 items-start">
             <div className="min-w-0 flex flex-col gap-3">
               <div className="flex justify-center overflow-auto rounded-xl border bg-muted/20 p-4">
@@ -283,7 +283,7 @@ export default function PdfToMarkdownPage({ initialFile }: { initialFile?: File 
             </div>
 
             <div className="flex flex-col gap-4 lg:sticky lg:top-6">
-              <div className="flex items-center gap-3 rounded-lg border bg-muted/10 px-3 py-2">
+              <div className="flex items-center gap-3 rounded-lg border bg-muted/10 p-4">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-red-500 to-rose-600 text-white">
                   <FileType className="h-4 w-4" />
                 </div>
@@ -297,19 +297,19 @@ export default function PdfToMarkdownPage({ initialFile }: { initialFile?: File 
 
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                     {t("tool.pdf-to-markdown.pagesLabel")}
                   </Label>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={selectAll}>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={selectAll}>
                       {t("tool.pdf-to-markdown.selectAll")}
                     </Button>
-                    <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={selectNone}>
+                    <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={selectNone}>
                       {t("tool.pdf-to-markdown.selectNone")}
                     </Button>
                   </div>
                 </div>
-                <div className="grid max-h-[50vh] grid-cols-3 gap-2 overflow-y-auto rounded-lg border bg-muted/10 p-2 sm:grid-cols-4 lg:grid-cols-2">
+                <div className="grid max-h-[50vh] grid-cols-3 gap-2 overflow-y-auto rounded-lg border bg-muted/10 p-4 sm:grid-cols-4 lg:grid-cols-2">
                   {Array.from({ length: numPages }, (_, i) => i + 1).map((pageNum) => {
                     const checked = selectedPages.has(pageNum);
                     return (
@@ -373,7 +373,7 @@ export default function PdfToMarkdownPage({ initialFile }: { initialFile?: File 
           {markdown && (
             <div className="flex flex-col gap-3">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   {t("tool.pdf-to-markdown.resultLabel")}
                 </Label>
                 <div className="flex flex-wrap items-center gap-3">
@@ -402,14 +402,14 @@ export default function PdfToMarkdownPage({ initialFile }: { initialFile?: File 
               <Card className="border-2 bg-muted/10">
                 {showPreview ? (
                   <div
-                    className="min-h-[800px] overflow-auto p-4"
+                    className="min-h-96 overflow-auto p-4"
                     dangerouslySetInnerHTML={{ __html: previewHtml }}
                   />
                 ) : (
                   <Textarea
                     readOnly
                     value={markdown}
-                    className="min-h-[800px] resize-none border-0 bg-transparent font-mono text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+                    className="min-h-96 p-4 resize-none border-0 bg-transparent font-mono text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 )}
               </Card>

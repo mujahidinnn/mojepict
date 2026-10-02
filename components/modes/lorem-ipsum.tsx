@@ -7,9 +7,11 @@ import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolWorkspace } from "@/components/tools/ToolWorkspace";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
 import { ToolEmptyState } from "@/components/tools/ToolEmptyState";
+import { FormGroup } from "@/components/tools/ToolTemplates";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -102,10 +104,7 @@ export default function LoremIpsumPage() {
       <ToolWorkspace
         sidebar={
           <>
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {t("tool.lorem-ipsum.unit")}
-              </Label>
+            <FormGroup label={t("tool.lorem-ipsum.unit")}>
               <Select value={unit} onValueChange={(v) => setUnit(v as Unit)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -120,12 +119,9 @@ export default function LoremIpsumPage() {
                   <SelectItem value="words">{t("tool.lorem-ipsum.unit.words")}</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormGroup>
 
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {t("tool.lorem-ipsum.count")} ({MIN_COUNT}-{MAX_COUNT})
-              </Label>
+            <FormGroup label={`${t("tool.lorem-ipsum.count")} (${MIN_COUNT}-${MAX_COUNT})`}>
               <Input
                 type="number"
                 min={MIN_COUNT}
@@ -139,10 +135,10 @@ export default function LoremIpsumPage() {
                   setCount(clamped);
                 }}
               />
-            </div>
+            </FormGroup>
 
-            <div className="flex items-center justify-between">
-              <Label htmlFor="start-lorem" className="text-sm font-normal">
+            <div className="flex items-center justify-between py-2">
+              <Label htmlFor="start-lorem" className="text-sm font-normal cursor-pointer">
                 {t("tool.lorem-ipsum.startWithLorem")}
               </Label>
               <Switch
@@ -157,14 +153,15 @@ export default function LoremIpsumPage() {
               primaryIcon={<Wand2 className="h-4 w-4" />}
               onPrimary={handleGenerate}
             >
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                className="w-full h-10 gap-2"
                 onClick={copyResult}
                 disabled={!output}
-                className="flex w-full items-center justify-center gap-2 rounded-md border px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors disabled:pointer-events-none disabled:opacity-50"
               >
                 <Copy className="h-4 w-4" /> {t("action.copy")}
-              </button>
+              </Button>
             </ToolActionBar>
           </>
         }
@@ -173,10 +170,10 @@ export default function LoremIpsumPage() {
           <Textarea
             readOnly
             value={output}
-            className="min-h-[500px] resize-none text-base p-4"
+            className="min-h-96 p-4 resize-none"
           />
         ) : (
-          <div className="flex min-h-[500px] items-center justify-center rounded-xl border bg-muted/10">
+          <div className="flex min-h-96 items-center justify-center rounded-xl border bg-muted/10">
             <ToolEmptyState
               icon={<Pilcrow className="h-6 w-6" />}
               title={t("tool.lorem-ipsum.placeholder")}

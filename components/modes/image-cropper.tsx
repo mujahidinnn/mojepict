@@ -147,99 +147,101 @@ export default function ImageCropperPage() {
       title={t("tool.image-cropper.name")}
       description={t("tool.image-cropper.description")}
     >
-      <ToolWorkspace
-        sidebar={
-          <>
-            <div className="space-y-3 text-left">
-              <Label className="text-xs font-bold uppercase tracking-wider">
-                {t("tool.image-cropper.aspect")}
-              </Label>
-              <Select
-                onValueChange={(v) =>
-                  setAspect(v === "custom" ? undefined : Number(v))
-                }
-                defaultValue="custom"
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="custom">
-                    {t("tool.image-cropper.free")}
-                  </SelectItem>
-                  <SelectItem value="1">
-                    {t("tool.image-cropper.square")}
-                  </SelectItem>
-                  <SelectItem value={(4 / 3).toString()}>4:3</SelectItem>
-                  <SelectItem value={(16 / 9).toString()}>16:9</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+      <div className="flex flex-col gap-8">
+          <ToolWorkspace
+          sidebar={
+            <>
+              <div className="space-y-3 text-left">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  {t("tool.image-cropper.aspect")}
+                </Label>
+                <Select
+                  onValueChange={(v) =>
+                    setAspect(v === "custom" ? undefined : Number(v))
+                  }
+                  defaultValue="custom"
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="custom">
+                      {t("tool.image-cropper.free")}
+                    </SelectItem>
+                    <SelectItem value="1">
+                      {t("tool.image-cropper.square")}
+                    </SelectItem>
+                    <SelectItem value={(4 / 3).toString()}>4:3</SelectItem>
+                    <SelectItem value={(16 / 9).toString()}>16:9</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <Separator />
+              <Separator />
 
-            <ToolActionBar
-              primaryLabel={t("action.capture")}
-              primaryIcon={<ScanSearch className="h-4 w-4" />}
-              onPrimary={generateCrop}
-              primaryDisabled={!upImg}
-              resetLabel={t("action.clear")}
-              onReset={handleReset}
-              resetDisabled={!upImg}
-            >
-              <Button
-                variant="outline"
-                className="w-full gap-2"
-                onClick={downloadCroppedImage}
-                disabled={!completedCrop}
+              <ToolActionBar
+                primaryLabel={t("action.capture")}
+                primaryIcon={<ScanSearch className="h-4 w-4" />}
+                onPrimary={generateCrop}
+                primaryDisabled={!upImg}
+                resetLabel={t("action.clear")}
+                onReset={handleReset}
+                resetDisabled={!upImg}
               >
-                <Download className="h-4 w-4" /> {t("action.download")}
-              </Button>
-              <CopyImageButton getBlob={getCroppedBlob} disabled={!completedCrop} />
-            </ToolActionBar>
-          </>
-        }
-      >
-        {upImg ? (
-          <ImageZoomPreview>
-            <ReactCrop
-              crop={crop}
-              onChange={(c) => setCrop(c)}
-              onComplete={(c) => setCompletedCrop(c)}
-              aspect={aspect}
-            >
-              <Image
-                ref={imgRef}
-                src={upImg}
-                alt="Source"
-                width={800}
-                height={500}
-                unoptimized
-                onLoad={onImageLoad}
-                className="max-h-[500px] w-auto object-contain rounded-md"
+                <Button
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={downloadCroppedImage}
+                  disabled={!completedCrop}
+                >
+                  <Download className="h-4 w-4" /> {t("action.download")}
+                </Button>
+                <CopyImageButton getBlob={getCroppedBlob} disabled={!completedCrop} />
+              </ToolActionBar>
+            </>
+          }
+        >
+          {upImg ? (
+            <ImageZoomPreview>
+              <ReactCrop
+                crop={crop}
+                onChange={(c) => setCrop(c)}
+                onComplete={(c) => setCompletedCrop(c)}
+                aspect={aspect}
+              >
+                <Image
+                  ref={imgRef}
+                  src={upImg}
+                  alt="Source"
+                  width={800}
+                  height={500}
+                  unoptimized
+                  onLoad={onImageLoad}
+                  className="max-h-[500px] w-auto object-contain rounded-md"
+                />
+              </ReactCrop>
+            </ImageZoomPreview>
+          ) : (
+            <Dropzone onFile={processFile} title={t("action.dropzone")} />
+          )}
+        </ToolWorkspace>
+
+        {upImg && (
+          <Card className="overflow-hidden text-left">
+            <CardHeader className="bg-muted/20">
+              <CardTitle className="text-sm font-medium">
+                {t("tool.image-cropper.preview")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 flex justify-center">
+              <canvas
+                ref={previewCanvasRef}
+                className="max-w-full h-auto border rounded-md shadow-sm"
               />
-            </ReactCrop>
-          </ImageZoomPreview>
-        ) : (
-          <Dropzone onFile={processFile} title={t("action.dropzone")} />
+            </CardContent>
+          </Card>
         )}
-      </ToolWorkspace>
-
-      {upImg && (
-        <Card className="mt-8 overflow-hidden text-left">
-          <CardHeader className="py-3 bg-muted/20">
-            <CardTitle className="text-sm font-medium">
-              {t("tool.image-cropper.preview")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 flex justify-center">
-            <canvas
-              ref={previewCanvasRef}
-              className="max-w-full h-auto border rounded-md shadow-sm"
-            />
-          </CardContent>
-        </Card>
-      )}
+      </div>
     </ToolShell>
   );
 }

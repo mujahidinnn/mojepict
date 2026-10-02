@@ -5,7 +5,7 @@ import { useI18n } from "@/lib/i18n/context";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolEmptyState } from "@/components/tools/ToolEmptyState";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Label } from "@/components/ui/label";
+import { FormGroup } from "@/components/tools/ToolTemplates";
 import { Cake, PartyPopper } from "lucide-react";
 
 function todayISO() {
@@ -66,20 +66,14 @@ export default function AgeCalculatorPage() {
       title={t("tool.age-calculator.name")}
       description={t("tool.age-calculator.description")}
     >
-      <div className="flex flex-col gap-6 max-w-xl">
+      <div className="max-w-screen-lg flex flex-col gap-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">
-              {t("tool.age-calculator.birthDate")}
-            </Label>
+          <FormGroup label={t("tool.age-calculator.birthDate")}>
             <DatePicker value={birthDate} max={asOfDate} onChange={setBirthDate} />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">
-              {t("tool.age-calculator.asOfDate")}
-            </Label>
+          </FormGroup>
+          <FormGroup label={t("tool.age-calculator.asOfDate")}>
             <DatePicker value={asOfDate} onChange={setAsOfDate} />
-          </div>
+          </FormGroup>
         </div>
 
         {age ? (
@@ -88,7 +82,7 @@ export default function AgeCalculatorPage() {
               {stats.map(([label, value]) => (
                 <div
                   key={label}
-                  className="flex flex-col items-center gap-1 rounded-xl border bg-muted/10 p-4"
+                  className="flex flex-col items-center gap-2 rounded-xl border bg-muted/10 p-6"
                 >
                   <span className="text-3xl font-bold tracking-tight">{value}</span>
                   <span className="text-xs text-muted-foreground">{label}</span>
@@ -96,7 +90,7 @@ export default function AgeCalculatorPage() {
               ))}
             </div>
 
-            <div className="flex items-center gap-3 rounded-xl border bg-muted/10 p-4">
+            <div className="flex items-center gap-3 rounded-xl border bg-muted/10 p-6">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 text-white">
                 <Cake className="h-5 w-5" />
               </div>
@@ -110,7 +104,7 @@ export default function AgeCalculatorPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 rounded-xl border bg-muted/10 p-4">
+            <div className="flex items-center gap-3 rounded-xl border bg-muted/10 p-6">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 text-white">
                 <PartyPopper className="h-5 w-5" />
               </div>

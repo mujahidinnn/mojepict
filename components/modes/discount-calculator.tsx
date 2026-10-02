@@ -4,8 +4,8 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/lib/i18n/context";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ThousandsInput } from "@/components/tools/ThousandsInput";
+import { FormGroup } from "@/components/tools/ToolTemplates";
 import { BadgePercent } from "lucide-react";
 
 export default function DiscountCalculatorPage() {
@@ -36,23 +36,17 @@ export default function DiscountCalculatorPage() {
       title={t("tool.discount-calculator.name")}
       description={t("tool.discount-calculator.description")}
     >
-      <div className="flex flex-col gap-6 max-w-xl">
-        <div className="space-y-2">
-          <Label className="text-xs font-medium text-muted-foreground">
-            {t("tool.discount-calculator.originalPrice")}
-          </Label>
+      <div className="max-w-screen-lg flex flex-col gap-8">
+        <FormGroup label={t("tool.discount-calculator.originalPrice")}>
           <ThousandsInput
             value={originalPrice}
             onChange={setOriginalPrice}
             className="h-12 text-lg font-semibold"
           />
-        </div>
+        </FormGroup>
 
         <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">
-              {t("tool.discount-calculator.discount1")}
-            </Label>
+          <FormGroup label={t("tool.discount-calculator.discount1")}>
             <Input
               type="number"
               min="0"
@@ -61,11 +55,8 @@ export default function DiscountCalculatorPage() {
               onChange={(e) => setDiscount1(e.target.value)}
               className="h-11"
             />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">
-              {t("tool.discount-calculator.discount2")}
-            </Label>
+          </FormGroup>
+          <FormGroup label={t("tool.discount-calculator.discount2")}>
             <Input
               type="number"
               min="0"
@@ -74,15 +65,15 @@ export default function DiscountCalculatorPage() {
               onChange={(e) => setDiscount2(e.target.value)}
               className="h-11"
             />
-          </div>
+          </FormGroup>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl border bg-muted/10 p-4">
+          <div className="rounded-xl border bg-muted/10 p-6">
             <span className="text-xs text-muted-foreground">{t("tool.discount-calculator.youSave")}</span>
             <p className="text-lg font-bold tracking-tight">{formatNumber(youSave)}</p>
           </div>
-          <div className="rounded-xl border bg-muted/10 p-4">
+          <div className="rounded-xl border bg-muted/10 p-6">
             <span className="text-xs text-muted-foreground">
               {t("tool.discount-calculator.effectiveDiscount")}
             </span>
