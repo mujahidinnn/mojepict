@@ -570,6 +570,20 @@ export const TOOL_KEYWORDS: Record<string, ToolKeywordSet> = {
       "docx ke pdf tanpa upload",
     ],
   },
+  "pdf-to-word": {
+    en: [
+      "pdf to word converter",
+      "pdf to docx online",
+      "convert pdf to editable word document",
+      "pdf to doc no upload",
+    ],
+    id: [
+      "pdf ke word",
+      "convert pdf ke docx online",
+      "ubah pdf jadi dokumen word gratis",
+      "pdf ke doc tanpa upload",
+    ],
+  },
   "rich-text-to-markdown": {
     en: [
       "rich text to markdown",
@@ -1336,6 +1350,20 @@ export const TOOL_KEYWORDS: Record<string, ToolKeywordSet> = {
       "ubah data csv jadi json",
     ],
   },
+  "excel-csv-converter": {
+    en: [
+      "excel to csv converter",
+      "csv to excel converter online",
+      "convert xlsx to csv free",
+      "convert csv to xlsx online",
+    ],
+    id: [
+      "convert excel ke csv",
+      "ubah csv ke excel online",
+      "konversi xlsx ke csv gratis",
+      "convert csv ke xlsx",
+    ],
+  },
   "meta-tag-generator": {
     en: [
       "meta tag generator online",
@@ -1434,6 +1462,74 @@ export const TOOL_KEYWORDS: Record<string, ToolKeywordSet> = {
       "upload file teks jadi suara",
       "text to speech gratis",
       "alat pembaca teks online",
+    ],
+  },
+  "archive-tool": {
+    en: [
+      "zip files online",
+      "extract zip file online",
+      "create tar.gz online",
+      "compress folder to zip",
+      "unzip files in browser",
+      "zip extractor online free",
+    ],
+    id: [
+      "zip file online",
+      "ekstrak file zip online",
+      "kompres folder jadi zip",
+      "buat tar.gz online",
+      "unzip file online gratis",
+      "ekstrak rar zip online",
+    ],
+  },
+  "doc-scanner": {
+    en: [
+      "document scanner online",
+      "scan document to pdf",
+      "photo to pdf scanner",
+      "scan multiple pages to pdf",
+      "straighten scanned photo",
+      "ocr scan to text pdf",
+    ],
+    id: [
+      "scan dokumen online",
+      "scan ke pdf dari hp",
+      "aplikasi scanner dokumen online",
+      "scan banyak halaman jadi pdf",
+      "luruskan foto dokumen miring",
+      "ocr scan jadi teks pdf",
+    ],
+  },
+  "map-editor": {
+    en: [
+      "online map editor",
+      "geojson editor online",
+      "draw polygon on map online",
+      "map maker with markers",
+      "interactive map tool free",
+    ],
+    id: [
+      "editor peta online",
+      "buat polygon di peta online",
+      "editor geojson online",
+      "alat buat peta interaktif",
+      "peta online tambah marker",
+    ],
+  },
+  "website-score-checker": {
+    en: [
+      "website score checker",
+      "check website performance online",
+      "website security header checker",
+      "free lighthouse score checker",
+      "website seo checker online",
+    ],
+    id: [
+      "cek skor website",
+      "cek performa website online",
+      "cek keamanan header website",
+      "cek seo website gratis",
+      "lighthouse checker online",
     ],
   },
 };

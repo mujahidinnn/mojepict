@@ -78,6 +78,7 @@ export default function SvgTracerPage({ initialFile }: { initialFile?: File } = 
     <ToolShell
       title={t("tool.svg-tracer.name")}
       description={t("tool.svg-tracer.description")}
+      fullWidth
     >
       <ToolWorkspace
         sidebar={

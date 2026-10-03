@@ -69,7 +69,7 @@ export default function TextDiffPage() {
   const removed = diff.filter((d) => d.type === "remove").length;
 
   return (
-    <ToolShell title={t("tool.text-diff.name")} description={t("tool.text-diff.description")}>
+    <ToolShell title={t("tool.text-diff.name")} description={t("tool.text-diff.description")} fullWidth>
       <div className="flex flex-col gap-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-2">

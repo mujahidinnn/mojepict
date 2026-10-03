@@ -146,6 +146,7 @@ export default function ImageCropperPage() {
     <ToolShell
       title={t("tool.image-cropper.name")}
       description={t("tool.image-cropper.description")}
+      fullWidth
     >
       <div className="flex flex-col gap-8">
           <ToolWorkspace

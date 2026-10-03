@@ -6,6 +6,7 @@ import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
 import { Dropzone } from "@/components/tools/Dropzone";
 import { PdfPreview } from "@/components/tools/PdfPreview";
+import { ToolEmptyState } from "@/components/tools/ToolEmptyState";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -229,6 +230,11 @@ export default function SplitPdfPage() {
               </InputSection>
 
               <OutputSection label="Result">
+                {results.length === 0 && (
+                  <div className="flex min-h-[200px] items-center justify-center rounded-xl border bg-muted/10">
+                    <ToolEmptyState icon={<Scissors className="h-6 w-6" />} title={t("tool.split-pdf.placeholder")} />
+                  </div>
+                )}
                 {results.map((result) => (
                   <Fragment key={result.url}>
                     <Card className="p-6 flex items-center justify-between bg-muted/10">

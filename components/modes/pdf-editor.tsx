@@ -513,7 +513,7 @@ export default function PdfEditorPage() {
   ];
 
   return (
-    <ToolShell title={t("tool.pdf-editor.name")} description={t("tool.pdf-editor.description")}>
+    <ToolShell title={t("tool.pdf-editor.name")} description={t("tool.pdf-editor.description")} fullWidth>
       {!file ? (
         <div className="max-w-screen-lg">
           <Dropzone

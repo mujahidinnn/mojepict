@@ -50,6 +50,7 @@ export default function JsonFormatterPage() {
     <ToolShell
       title={t("tool.json-formatter.name")}
       description={t("tool.json-formatter.description")}
+      fullWidth
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4 text-left">

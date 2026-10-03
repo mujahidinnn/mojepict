@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Select,
   SelectContent,
@@ -86,6 +87,21 @@ const NEON_STYLES = [
 ] as const;
 
 type NeonStyle = (typeof NEON_STYLES)[number]["id"];
+
+const FILTER_OPTIONS = [
+  { value: "none", label: "Default (Clean)" },
+  { value: "brightness(110%) contrast(90%) saturate(120%) blur(0.3px)", label: "Sweet Look ✨" },
+  { value: "sepia(0.4) brightness(110%) hue-rotate(-10deg)", label: "Golden Hour ☀️" },
+  { value: "sepia(0.6) contrast(0.9) brightness(1.1)", label: "Vintage 🎞️" },
+  { value: "brightness(110%) contrast(120%) hue-rotate(180deg)", label: "Cold Tone ❄️" },
+  { value: "grayscale(100%)", label: "Classic B&W" },
+  { value: "grayscale(100%) contrast(150%)", label: "High Contrast B&W" },
+  { value: "brightness(105%) contrast(95%) saturate(120%) sepia(0.5) hue-rotate(-10deg)", label: "Retro 70s" },
+  { value: "brightness(110%) contrast(90%) saturate(85%) sepia(0.3) blur(0.4px)", label: "Retro 80s" },
+  { value: "brightness(70%) contrast(130%) hue-rotate(210deg)", label: "Midnight 🌙" },
+  { value: "contrast(200%) brightness(80%)", label: "Dramatic" },
+  { value: "blur(0.5px) brightness(115%)", label: "Soft Glow" },
+];
 
 const TIMER_OPTIONS = [
   { value: 0, label: "Timer: Off" },
@@ -1217,6 +1233,7 @@ export default function PhotoBoothPage() {
     <ToolShell
       title={t("tool.photobooth.name")}
       description={t("tool.photobooth.description")}
+      fullWidth
     >
       <ToolWorkspace
         sidebar={
@@ -1320,45 +1337,7 @@ export default function PhotoBoothPage() {
               </TabsContent>
 
               <TabsContent value="filter" className="pt-4">
-                <Select value={filter} onValueChange={setFilter}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Default (Clean)</SelectItem>
-                    <SelectItem value="brightness(110%) contrast(90%) saturate(120%) blur(0.3px)">
-                      Sweet Look ✨
-                    </SelectItem>
-                    <SelectItem value="sepia(0.4) brightness(110%) hue-rotate(-10deg)">
-                      Golden Hour ☀️
-                    </SelectItem>
-                    <SelectItem value="sepia(0.6) contrast(0.9) brightness(1.1)">
-                      Vintage 🎞️
-                    </SelectItem>
-                    <SelectItem value="brightness(110%) contrast(120%) hue-rotate(180deg)">
-                      Cold Tone ❄️
-                    </SelectItem>
-                    <SelectItem value="grayscale(100%)">Classic B&W</SelectItem>
-                    <SelectItem value="grayscale(100%) contrast(150%)">
-                      High Contrast B&W
-                    </SelectItem>
-                    <SelectItem value="brightness(105%) contrast(95%) saturate(120%) sepia(0.5) hue-rotate(-10deg)">
-                      Retro 70s
-                    </SelectItem>
-                    <SelectItem value="brightness(110%) contrast(90%) saturate(85%) sepia(0.3) blur(0.4px)">
-                      Retro 80s
-                    </SelectItem>
-                    <SelectItem value="brightness(70%) contrast(130%) hue-rotate(210deg)">
-                      Midnight 🌙
-                    </SelectItem>
-                    <SelectItem value="contrast(200%) brightness(80%)">
-                      Dramatic
-                    </SelectItem>
-                    <SelectItem value="blur(0.5px) brightness(115%)">
-                      Soft Glow
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <Combobox value={filter} onValueChange={setFilter} options={FILTER_OPTIONS} />
                 <p className="mt-4 text-[10px] text-muted-foreground">
                   * Filters override Manual Adjustments (Brightness/Contrast/Blur)
                 </p>

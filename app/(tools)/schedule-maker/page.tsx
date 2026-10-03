@@ -40,6 +40,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Combobox } from "@/components/ui/combobox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -921,18 +922,11 @@ export default function ScheduleMakerPage() {
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Template
                 </Label>
-                <Select value={templateId} onValueChange={applyTemplate}>
-                  <SelectTrigger className="h-10">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TEMPLATES.map((tmpl) => (
-                      <SelectItem key={tmpl.id} value={tmpl.id}>
-                        {tmpl.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  value={templateId}
+                  onValueChange={applyTemplate}
+                  options={TEMPLATES.map((tmpl) => ({ value: tmpl.id, label: tmpl.label }))}
+                />
               </div>
 
               <div className="space-y-2">

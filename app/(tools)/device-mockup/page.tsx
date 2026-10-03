@@ -460,6 +460,7 @@ export default function DeviceMockupPage() {
         t("tool.device-mockup.description") ||
         "Frame your screenshot inside a phone, tablet, laptop, browser, or monitor."
       }
+      fullWidth
     >
       <ToolWorkspace
         sidebar={

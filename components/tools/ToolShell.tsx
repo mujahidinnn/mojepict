@@ -9,6 +9,7 @@ import { TOOLS, getToolBadge } from "@/lib/tools";
 import { getCategoryColor, getCategoryWash, getToolIconComponent } from "@/lib/tool-icons";
 import { useI18n } from "@/lib/i18n/context";
 import { useEmbedded } from "@/components/tools/EmbeddedContext";
+import { useFullWidthContent } from "@/components/layout/ContentWidth";
 import { cn } from "@/lib/utils";
 
 interface ToolShellProps {
@@ -18,6 +19,8 @@ interface ToolShellProps {
   badge?: string;
   children: ReactNode;
   actions?: ReactNode;
+  /** Opts this page out of the default max-w-6xl cap, for canvas/map-sized workspaces that want the room. */
+  fullWidth?: boolean;
 }
 
 export function ToolShell({
@@ -26,10 +29,13 @@ export function ToolShell({
   badge,
   children,
   actions,
+  fullWidth,
 }: ToolShellProps) {
   const pathname = usePathname();
   const { t } = useI18n();
   const embedded = useEmbedded();
+
+  useFullWidthContent(!!fullWidth && !embedded);
 
   useEffect(() => {
     if (embedded) return;

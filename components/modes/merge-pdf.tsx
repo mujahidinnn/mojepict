@@ -6,6 +6,7 @@ import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
 import { Dropzone } from "@/components/tools/Dropzone";
 import { PdfPreview } from "@/components/tools/PdfPreview";
+import { ToolEmptyState } from "@/components/tools/ToolEmptyState";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -205,7 +206,7 @@ export default function MergePdfPage() {
 
           <OutputSection label="Result">
             {merging && <Progress value={progress} className="h-1.5" />}
-            {resultUrl && (
+            {resultUrl ? (
               <>
                 <Card className="p-6 flex items-center justify-between bg-muted/10">
                   <div className="flex-1 overflow-hidden pr-4">
@@ -222,6 +223,12 @@ export default function MergePdfPage() {
                 </Card>
                 <PdfPreview src={resultUrl} className="w-full rounded-lg border" />
               </>
+            ) : (
+              !merging && (
+                <div className="flex min-h-[200px] items-center justify-center rounded-xl border bg-muted/10">
+                  <ToolEmptyState icon={<Merge className="h-6 w-6" />} title={t("tool.merge-pdf.placeholder")} />
+                </div>
+              )
             )}
           </OutputSection>
         </TwoColumnLayout>
