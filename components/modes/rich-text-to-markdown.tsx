@@ -1,43 +1,78 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
+import { useEditor, EditorContent, type Editor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
 import { htmlToMarkdown } from "@/lib/html-to-markdown";
-import { Bold, Code, Copy, Download, Heading1, Heading2, Italic, Link, List, ListOrdered, Quote, Strikethrough } from "lucide-react";
+import { Bold, Code, Copy, Download, Heading1, Heading2, Italic, Link as LinkIcon, List, ListOrdered, Quote, Strikethrough } from "lucide-react";
 import { TwoColumnLayout, InputSection, OutputSection } from "@/components/tools/ToolTemplates";
 
-// document.execCommand is deprecated but is still the only dependency-free way to drive contentEditable.
-const ACTIONS: { icon: typeof Bold; label: string; run: () => void }[] = [
-  { icon: Bold, label: "Bold", run: () => document.execCommand("bold") },
-  { icon: Italic, label: "Italic", run: () => document.execCommand("italic") },
-  { icon: Strikethrough, label: "Strikethrough", run: () => document.execCommand("strikeThrough") },
-  { icon: Heading1, label: "H1", run: () => document.execCommand("formatBlock", false, "h1") },
-  { icon: Heading2, label: "H2", run: () => document.execCommand("formatBlock", false, "h2") },
-  { icon: List, label: "Bullet list", run: () => document.execCommand("insertUnorderedList") },
-  { icon: ListOrdered, label: "Numbered list", run: () => document.execCommand("insertOrderedList") },
-  { icon: Quote, label: "Quote", run: () => document.execCommand("formatBlock", false, "blockquote") },
-  { icon: Code, label: "Code", run: () => document.execCommand("formatBlock", false, "pre") },
-  {
-    icon: Link,
-    label: "Link",
-    run: () => {
-      const url = window.prompt("URL", "https://");
-      if (url) document.execCommand("createLink", false, url);
+const EDITOR_CLASS =
+  "min-h-96 rounded-xl border p-4 overflow-auto focus:outline-none focus:ring-2 focus:ring-ring [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:text-xl [&_h2]:font-bold [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-6 [&_ol]:pl-6 [&_blockquote]:border-l-4 [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground [&_pre]:bg-muted [&_pre]:p-2 [&_pre]:rounded [&_pre]:font-mono [&_a]:text-primary [&_a]:underline";
+
+function Toolbar({ editor }: { editor: Editor }) {
+  const actions: { icon: typeof Bold; label: string; run: () => void }[] = [
+    { icon: Bold, label: "Bold", run: () => editor.chain().focus().toggleBold().run() },
+    { icon: Italic, label: "Italic", run: () => editor.chain().focus().toggleItalic().run() },
+    { icon: Strikethrough, label: "Strikethrough", run: () => editor.chain().focus().toggleStrike().run() },
+    { icon: Heading1, label: "H1", run: () => editor.chain().focus().toggleHeading({ level: 1 }).run() },
+    { icon: Heading2, label: "H2", run: () => editor.chain().focus().toggleHeading({ level: 2 }).run() },
+    { icon: List, label: "Bullet list", run: () => editor.chain().focus().toggleBulletList().run() },
+    { icon: ListOrdered, label: "Numbered list", run: () => editor.chain().focus().toggleOrderedList().run() },
+    { icon: Quote, label: "Quote", run: () => editor.chain().focus().toggleBlockquote().run() },
+    { icon: Code, label: "Code block", run: () => editor.chain().focus().toggleCodeBlock().run() },
+    {
+      icon: LinkIcon,
+      label: "Link",
+      run: () => {
+        if (editor.isActive("link")) {
+          editor.chain().focus().unsetLink().run();
+          return;
+        }
+        const url = window.prompt("URL", "https://");
+        if (url) editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+      },
     },
-  },
-];
+  ];
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {actions.map(({ icon: Icon, label, run }) => (
+        <Button
+          key={label}
+          type="button"
+          variant="outline"
+          size="icon"
+          title={label}
+          aria-label={label}
+          // preventDefault keeps the editor's selection when the button is clicked.
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={run}
+          className="h-9 w-9"
+        >
+          <Icon className="h-4 w-4" />
+        </Button>
+      ))}
+    </div>
+  );
+}
 
 export default function RichTextToMarkdownPage() {
   const { t } = useI18n();
   const { toast } = useToast();
-  const editorRef = useRef<HTMLDivElement>(null);
   const [markdown, setMarkdown] = useState("");
 
-  const sync = () => editorRef.current && setMarkdown(htmlToMarkdown(editorRef.current));
+  const editor = useEditor({
+    extensions: [StarterKit.configure({ link: { openOnClick: false, autolink: true } })],
+    immediatelyRender: false,
+    editorProps: { attributes: { class: EDITOR_CLASS } },
+    onUpdate: ({ editor }) => setMarkdown(htmlToMarkdown(editor.view.dom as HTMLElement)),
+  });
 
   const copy = () => {
     if (!markdown) return;
@@ -61,34 +96,8 @@ export default function RichTextToMarkdownPage() {
     >
       <TwoColumnLayout>
         <InputSection label={t("tool.rich-text-to-markdown.editor")}>
-          <div className="flex flex-wrap gap-2">
-            {ACTIONS.map(({ icon: Icon, label, run }) => (
-              <Button
-                key={label}
-                type="button"
-                variant="outline"
-                size="icon"
-                title={label}
-                aria-label={label}
-                // preventDefault keeps the editor's selection when the button is clicked.
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  run();
-                  sync();
-                }}
-                className="h-9 w-9"
-              >
-                <Icon className="h-4 w-4" />
-              </Button>
-            ))}
-          </div>
-          <div
-            ref={editorRef}
-            contentEditable
-            suppressContentEditableWarning
-            onInput={sync}
-            className="min-h-96 rounded-xl border p-4 overflow-auto focus:outline-none focus:ring-2 focus:ring-ring [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:text-xl [&_h2]:font-bold [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-6 [&_ol]:pl-6 [&_blockquote]:border-l-4 [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground [&_pre]:bg-muted [&_pre]:p-2 [&_pre]:rounded [&_pre]:font-mono [&_a]:text-primary [&_a]:underline"
-          />
+          {editor && <Toolbar editor={editor} />}
+          <EditorContent editor={editor} />
         </InputSection>
 
         <OutputSection label="Markdown">

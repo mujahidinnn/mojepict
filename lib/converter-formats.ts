@@ -10,8 +10,10 @@ export type ConverterModule =
   | "svg-tracer"
   | "pdf-to-markdown"
   | "word-to-pdf"
+  | "pdf-to-word"
   | "rich-text-to-markdown"
-  | "csv-json-converter";
+  | "csv-json-converter"
+  | "excel-csv-converter";
 
 export const FORMATS = {
   png: { label: "PNG", ext: ["png"] },
@@ -20,10 +22,12 @@ export const FORMATS = {
   gif: { label: "GIF", ext: ["gif"] },
   bmp: { label: "BMP", ext: ["bmp"] },
   ico: { label: "ICO", ext: ["ico"] },
+  avif: { label: "AVIF", ext: ["avif"] },
   svg: { label: "SVG", ext: ["svg"] },
   svgtrace: { label: "SVG (vector trace)", ext: [] as string[] },
   pdf: { label: "PDF", ext: ["pdf"] },
   docx: { label: "Word (DOCX)", ext: ["docx"] },
+  xlsx: { label: "Excel (XLSX)", ext: ["xlsx", "xls"] },
   csv: { label: "CSV", ext: ["csv"] },
   json: { label: "JSON", ext: ["json"] },
   md: { label: "Markdown", ext: [] as string[] },
@@ -42,14 +46,21 @@ const edges: ConverterEdge[] = [];
 const link = (from: FormatId[], to: FormatId[], module: ConverterModule) =>
   from.forEach((f) => to.forEach((t) => f !== t && edges.push({ from: f, to: t, module })));
 
-link(["png", "jpg", "webp", "gif", "bmp", "ico", "svg"], ["jpg", "png", "webp", "ico", "svg"], "image-converter");
-link(["png", "jpg", "webp", "gif", "bmp"], ["pdf"], "image-to-pdf");
+link(
+  ["png", "jpg", "webp", "gif", "bmp", "ico", "svg", "avif"],
+  ["jpg", "png", "webp", "ico", "svg", "avif"],
+  "image-converter",
+);
+link(["png", "jpg", "webp", "gif", "bmp", "avif"], ["pdf"], "image-to-pdf");
 link(["png", "jpg"], ["svgtrace"], "svg-tracer");
 link(["pdf"], ["md"], "pdf-to-markdown");
 link(["docx"], ["pdf"], "word-to-pdf");
+link(["pdf"], ["docx"], "pdf-to-word");
 link(["richtext"], ["md"], "rich-text-to-markdown");
 link(["csv"], ["json"], "csv-json-converter");
 link(["json"], ["csv"], "csv-json-converter");
+link(["xlsx"], ["csv"], "excel-csv-converter");
+link(["csv"], ["xlsx"], "excel-csv-converter");
 
 export const CONVERTER_EDGES: readonly ConverterEdge[] = edges;
 

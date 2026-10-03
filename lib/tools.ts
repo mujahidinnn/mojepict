@@ -105,29 +105,11 @@ export const TOOLS: Tool[] = [
     createdAt: "2026-08-18",
   },
   {
-    id: "diagram-maker",
-    slug: "diagram-maker",
-    icon: "Workflow",
-    category: "image",
-    createdAt: "2026-08-18",
-    featured: true,
-    popular: true,
-  },
-  {
     id: "device-mockup",
     slug: "device-mockup",
     icon: "Smartphone",
     category: "image",
     createdAt: "2026-08-18",
-    featured: true,
-    popular: true,
-  },
-  {
-    id: "code-generator",
-    slug: "code-generator",
-    icon: "QrCode",
-    category: "image",
-    createdAt: "2026-09-24",
     featured: true,
     popular: true,
   },
@@ -261,6 +243,15 @@ export const TOOLS: Tool[] = [
 
   // --- KATEGORI: DEV ---
   {
+    id: "code-generator",
+    slug: "code-generator",
+    icon: "QrCode",
+    category: "dev",
+    createdAt: "2026-09-24",
+    featured: true,
+    popular: true,
+  },
+  {
     id: "random-generator",
     slug: "random-generator",
     icon: "KeyRound",
@@ -317,6 +308,15 @@ export const TOOLS: Tool[] = [
 
   // --- KATEGORI: PRODUCTIVITY ---
   {
+    id: "diagram-maker",
+    slug: "diagram-maker",
+    icon: "Workflow",
+    category: "productivity",
+    createdAt: "2026-08-18",
+    featured: true,
+    popular: true,
+  },
+  {
     id: "schedule-maker",
     slug: "schedule-maker",
     icon: "CalendarClock",
@@ -351,6 +351,34 @@ export const TOOLS: Tool[] = [
     createdAt: "2026-08-19",
     featured: true,
     popular: true,
+  },
+  {
+    id: "archive-tool",
+    slug: "archive-tool",
+    icon: "Archive",
+    category: "productivity",
+    createdAt: "2026-10-03",
+  },
+  {
+    id: "doc-scanner",
+    slug: "doc-scanner",
+    icon: "ScanLine",
+    category: "productivity",
+    createdAt: "2026-10-03",
+  },
+  {
+    id: "map-editor",
+    slug: "map-editor",
+    icon: "Map",
+    category: "productivity",
+    createdAt: "2026-10-03",
+  },
+  {
+    id: "website-score-checker",
+    slug: "website-score-checker",
+    icon: "ShieldCheck",
+    category: "dev",
+    createdAt: "2026-10-03",
   },
 ];
 

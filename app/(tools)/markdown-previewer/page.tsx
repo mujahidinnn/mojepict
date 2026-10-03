@@ -28,6 +28,7 @@ export default function MarkdownPreviewerPage() {
     <ToolShell
       title={t("tool.markdown-previewer.name")}
       description={t("tool.markdown-previewer.description")}
+      fullWidth
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-2">

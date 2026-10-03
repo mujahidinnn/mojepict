@@ -3,6 +3,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { ThemeProvider } from "next-themes";
 import { I18nProvider } from "@/lib/i18n/context";
+import { ContentWidthProvider } from "@/components/layout/ContentWidth";
 import { Toaster } from "@/components/ui/toaster";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Navbar } from "@/components/layout/Navbar";
@@ -108,7 +109,7 @@ export default function RootLayout({
                 <Navbar />
 
                 <main className="relative flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
-                  <div className="mx-auto max-w-6xl">{children}</div>
+                  <ContentWidthProvider>{children}</ContentWidthProvider>
                 </main>
               </div>
             </div>

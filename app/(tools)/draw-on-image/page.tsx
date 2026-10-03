@@ -172,6 +172,7 @@ export default function DrawOnImagePage() {
     <ToolShell
       title={t("tool.image-draw.name")}
       description={t("tool.image-draw.description")}
+      fullWidth
     >
       <ToolWorkspace
         sidebar={

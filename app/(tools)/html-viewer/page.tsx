@@ -371,7 +371,7 @@ export default function HtmlViewerPage() {
   };
 
   return (
-    <ToolShell title={t("tool.html-viewer.name")} description={t("tool.html-viewer.description")}>
+    <ToolShell title={t("tool.html-viewer.name")} description={t("tool.html-viewer.description")} fullWidth>
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2">
           <Button type="button" variant="outline" size="sm" onClick={addFile} className="gap-2">

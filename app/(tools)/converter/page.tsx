@@ -9,6 +9,7 @@ import { EmbeddedProvider } from "@/components/tools/EmbeddedContext";
 import { Dropzone } from "@/components/tools/Dropzone";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Select,
   SelectContent,
@@ -38,8 +39,10 @@ const MODULES: Record<ConverterModule, Mod> = {
   "svg-tracer": dynamic(() => import("@/components/modes/svg-tracer")),
   "pdf-to-markdown": dynamic(() => import("@/components/modes/pdf-to-markdown")),
   "word-to-pdf": dynamic(() => import("@/components/modes/word-to-pdf")),
+  "pdf-to-word": dynamic(() => import("@/components/modes/pdf-to-word")),
   "rich-text-to-markdown": dynamic(() => import("@/components/modes/rich-text-to-markdown")),
   "csv-json-converter": dynamic(() => import("@/components/modes/csv-json-converter")),
+  "excel-csv-converter": dynamic(() => import("@/components/modes/excel-csv-converter")),
 };
 
 const ACCEPT = ALL_FROM.flatMap((id) => FORMATS[id].ext.map((e) => `.${e}`)).join(",");
@@ -109,19 +112,15 @@ function Converter() {
             <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
               {t("converter.from")}
             </Label>
-            <Select value={from ?? "auto"} onValueChange={pickFrom}>
-              <SelectTrigger aria-label={t("converter.from")}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="auto">{t("converter.auto")}</SelectItem>
-                {ALL_FROM.map((id) => (
-                  <SelectItem key={id} value={id}>
-                    {FORMATS[id].label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Combobox
+              aria-label={t("converter.from")}
+              value={from ?? "auto"}
+              onValueChange={pickFrom}
+              options={[
+                { value: "auto", label: t("converter.auto") },
+                ...ALL_FROM.map((id) => ({ value: id, label: FORMATS[id].label })),
+              ]}
+            />
           </div>
           <Button
             type="button"

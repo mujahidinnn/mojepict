@@ -141,6 +141,7 @@ export default function DiagramMakerPage() {
     <ToolShell
       title={t("tool.diagram-maker.name")}
       description={t("tool.diagram-maker.description")}
+      fullWidth
       actions={
         <Button variant="outline" size="sm" className="gap-2" onClick={handleClear}>
           <RotateCcw className="h-4 w-4" />

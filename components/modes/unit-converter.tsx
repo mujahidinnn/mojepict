@@ -4,12 +4,11 @@ import { ToolShell } from "@/components/tools/ToolShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormGroup } from "@/components/tools/ToolTemplates";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -302,33 +301,17 @@ function LadderUnitSelect({
   t: TFunc;
 }) {
   const extras = EXTRA_UNITS[category];
-  return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger>
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <SelectLabel>{t("tool.unit-converter.metricLadder")}</SelectLabel>
-          {LADDER_SYMBOLS[category].map((sym, i) => (
-            <SelectItem key={sym} value={sym}>
-              {unitFullName(category, i, locale)} ({displaySymbol(sym)})
-            </SelectItem>
-          ))}
-        </SelectGroup>
-        {extras.length > 0 && (
-          <SelectGroup>
-            <SelectLabel>{t("tool.unit-converter.otherUnits")}</SelectLabel>
-            {extras.map((u) => (
-              <SelectItem key={u.key} value={u.key}>
-                {u.label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        )}
-      </SelectContent>
-    </Select>
-  );
+  const ladderGroup = t("tool.unit-converter.metricLadder");
+  const extrasGroup = t("tool.unit-converter.otherUnits");
+  const options = [
+    ...LADDER_SYMBOLS[category].map((sym, i) => ({
+      value: sym,
+      label: `${unitFullName(category, i, locale)} (${displaySymbol(sym)})`,
+      group: ladderGroup,
+    })),
+    ...extras.map((u) => ({ value: u.key, label: u.label, group: extrasGroup })),
+  ];
+  return <Combobox value={value} onValueChange={onChange} options={options} />;
 }
 
 function TempUnitSelect({

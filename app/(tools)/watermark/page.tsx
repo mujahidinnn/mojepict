@@ -230,6 +230,7 @@ export default function WatermarkPage() {
         t("tool.watermark.description") ||
         "Add text or logo watermarks to your images locally."
       }
+      fullWidth
     >
       <ToolWorkspace
         sidebar={

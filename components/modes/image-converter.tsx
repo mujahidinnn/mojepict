@@ -28,7 +28,8 @@ type OutputFormat =
   | "image/png"
   | "image/webp"
   | "image/x-icon"
-  | "image/svg+xml";
+  | "image/svg+xml"
+  | "image/avif";
 
 const FORMAT_LABELS: Record<OutputFormat, string> = {
   "image/jpeg": "JPG",
@@ -36,6 +37,7 @@ const FORMAT_LABELS: Record<OutputFormat, string> = {
   "image/webp": "WebP",
   "image/x-icon": "ICO",
   "image/svg+xml": "SVG",
+  "image/avif": "AVIF",
 };
 
 const ID_TO_MIME: Record<string, OutputFormat> = {
@@ -44,6 +46,7 @@ const ID_TO_MIME: Record<string, OutputFormat> = {
   webp: "image/webp",
   ico: "image/x-icon",
   svg: "image/svg+xml",
+  avif: "image/avif",
 };
 
 /** `to` (format id) and `initialFile` are supplied by the Universal Converter hub. */
@@ -166,6 +169,15 @@ export default function ImageConverterPage({
       }
 
       setProgress(70);
+
+      // No browser can encode AVIF via canvas.toBlob yet, so it goes through a WASM encoder instead.
+      if (outputFormat === "image/avif") {
+        const { encodeAvif } = await import("@/lib/avif-encode");
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const buffer = await encodeAvif(imageData);
+        downloadBlob(new Blob([buffer], { type: "image/avif" }), "avif", objectUrl);
+        return;
+      }
 
       const mimeType =
         outputFormat === "image/x-icon" ? "image/png" : outputFormat;
