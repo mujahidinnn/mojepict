@@ -43,6 +43,7 @@ const MODULES: Record<ConverterModule, Mod> = {
   "rich-text-to-markdown": dynamic(() => import("@/components/modes/rich-text-to-markdown")),
   "csv-json-converter": dynamic(() => import("@/components/modes/csv-json-converter")),
   "excel-csv-converter": dynamic(() => import("@/components/modes/excel-csv-converter")),
+  "pptx-converter": dynamic(() => import("@/components/modes/pptx-converter")),
 };
 
 const ACCEPT = ALL_FROM.flatMap((id) => FORMATS[id].ext.map((e) => `.${e}`)).join(",");

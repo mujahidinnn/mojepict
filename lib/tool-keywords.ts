@@ -1350,6 +1350,20 @@ export const TOOL_KEYWORDS: Record<string, ToolKeywordSet> = {
       "ubah data csv jadi json",
     ],
   },
+  "pptx-converter": {
+    en: [
+      "pptx to pdf converter",
+      "powerpoint to markdown",
+      "pdf to pptx online",
+      "markdown to powerpoint",
+    ],
+    id: [
+      "pptx ke pdf",
+      "powerpoint ke markdown",
+      "pdf ke pptx online",
+      "markdown ke powerpoint",
+    ],
+  },
   "excel-csv-converter": {
     en: [
       "excel to csv converter",
