@@ -12,7 +12,10 @@ import { Layers, Search, ShieldCheck, Sparkles } from "lucide-react";
 
 export default function HomePage() {
   const { t } = useI18n();
-  const featured = TOOLS.filter((tool) => tool.featured);
+  // Universal Converter always leads the featured list.
+  const featured = TOOLS.filter((tool) => tool.featured).sort(
+    (a, b) => Number(b.id === "converter") - Number(a.id === "converter"),
+  );
   const popular = getPopularTools();
 
   const [recent, setRecent] = useState<typeof TOOLS>([]);

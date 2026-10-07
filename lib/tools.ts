@@ -49,6 +49,7 @@ export const TOOLS: Tool[] = [
     icon: "ArrowRightLeft",
     category: "productivity",
     createdAt: "2026-09-24",
+    featured: true,
     popular: true,
   },
   {
