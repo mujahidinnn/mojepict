@@ -127,3 +127,85 @@ export function markdownToSlides(md: string): Slide[] {
   }
   return slides;
 }
+
+const TITLE_TYPES = [0, 6]; // TextHeaderAtom: title, center title
+const NOTES_TYPE = 2;
+
+/**
+ * Text-only reader for legacy binary .ppt (PowerPoint 97–2003, [MS-PPT]).
+ * Placeholder text comes from the SlideListWithText; free text boxes from each slide's drawing.
+ * ponytail: no images or indent levels; add StyleTextPropAtom/BLIP parsing if users need them.
+ */
+export async function parsePpt(buf: ArrayBuffer): Promise<Slide[]> {
+  const { CFB } = await import("xlsx");
+  const entry = CFB.find(CFB.read(new Uint8Array(buf), { type: "buffer" }), "PowerPoint Document");
+  if (!entry?.content) throw new Error("not a ppt");
+  const d = new Uint8Array(entry.content);
+  const v = new DataView(d.buffer, d.byteOffset, d.byteLength);
+  const u32 = (o: number) => v.getUint32(o, true);
+  const utf16 = new TextDecoder("utf-16le");
+  const latin1 = new TextDecoder("latin1");
+
+  // Visits every record in [start, end) and descends into containers unless fn returns false.
+  const walk = (start: number, end: number, fn: (type: number, inst: number, body: number, len: number) => boolean | void) => {
+    for (let o = start; o + 8 <= end; ) {
+      const verInst = v.getUint16(o, true);
+      const type = v.getUint16(o + 2, true);
+      const len = u32(o + 4);
+      const body = o + 8;
+      if (body + len > end) break;
+      if (fn(type, verInst >> 4, body, len) !== false && (verInst & 0xf) === 0xf) walk(body, body + len, fn);
+      o = body + len;
+    }
+  };
+
+  const paras = (type: number, body: number, len: number) =>
+    (type === 0x0fa0 ? utf16 : latin1)
+      .decode(d.subarray(body, body + len))
+      .split(/[\r\v]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+  type PptSlide = Slide & { persistId: number };
+  const add = (s: PptSlide, textType: number, lines: string[]) => {
+    if (textType === NOTES_TYPE) return;
+    if (TITLE_TYPES.includes(textType) && !s.title) return void (s.title = lines.join(" "));
+    for (const text of lines) if (text !== s.title && !s.body.some((p) => p.text === text)) s.body.push({ text, level: 0 });
+  };
+
+  const offsets: Record<number, number> = {};
+  let slides: PptSlide[] = [];
+  walk(0, d.length, (type, inst, body, len) => {
+    if (type === 0x1772) {
+      // PersistDirectoryAtom: later (incremental-save) entries override earlier ones.
+      for (let p = body; p < body + len; ) {
+        const head = u32(p);
+        const n = head >>> 20;
+        for (let i = 0; i < n; i++) offsets[(head & 0xfffff) + i] = u32(p + 4 + 4 * i);
+        p += 4 + 4 * n;
+      }
+    } else if (type === 0x0ff0) {
+      if (inst !== 0) return false; // masters / notes lists
+      slides = []; // the last slide list in the stream is the current one
+      let textType = 4;
+      walk(body, body + len, (t, _i, b, l) => {
+        if (t === 0x03f3) slides.push({ persistId: u32(b), title: "", body: [], images: [] });
+        else if (t === 0x0f9f) textType = u32(b);
+        else if ((t === 0x0fa0 || t === 0x0fa8) && slides.length) add(slides[slides.length - 1], textType, paras(t, b, l));
+      });
+      return false;
+    }
+  });
+
+  for (const s of slides) {
+    const o = offsets[s.persistId];
+    if (o === undefined || o + 8 > d.length || v.getUint16(o + 2, true) !== 0x03ee) continue;
+    let textType = 4;
+    walk(o + 8, Math.min(o + 8 + u32(o + 4), d.length), (t, _i, b, l) => {
+      if (t === 0x0f9f) textType = u32(b);
+      else if (t === 0x0fa0 || t === 0x0fa8) add(s, textType, paras(t, b, l));
+    });
+  }
+
+  return slides.map(({ title, body, images }) => ({ title, body, images }));
+}

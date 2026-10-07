@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
-import { parsePptx, slidesToMarkdown, markdownToSlides, type Slide } from "@/lib/pptx";
+import { parsePpt, parsePptx, slidesToMarkdown, markdownToSlides, type Slide } from "@/lib/pptx";
 import type { FormatId } from "@/lib/converter-formats";
 import { Download, Presentation } from "lucide-react";
 
@@ -16,7 +16,7 @@ type Source = "pptx" | "pdf" | "md";
 
 const sourceOf = (name: string): Source | null => {
   const ext = name.split(".").pop()?.toLowerCase();
-  return ext === "pptx" ? "pptx" : ext === "pdf" ? "pdf" : ext === "md" || ext === "markdown" ? "md" : null;
+  return ext === "pptx" || ext === "ppt" ? "pptx" : ext === "pdf" ? "pdf" : ext === "md" || ext === "markdown" ? "md" : null;
 };
 
 function save(blob: Blob, name: string) {
@@ -32,7 +32,7 @@ function save(blob: Blob, name: string) {
 const SLIDE_W = 960;
 const SLIDE_H = 540;
 
-/** Covers pptx → pdf/md and pdf/md → pptx. `to` and `initialFile` come from the Universal Converter hub. */
+/** Covers pptx/ppt → pdf/md and pdf/md → pptx. `to` and `initialFile` come from the Universal Converter hub. */
 export default function PptxConverterPage({ to, initialFile }: { to?: FormatId; initialFile?: File } = {}) {
   const { t } = useI18n();
   const { toast } = useToast();
@@ -53,7 +53,8 @@ export default function PptxConverterPage({ to, initialFile }: { to?: FormatId; 
     setLoading(true);
     try {
       if (src === "pptx") {
-        const s = parsePptx(await f.arrayBuffer());
+        const buf = await f.arrayBuffer();
+        const s = /\.ppt$/i.test(f.name) ? await parsePpt(buf) : parsePptx(buf);
         setSlides(s);
         setMarkdown(slidesToMarkdown(s));
       } else if (src === "md") {
@@ -149,7 +150,7 @@ export default function PptxConverterPage({ to, initialFile }: { to?: FormatId; 
     <ToolShell title={t("tool.pptx-converter.name")} description={t("tool.pptx-converter.description")}>
       {!file ? (
         <Dropzone
-          accept=".pptx,.pdf,.md,.markdown"
+          accept=".pptx,.ppt,.pdf,.md,.markdown"
           onFile={load}
           icon={<Presentation className="h-8 w-8" />}
           title={t(loading ? "tool.pptx-converter.reading" : "tool.pptx-converter.dropzone.title")}

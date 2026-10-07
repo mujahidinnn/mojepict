@@ -31,7 +31,7 @@ export const FORMATS = {
   xlsx: { label: "Excel (XLSX)", ext: ["xlsx", "xls"] },
   csv: { label: "CSV", ext: ["csv"] },
   json: { label: "JSON", ext: ["json"] },
-  pptx: { label: "PowerPoint (PPTX)", ext: ["pptx"] },
+  pptx: { label: "PowerPoint (PPTX/PPT)", ext: ["pptx", "ppt"] },
   md: { label: "Markdown", ext: ["md", "markdown"] },
   richtext: { label: "Rich text (editor)", ext: [] as string[] },
 } as const;
