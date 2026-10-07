@@ -13,7 +13,8 @@ export type ConverterModule =
   | "pdf-to-word"
   | "rich-text-to-markdown"
   | "csv-json-converter"
-  | "excel-csv-converter";
+  | "excel-csv-converter"
+  | "pptx-converter";
 
 export const FORMATS = {
   png: { label: "PNG", ext: ["png"] },
@@ -30,7 +31,8 @@ export const FORMATS = {
   xlsx: { label: "Excel (XLSX)", ext: ["xlsx", "xls"] },
   csv: { label: "CSV", ext: ["csv"] },
   json: { label: "JSON", ext: ["json"] },
-  md: { label: "Markdown", ext: [] as string[] },
+  pptx: { label: "PowerPoint (PPTX)", ext: ["pptx"] },
+  md: { label: "Markdown", ext: ["md", "markdown"] },
   richtext: { label: "Rich text (editor)", ext: [] as string[] },
 } as const;
 
@@ -61,6 +63,8 @@ link(["csv"], ["json"], "csv-json-converter");
 link(["json"], ["csv"], "csv-json-converter");
 link(["xlsx"], ["csv"], "excel-csv-converter");
 link(["csv"], ["xlsx"], "excel-csv-converter");
+link(["pptx"], ["pdf", "md"], "pptx-converter");
+link(["pdf", "md"], ["pptx"], "pptx-converter");
 
 export const CONVERTER_EDGES: readonly ConverterEdge[] = edges;
 
