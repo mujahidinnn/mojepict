@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { differenceInCalendarDays, intervalToDuration } from "date-fns";
+import { differenceInCalendarDays, format, intervalToDuration } from "date-fns";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolEmptyState } from "@/components/tools/ToolEmptyState";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -10,7 +10,7 @@ import { useI18n } from "@/lib/i18n/context";
 import { CalendarDays } from "lucide-react";
 
 function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  return format(new Date(), "yyyy-MM-dd");
 }
 
 export default function DateDifferenceCalculatorPage() {

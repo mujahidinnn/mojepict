@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n/context";
 import { useToast } from "@/hooks/use-toast";
 import { ToolShell } from "@/components/tools/ToolShell";
@@ -48,7 +48,6 @@ const VIEWPORT_WIDTHS: Record<ViewportMode, string> = {
 };
 
 function detectViewportMode(): ViewportMode {
-  if (typeof window === "undefined") return "desktop";
   const width = window.innerWidth;
   if (width < 768) return "mobile";
   if (width < 1024) return "tablet";
@@ -78,13 +77,14 @@ function uid() {
   return Math.random().toString(36).slice(2, 9);
 }
 
-function detectLanguage(file: File): FileLang {
+function detectLanguage(file: File): FileLang | null {
   if (file.type.startsWith("image/")) return "asset";
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  if (ext === "html" || ext === "htm") return "html";
   if (ext === "css") return "css";
   if (ext === "js" || ext === "mjs" || ext === "jsx" || ext === "ts") return "js";
   if (["png", "jpg", "jpeg", "gif", "svg", "webp", "ico"].includes(ext)) return "asset";
-  return "html";
+  return null;
 }
 
 function uniqueName(base: string, existing: Set<string>): string {
@@ -160,6 +160,16 @@ function escapeHtml(s: string) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+/** <title> content is HTML text; decode common entities so it's shown/re-escaped once. */
+function decodeEntities(s: string) {
+  const named: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: "\u00a0" };
+  return s.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e: string) => {
+    if (e[0] !== "#") return named[e.toLowerCase()] ?? m;
+    const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+    return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : m;
+  });
+}
+
 function extractTag(html: string, tag: "head" | "body"): string | null {
   const match = html.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i"));
   return match ? match[1] : null;
@@ -205,7 +215,10 @@ function buildPreviewDocument(files: SnippetFile[]): PreviewResult {
   const jsFiles = files.filter((f) => f.language === "js");
 
   const css = resolveAssetRefs(cssFiles.map((f) => f.content).join("\n\n"), assetFiles);
-  const js = jsFiles.map((f) => f.content).join("\n\n");
+  const js = jsFiles
+    .map((f) => f.content)
+    .join("\n\n")
+    .replace(/<\/script/gi, "<\\/script");
 
   let bodyContent = "";
   let headExtra = "";
@@ -226,7 +239,7 @@ function buildPreviewDocument(files: SnippetFile[]): PreviewResult {
     const firstHead = extractTag(resolvedHtmlFiles[0].content, "head");
     if (firstHead !== null) headExtra = firstHead;
     const titleMatch = resolvedHtmlFiles[0].content.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-    if (titleMatch) title = titleMatch[1];
+    if (titleMatch) title = decodeEntities(titleMatch[1].trim());
     const faviconHref = extractFaviconHref(resolvedHtmlFiles[0].content);
     // Only a data: URI or an absolute URL is safe/loadable here - anything
     // else means the referenced asset file doesn't exist (e.g. it was
@@ -263,7 +276,11 @@ export default function HtmlViewerPage() {
   const [runCount, setRunCount] = useState(0);
   const [preview, setPreview] = useState<PreviewResult>(() => buildPreviewDocument(defaultFiles()));
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [viewportMode, setViewportMode] = useState<ViewportMode>(detectViewportMode);
+  const [viewportMode, setViewportMode] = useState<ViewportMode>("desktop");
+
+  // Viewport depends on window, so it's read after hydration to keep SSR markup stable.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => setViewportMode(detectViewportMode()), []);
 
   const activeFile = files.find((f) => f.id === activeId) ?? files[0];
   const totalBytes = files.reduce((sum, f) => sum + f.content.length, 0);
@@ -315,8 +332,12 @@ export default function HtmlViewerPage() {
         skipped++;
         continue;
       }
+      const language = detectLanguage(file);
+      if (!language) {
+        skipped++;
+        continue;
+      }
       try {
-        const language = detectLanguage(file);
         const content =
           language === "asset"
             ? await new Promise<string>((resolve, reject) => {
@@ -384,7 +405,7 @@ export default function HtmlViewerPage() {
             ref={fileInputRef}
             type="file"
             multiple
-            accept=".html,.htm,.css,.js,.mjs,.jsx,.ts,.txt,.png,.jpg,.jpeg,.gif,.svg,.webp,.ico"
+            accept=".html,.htm,.css,.js,.mjs,.jsx,.ts,.png,.jpg,.jpeg,.gif,.svg,.webp,.ico"
             className="hidden"
             onChange={(e) => handleFilesSelected(e.target.files)}
           />

@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { buildIco, resizeToPngBytes } from "@/lib/ico";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
 import { CopyImageButton } from "@/components/tools/CopyImageButton";
@@ -29,59 +30,13 @@ function loadImage(url: string): Promise<HTMLImageElement> {
   });
 }
 
-function resizeToPngBytes(img: HTMLImageElement, size: number): Promise<Uint8Array> {
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext("2d")!;
-  const scale = Math.min(size / img.naturalWidth, size / img.naturalHeight);
-  const w = img.naturalWidth * scale;
-  const h = img.naturalHeight * scale;
-  ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
-  return new Promise((resolve) => {
-    canvas.toBlob(async (blob) => {
-      const buf = await blob!.arrayBuffer();
-      resolve(new Uint8Array(buf));
-    }, "image/png");
-  });
-}
-
-/** Builds a valid .ico by embedding raw PNG frames (supported since Vista). */
-function buildIco(frames: { size: number; data: Uint8Array }[]): Uint8Array {
-  const headerSize = 6 + frames.length * 16;
-  const totalSize = headerSize + frames.reduce((sum, f) => sum + f.data.length, 0);
-  const buf = new Uint8Array(totalSize);
-  const view = new DataView(buf.buffer);
-
-  view.setUint16(0, 0, true);
-  view.setUint16(2, 1, true);
-  view.setUint16(4, frames.length, true);
-
-  let offset = headerSize;
-  frames.forEach((f, i) => {
-    const entry = 6 + i * 16;
-    buf[entry] = f.size >= 256 ? 0 : f.size;
-    buf[entry + 1] = f.size >= 256 ? 0 : f.size;
-    buf[entry + 2] = 0;
-    buf[entry + 3] = 0;
-    view.setUint16(entry + 4, 1, true);
-    view.setUint16(entry + 6, 32, true);
-    view.setUint32(entry + 8, f.data.length, true);
-    view.setUint32(entry + 12, offset, true);
-    buf.set(f.data, offset);
-    offset += f.data.length;
-  });
-
-  return buf;
-}
-
 function download(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   a.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export default function FaviconGeneratorPage() {
@@ -90,6 +45,11 @@ export default function FaviconGeneratorPage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [pngs, setPngs] = useState<Map<number, Uint8Array>>(new Map());
   const [processing, setProcessing] = useState(false);
+  const previewRef = useRef<string | null>(null);
+
+  useEffect(() => () => {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+  }, []);
 
   const handleFile = useCallback(
     async (f: File) => {
@@ -110,9 +70,12 @@ export default function FaviconGeneratorPage() {
         for (const size of sizes) {
           map.set(size, await resizeToPngBytes(img, size));
         }
+        if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+        previewRef.current = url;
         setPngs(map);
         setPreview(url);
       } catch {
+        URL.revokeObjectURL(url);
         toast({
           variant: "destructive",
           title: t("common.error"),
@@ -126,6 +89,8 @@ export default function FaviconGeneratorPage() {
   );
 
   const reset = () => {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    previewRef.current = null;
     setPreview(null);
     setPngs(new Map());
   };
@@ -155,9 +120,13 @@ export default function FaviconGeneratorPage() {
 <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png">`;
 
-  const copySnippet = () => {
-    navigator.clipboard.writeText(snippet);
-    toast({ description: t("toast.success.copied") });
+  const copySnippet = async () => {
+    try {
+      await navigator.clipboard.writeText(snippet);
+      toast({ description: t("toast.success.copied") });
+    } catch {
+      toast({ variant: "destructive", title: t("common.error"), description: t("toast.error.generic") });
+    }
   };
 
   return (

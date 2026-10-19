@@ -13,7 +13,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronDown, ChevronUp, Copy, Dices, Download, Plus, Trash2 } from "lucide-react";
 import { generateWavePath, generateBlobPath } from "@/lib/svg-shapes";
 import { downloadTextFile } from "@/lib/export-node";
-import { rasterizeToPngBlob } from "@/lib/copy-image";
+import { rasterizeToPngBlob, svgSize } from "@/lib/copy-image";
 
 type Mode = "wave" | "blob";
 
@@ -46,7 +46,7 @@ function downloadBlob(blob: Blob, filename: string) {
   a.href = url;
   a.download = filename;
   a.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export default function WaveGeneratorPage() {
@@ -150,17 +150,21 @@ export default function WaveGeneratorPage() {
     const paths = wavePaths
       .map((l) => `<path d="${l.d}" fill="${l.color}" opacity="${l.opacity}" />`)
       .join("");
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${WAVE_W} ${WAVE_H}" preserveAspectRatio="none">${paths}</svg>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${WAVE_W}" height="${WAVE_H}" viewBox="0 0 ${WAVE_W} ${WAVE_H}" preserveAspectRatio="none">${paths}</svg>`;
   };
 
   const buildBlobSvg = () => {
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${BLOB_SIZE} ${BLOB_SIZE}"><path d="${blobPath}" fill="${blobColor}" /></svg>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${BLOB_SIZE}" height="${BLOB_SIZE}" viewBox="0 0 ${BLOB_SIZE} ${BLOB_SIZE}"><path d="${blobPath}" fill="${blobColor}" /></svg>`;
   };
 
-  const copySvg = () => {
+  const copySvg = async () => {
     const svg = mode === "wave" ? buildWaveSvg() : buildBlobSvg();
-    navigator.clipboard.writeText(svg);
-    toast({ description: t("toast.success.copied") });
+    try {
+      await navigator.clipboard.writeText(svg);
+      toast({ description: t("toast.success.copied") });
+    } catch {
+      toast({ variant: "destructive", description: t("toast.error.generic") });
+    }
   };
 
   const downloadSvg = () => {
@@ -172,7 +176,7 @@ export default function WaveGeneratorPage() {
     try {
       const svg = mode === "wave" ? buildWaveSvg() : buildBlobSvg();
       const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-      const blob = await rasterizeToPngBlob(dataUrl);
+      const blob = await rasterizeToPngBlob(dataUrl, svgSize(svg));
       downloadBlob(blob, mode === "wave" ? "wave.png" : "blob.png");
     } catch {
       toast({ variant: "destructive", description: t("toast.error.generic") });
@@ -208,6 +212,7 @@ export default function WaveGeneratorPage() {
                       className="h-6 w-6"
                       onClick={randomizeWave}
                       title={t("tool.wave-generator.randomize")}
+                      aria-label={t("tool.wave-generator.randomize")}
                     >
                       <Dices className="h-3.5 w-3.5" />
                     </Button>
@@ -218,6 +223,7 @@ export default function WaveGeneratorPage() {
                       className="h-6 w-6"
                       onClick={addLayer}
                       disabled={layers.length >= MAX_LAYERS}
+                      aria-label={t("tool.wave-generator.addLayer")}
                     >
                       <Plus className="h-3.5 w-3.5" />
                     </Button>
@@ -244,6 +250,7 @@ export default function WaveGeneratorPage() {
                           className="h-7 w-7 shrink-0"
                           onClick={() => removeLayer(layer.id)}
                           disabled={layers.length <= 1}
+                          aria-label={t("media.removeLayer")}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
@@ -364,6 +371,7 @@ export default function WaveGeneratorPage() {
                     className="h-6 w-6"
                     onClick={randomizeBlob}
                     title={t("tool.wave-generator.randomize")}
+                    aria-label={t("tool.wave-generator.randomize")}
                   >
                     <Dices className="h-3.5 w-3.5" />
                   </Button>
@@ -434,6 +442,7 @@ export default function WaveGeneratorPage() {
               className="absolute right-3 top-3 z-10 h-9 w-9 shadow"
               onClick={randomizeWave}
               title={t("tool.wave-generator.randomize")}
+              aria-label={t("tool.wave-generator.randomize")}
             >
               <Dices className="h-4 w-4" />
             </Button>
@@ -456,6 +465,7 @@ export default function WaveGeneratorPage() {
               className="absolute right-3 top-3 z-10 h-9 w-9 shadow"
               onClick={randomizeBlob}
               title={t("tool.wave-generator.randomize")}
+              aria-label={t("tool.wave-generator.randomize")}
             >
               <Dices className="h-4 w-4" />
             </Button>

@@ -8,10 +8,12 @@ import { ThousandsInput } from "@/components/tools/ThousandsInput";
 import { FormGroup } from "@/components/tools/ToolTemplates";
 import { Factory } from "lucide-react";
 
+const MAX_MARGIN = 95;
+
 export default function HppCalculatorPage() {
   const { t } = useI18n();
   const formatNumber = (n: number) => {
-    if (!Number.isFinite(n)) return "0";
+    if (!Number.isFinite(n)) return "-";
     return n.toLocaleString("id-ID", { maximumFractionDigits: 2 });
   };
   const [materialCost, setMaterialCost] = useState("2000000");
@@ -20,16 +22,17 @@ export default function HppCalculatorPage() {
   const [units, setUnits] = useState("100");
   const [margin, setMargin] = useState("30");
 
+  const marginTooHigh = (parseFloat(margin) || 0) > MAX_MARGIN;
   const { totalCost, costPerUnit, suggestedPrice, profitPerUnit } = useMemo(() => {
     const material = parseFloat(materialCost) || 0;
     const labor = parseFloat(laborCost) || 0;
     const overhead = parseFloat(overheadCost) || 0;
     const unitCount = Math.max(0, parseFloat(units) || 0);
-    const marginPct = Math.min(95, Math.max(0, parseFloat(margin) || 0));
+    const marginPct = Math.max(0, parseFloat(margin) || 0);
 
     const total = material + labor + overhead;
     const perUnit = unitCount > 0 ? total / unitCount : 0;
-    const price = marginPct < 100 ? perUnit / (1 - marginPct / 100) : perUnit;
+    const price = marginPct <= MAX_MARGIN ? perUnit / (1 - marginPct / 100) : NaN;
     const profit = price - perUnit;
 
     return { totalCost: total, costPerUnit: perUnit, suggestedPrice: price, profitPerUnit: profit };
@@ -57,11 +60,16 @@ export default function HppCalculatorPage() {
           <Input
             type="number"
             min="0"
-            max="95"
+            max={MAX_MARGIN}
             value={margin}
-            onChange={(e) => setMargin(e.target.value)}
+            onChange={(e) => {
+              if (!e.target.value.includes("-")) setMargin(e.target.value);
+            }}
             className="h-11 max-w-[10rem]"
           />
+          {marginTooHigh && (
+            <p className="text-xs text-destructive">{t("tool.hpp-calculator.marginTooHigh")}</p>
+          )}
         </FormGroup>
 
         <div className="grid grid-cols-2 gap-3">

@@ -40,8 +40,10 @@ export default function JwtDecoderPage() {
   const invalid = token.trim().length > 0 && !decoded;
 
   const copy = (value: unknown) => {
-    navigator.clipboard.writeText(JSON.stringify(value, null, 2));
-    toast({ description: t("toast.success.copied") });
+    navigator.clipboard
+      .writeText(JSON.stringify(value, null, 2))
+      .then(() => toast({ description: t("toast.success.copied") }))
+      .catch(() => toast({ variant: "destructive", description: t("toast.error.generic") }));
   };
 
   return (

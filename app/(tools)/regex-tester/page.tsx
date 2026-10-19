@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/lib/i18n/context";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,38 @@ interface MatchInfo {
   groups: string[];
 }
 
+// Runs inside a Web Worker so catastrophic backtracking can be killed.
+const WORKER_SRC = `onmessage = (e) => {
+  const { pattern, flags, text } = e.data;
+  try {
+    const re = new RegExp(pattern, flags.includes("g") ? flags : flags + "g");
+    const unicode = flags.includes("u");
+    const found = [];
+    let m;
+    while ((m = re.exec(text)) !== null && found.length < 5000) {
+      found.push({ match: m[0], index: m.index, groups: m.slice(1).map((g) => g ?? "") });
+      if (m[0].length === 0) {
+        const cp = unicode ? text.codePointAt(re.lastIndex) : undefined;
+        re.lastIndex += cp !== undefined && cp > 0xffff ? 2 : 1;
+      }
+    }
+    postMessage({ matches: found });
+  } catch (err) {
+    postMessage({ error: err instanceof Error ? err.message : String(err) });
+  }
+};`;
+
+function buildHighlight(text: string, matches: MatchInfo[]) {
+  let html = "";
+  let last = 0;
+  for (const m of matches) {
+    html += escapeHtml(text.slice(last, m.index));
+    if (m.match) html += `<mark class="bg-primary/30 text-foreground rounded px-0.5">${escapeHtml(m.match)}</mark>`;
+    last = m.index + m.match.length;
+  }
+  return html + escapeHtml(text.slice(last));
+}
+
 export default function RegexTesterPage() {
   const { t } = useI18n();
   const [pattern, setPattern] = useState("[A-Z][a-z]+");
@@ -30,35 +62,53 @@ export default function RegexTesterPage() {
   const [testString, setTestString] = useState(
     "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
   );
+  const [matches, setMatches] = useState<MatchInfo[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  const { matches, error, highlighted } = useMemo(() => {
-    if (!pattern) return { matches: [] as MatchInfo[], error: null, highlighted: escapeHtml(testString) };
-    try {
-      const globalFlags = flags.includes("g") ? flags : flags + "g";
-      const re = new RegExp(pattern, globalFlags);
-      const found: MatchInfo[] = [];
-      let html = "";
-      let lastIndex = 0;
-      let m: RegExpExecArray | null;
-      let guard = 0;
-      while ((m = re.exec(testString)) !== null && guard < 5000) {
-        guard++;
-        found.push({ match: m[0], index: m.index, groups: m.slice(1).map((g) => g ?? "") });
-        html += escapeHtml(testString.slice(lastIndex, m.index));
-        html += `<mark class="bg-primary/30 text-foreground rounded px-0.5">${escapeHtml(m[0])}</mark>`;
-        lastIndex = m.index + (m[0].length || 1);
-        if (m[0].length === 0) re.lastIndex++;
-      }
-      html += escapeHtml(testString.slice(lastIndex));
-      return { matches: found, error: null, highlighted: html };
-    } catch (e) {
-      return {
-        matches: [] as MatchInfo[],
-        error: e instanceof Error ? e.message : "Invalid regular expression",
-        highlighted: escapeHtml(testString),
-      };
+  useEffect(() => {
+    if (!pattern) {
+      setMatches([]);
+      setError(null);
+      return;
     }
-  }, [pattern, flags, testString]);
+    if (new Set(flags).size !== flags.length) {
+      setMatches([]);
+      setError(t("tool.regex-tester.invalidFlags"));
+      return;
+    }
+    let worker: Worker | null = null;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const url = URL.createObjectURL(new Blob([WORKER_SRC], { type: "text/javascript" }));
+    const stop = () => {
+      clearTimeout(timer);
+      worker?.terminate();
+      worker = null;
+    };
+    const debounce = setTimeout(() => {
+      worker = new Worker(url);
+      worker.onmessage = (e: MessageEvent<{ matches?: MatchInfo[]; error?: string }>) => {
+        stop();
+        setMatches(e.data.matches ?? []);
+        setError(e.data.error ?? null);
+      };
+      timer = setTimeout(() => {
+        stop();
+        setMatches([]);
+        setError(t("tool.regex-tester.timeout"));
+      }, 1000);
+      worker.postMessage({ pattern, flags, text: testString });
+    }, 250);
+    return () => {
+      clearTimeout(debounce);
+      stop();
+      URL.revokeObjectURL(url);
+    };
+  }, [pattern, flags, testString, t]);
+
+  const highlighted = useMemo(
+    () => (error ? escapeHtml(testString) : buildHighlight(testString, matches)),
+    [error, testString, matches],
+  );
 
   return (
     <ToolShell title={t("tool.regex-tester.name")} description={t("tool.regex-tester.description")}>

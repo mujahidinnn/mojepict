@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { PDFDocument } from "pdf-lib";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
@@ -51,14 +51,11 @@ export default function SplitPdfPage() {
   };
 
   // Revoke any generated result object URLs when the component unmounts.
+  const resultsRef = useRef<SplitResult[]>([]);
   useEffect(() => {
-    return () => {
-      setResults((prev) => {
-        revokeResults(prev);
-        return prev;
-      });
-    };
-  }, []);
+    resultsRef.current = results;
+  }, [results]);
+  useEffect(() => () => revokeResults(resultsRef.current), []);
 
   const handleFile = useCallback(
     async (f: File) => {
@@ -79,6 +76,7 @@ export default function SplitPdfPage() {
         setFrom(1);
         setTo(count);
         setSplitAt(Math.max(1, Math.floor(count / 2)));
+        if (count < 2) setMode("range");
       } catch {
         toast({
           variant: "destructive",
@@ -101,6 +99,10 @@ export default function SplitPdfPage() {
 
   const runSplit = useCallback(async () => {
     if (!file || !pageCount) return;
+    if (mode === "half" && pageCount < 2) {
+      toast({ variant: "destructive", title: t("common.error"), description: t("tool.split-pdf.needTwoPages") });
+      return;
+    }
     setProcessing(true);
     try {
       const bytes = await file.arrayBuffer();
@@ -108,8 +110,8 @@ export default function SplitPdfPage() {
       const newResults: SplitResult[] = [];
 
       if (mode === "range") {
-        const start = Math.max(1, Math.min(from, pageCount));
-        const end = Math.max(start, Math.min(to, pageCount));
+        const start = Math.max(1, Math.min(from || 1, pageCount));
+        const end = Math.max(start, Math.min(to || pageCount, pageCount));
         const source = await PDFDocument.load(bytes);
         const out = await PDFDocument.create();
         const indices = Array.from({ length: end - start + 1 }, (_, i) => start - 1 + i);
@@ -119,7 +121,7 @@ export default function SplitPdfPage() {
         const blob = new Blob([outBytes as BlobPart], { type: "application/pdf" });
         newResults.push({ name: `${name}-p${start}-${end}.pdf`, url: URL.createObjectURL(blob) });
       } else {
-        const at = Math.max(1, Math.min(splitAt, pageCount - 1));
+        const at = Math.max(1, Math.min(splitAt || 1, pageCount - 1));
         const source1 = await PDFDocument.load(bytes);
         const part1 = await PDFDocument.create();
         const pages1 = await part1.copyPages(
@@ -175,9 +177,9 @@ export default function SplitPdfPage() {
         ) : (
           <>
             <TwoColumnLayout>
-              <InputSection label="Source">
+              <InputSection label={t("tool.split-pdf.source")}>
                 <div className="flex items-center gap-3 rounded-lg border bg-muted/10 p-4">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-red-500 to-rose-600 text-white">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-destructive/10 text-destructive">
                     <FileText className="h-4 w-4" />
                   </div>
                   <div className="flex min-w-0 flex-1 flex-col">
@@ -191,9 +193,12 @@ export default function SplitPdfPage() {
                 <Tabs value={mode} onValueChange={(v) => setMode(v as SplitMode)}>
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="range">{t("tool.split-pdf.mode.range")}</TabsTrigger>
-                    <TabsTrigger value="half">{t("tool.split-pdf.mode.half")}</TabsTrigger>
+                    <TabsTrigger value="half" disabled={(pageCount ?? 0) < 2}>{t("tool.split-pdf.mode.half")}</TabsTrigger>
                   </TabsList>
                 </Tabs>
+                {(pageCount ?? 0) < 2 && (
+                  <p className="text-xs text-muted-foreground">{t("tool.split-pdf.needTwoPages")}</p>
+                )}
 
                 {mode === "range" ? (
                   <div className="grid grid-cols-2 gap-4">
@@ -229,7 +234,7 @@ export default function SplitPdfPage() {
                 )}
               </InputSection>
 
-              <OutputSection label="Result">
+              <OutputSection label={t("common.result")}>
                 {results.length === 0 && (
                   <div className="flex min-h-[200px] items-center justify-center rounded-xl border bg-muted/10">
                     <ToolEmptyState icon={<Scissors className="h-6 w-6" />} title={t("tool.split-pdf.placeholder")} />
@@ -245,6 +250,7 @@ export default function SplitPdfPage() {
                         size="icon"
                         variant="ghost"
                         className="h-9 w-9 shrink-0"
+                        aria-label={`${t("action.download")} ${result.name}`}
                         onClick={() => triggerDownload(result.url, result.name)}
                       >
                         <Download className="h-4 w-4" />

@@ -36,15 +36,19 @@ export default function UuidGeneratorPage() {
     setUuids(next);
   };
 
-  const copyOne = (id: string) => {
-    navigator.clipboard.writeText(format(id));
-    toast({ description: t("toast.success.copied") });
+  const copyText = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({ description: t("toast.success.copied") });
+    } catch {
+      toast({ title: t("common.error"), variant: "destructive" });
+    }
   };
+  const copyOne = (id: string) => copyText(format(id));
 
   const copyAll = () => {
     if (!uuids.length) return;
-    navigator.clipboard.writeText(uuids.map(format).join("\n"));
-    toast({ description: t("toast.success.copied") });
+    copyText(uuids.map(format).join("\n"));
   };
 
   return (
@@ -116,6 +120,7 @@ export default function UuidGeneratorPage() {
                   size="icon"
                   className="h-9 w-9 shrink-0"
                   onClick={() => copyOne(id)}
+                  aria-label={t("action.copy")}
                 >
                   <Copy className="h-4 w-4" />
                 </Button>

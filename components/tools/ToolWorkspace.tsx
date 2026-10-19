@@ -22,7 +22,10 @@ export function ToolWorkspace({ children, sidebar, className }: ToolWorkspacePro
   return (
     <div className={cn("grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start", className)}>
       <div className="min-w-0">{children}</div>
-      <div className="flex flex-col gap-6 lg:sticky lg:top-6">{sidebar}</div>
+      {/* Capped to the viewport and scrolls on its own, so a long options list never drags the preview along. */}
+      <div className="flex flex-col gap-6 lg:sticky lg:top-6 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
+        {sidebar}
+      </div>
     </div>
   );
 }

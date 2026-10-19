@@ -9,14 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Combobox } from "@/components/ui/combobox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
@@ -31,22 +25,163 @@ import {
   Grid3X3,
   Palette,
   RefreshCcw,
+  RotateCcw,
   Settings2,
+  Share2,
   Smile,
   Sparkles,
   Sun,
   Thermometer,
   Timer,
+  Upload,
+  Volume2,
+  VolumeX,
   X,
 } from "lucide-react";
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
-// Locks the preview/capture canvas to a fixed 16:9 resolution matching the
-// container's `aspect-video` box, so the video is cropped ("cover") into it
-// instead of the canvas inheriting the camera's raw (often non-16:9) size.
-const PREVIEW_W = 1280;
-const PREVIEW_H = 720;
+// Capture resolution per cell aspect. The preview canvas is locked to the
+// active layout's cell size and the video is cropped ("cover") into it, so
+// what you see is exactly what lands in each strip cell.
+const CELL_SIZE = {
+  "16:9": [1280, 720],
+  "4:3": [960, 720],
+  "1:1": [800, 800],
+  "3:4": [720, 960],
+} as const;
+
+type CellAspect = keyof typeof CELL_SIZE;
+
+const starPath = Array.from({ length: 10 }, (_, k) => {
+  const a = ((-90 + k * 36) * Math.PI) / 180;
+  const r = k % 2 ? 21 : 50;
+  return `${k ? "L" : "M"}${(50 + r * Math.cos(a)).toFixed(1)} ${(53 + r * Math.sin(a)).toFixed(1)}`;
+}).join("") + "Z";
+
+/** Photo-cell masks as SVG paths in a 0..100 box; shared by the canvas clip, layout icons and camera overlay. */
+const SHAPES = {
+  circle: "M50 0A50 50 0 1 1 49.99 0Z",
+  triangle: "M50 0L100 100H0Z",
+  triangleDown: "M0 0H100L50 100Z",
+  diamond: "M50 0L100 50L50 100L0 50Z",
+  parallelogram: "M25 0H100L75 100H0Z",
+  heart: "M50 96C22 76 0 56 0 31C0 13 13 2 28 2C39 2 46 9 50 18C54 9 61 2 72 2C87 2 100 13 100 31C100 56 78 76 50 96Z",
+  hexagon: "M25 3H75L100 50L75 97H25L0 50Z",
+  star: starPath,
+  arch: "M0 100V50A50 50 0 0 1 100 50V100Z",
+} as const;
+
+type ShapeId = keyof typeof SHAPES;
+
+/**
+ * `zigzag` staggers every other column down by half a cell; `hero` adds one
+ * full-width cell on top of the cols×rows grid (so it holds one extra shot).
+ * `shape` masks each cell (an array cycles per shot); `overlap` slides
+ * columns into each other so interlocking shapes (triangles) tile tightly.
+ */
+const LAYOUTS: {
+  id: string;
+  name: string;
+  cols: number;
+  rows: number;
+  aspect: CellAspect;
+  kind?: "zigzag" | "hero";
+  shape?: ShapeId | ShapeId[];
+  overlap?: number;
+}[] = [
+  { id: "strip4", name: "Classic Strip", cols: 1, rows: 4, aspect: "4:3" },
+  { id: "strip3", name: "Mini Strip", cols: 1, rows: 3, aspect: "4:3" },
+  { id: "portrait3", name: "Portrait Strip", cols: 1, rows: 3, aspect: "3:4" },
+  { id: "duo-v", name: "1 × 2", cols: 1, rows: 2, aspect: "4:3" },
+  { id: "duo-h", name: "2 × 1", cols: 2, rows: 1, aspect: "3:4" },
+  { id: "trio-h", name: "3 × 1", cols: 3, rows: 1, aspect: "3:4" },
+  { id: "single", name: "Single", cols: 1, rows: 1, aspect: "3:4" },
+  { id: "zigzag4", name: "Zigzag 4", cols: 2, rows: 2, aspect: "3:4", kind: "zigzag" },
+  { id: "zigzag6", name: "Zigzag 6", cols: 2, rows: 3, aspect: "1:1", kind: "zigzag" },
+  { id: "zigzag9", name: "Zigzag 9", cols: 3, rows: 3, aspect: "1:1", kind: "zigzag" },
+  { id: "hero4", name: "Hero + 3", cols: 3, rows: 1, aspect: "4:3", kind: "hero" },
+  { id: "grid2x2", name: "2 × 2", cols: 2, rows: 2, aspect: "1:1" },
+  { id: "grid3x2", name: "3 × 2", cols: 3, rows: 2, aspect: "1:1" },
+  { id: "grid2x3", name: "2 × 3", cols: 2, rows: 3, aspect: "16:9" },
+  { id: "grid2x4", name: "2 × 4", cols: 2, rows: 4, aspect: "16:9" },
+  { id: "grid3x3", name: "3 × 3", cols: 3, rows: 3, aspect: "1:1" },
+  { id: "circle4", name: "Bulat 2 × 2", cols: 2, rows: 2, aspect: "1:1", shape: "circle" },
+  { id: "circle3", name: "Bulat Strip", cols: 1, rows: 3, aspect: "1:1", shape: "circle" },
+  { id: "heart4", name: "Love 2 × 2", cols: 2, rows: 2, aspect: "1:1", shape: "heart" },
+  { id: "heart3", name: "Love Strip", cols: 1, rows: 3, aspect: "1:1", shape: "heart" },
+  { id: "tri3", name: "Segitiga", cols: 3, rows: 1, aspect: "4:3", shape: "triangle" },
+  { id: "trid3", name: "Segitiga Terbalik", cols: 3, rows: 1, aspect: "4:3", shape: "triangleDown" },
+  { id: "trimix", name: "Segitiga Mozaik", cols: 4, rows: 2, aspect: "4:3", shape: ["triangle", "triangleDown"], overlap: 0.5 },
+  { id: "diamond4", name: "Belah Ketupat", cols: 2, rows: 2, aspect: "1:1", shape: "diamond" },
+  { id: "diamond5", name: "Ketupat Zigzag", cols: 3, rows: 2, aspect: "1:1", shape: "diamond", kind: "zigzag", overlap: 0.5 },
+  { id: "para3", name: "Jajar Genjang", cols: 3, rows: 1, aspect: "3:4", shape: "parallelogram", overlap: 0.25 },
+  { id: "hex6", name: "Hexagon", cols: 3, rows: 2, aspect: "1:1", shape: "hexagon", kind: "zigzag" },
+  { id: "star4", name: "Bintang", cols: 2, rows: 2, aspect: "1:1", shape: "star" },
+  { id: "arch3", name: "Arch", cols: 3, rows: 1, aspect: "3:4", shape: "arch" },
+  {
+    id: "random9",
+    name: "Random",
+    cols: 3,
+    rows: 3,
+    aspect: "1:1",
+    shape: ["heart", "circle", "star", "hexagon", "diamond", "arch", "triangle", "circle", "heart"],
+  },
+];
+
+const shapeAt = (layout: (typeof LAYOUTS)[number], i: number): ShapeId | undefined =>
+  Array.isArray(layout.shape) ? layout.shape[i % layout.shape.length] : layout.shape;
+
+/** Clip/fill path for one cell: the layout's shape, or a rounded rect. */
+function cellPath(shape: ShapeId | undefined, x: number, y: number, w: number, h: number, r: number) {
+  const p = new Path2D();
+  if (shape) p.addPath(new Path2D(SHAPES[shape]), new DOMMatrix([w / 100, 0, 0, h / 100, x, y]));
+  else if (typeof p.roundRect === "function") p.roundRect(x, y, w, h, r);
+  else p.rect(x, y, w, h);
+  return p;
+}
+
+const FONT_OPTIONS = [
+  { id: "script", name: "Script", css: (px: number) => `italic ${px}px Georgia, serif`, upper: false },
+  { id: "bold", name: "Bold", css: (px: number) => `800 ${px}px system-ui, sans-serif`, upper: true },
+  { id: "type", name: "Typewriter", css: (px: number) => `${px}px "Courier New", monospace`, upper: false },
+  { id: "classic", name: "Classic", css: (px: number) => `${px}px Georgia, serif`, upper: true },
+] as const;
+
+type FontId = (typeof FONT_OPTIONS)[number]["id"];
+
+/** Draws `img` into the rect, center-cropped to fill it (CSS object-fit: cover). */
+function drawCover(
+  ctx: CanvasRenderingContext2D,
+  img: CanvasImageSource & { width: number; height: number },
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+) {
+  const scale = Math.max(w / img.width, h / img.height);
+  const sw = w / scale;
+  const sh = h / scale;
+  ctx.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, x, y, w, h);
+}
+
+let audioCtx: AudioContext | null = null;
+/** Short synthesized blip for countdown ticks / shutter; silently no-ops where WebAudio is blocked. */
+function beep(freq: number, dur: number) {
+  try {
+    audioCtx ??= new AudioContext();
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + dur);
+  } catch {
+    // audio is a nicety, never block capture on it
+  }
+}
 
 /** e.g. "2026-08-18_14-32-05", safe to use in a downloaded filename. */
 function filenameTimestamp(): string {
@@ -104,10 +239,10 @@ const FILTER_OPTIONS = [
 ];
 
 const TIMER_OPTIONS = [
-  { value: 0, label: "Timer: Off" },
-  { value: 3, label: "Timer: 3s" },
-  { value: 5, label: "Timer: 5s" },
-  { value: 10, label: "Timer: 10s" },
+  { value: 0, label: "Off" },
+  { value: 3, label: "3s" },
+  { value: 5, label: "5s" },
+  { value: 10, label: "10s" },
 ];
 
 const DECORATIVE_FRAMES = [
@@ -447,28 +582,217 @@ function drawCellAccent(
   }
 }
 
-function drawScriptBanner(ctx: CanvasRenderingContext2D, w: number, h: number, text: string) {
-  const barH = h * 0.07;
-  ctx.fillStyle = "rgba(30,30,20,0.85)";
-  ctx.fillRect(0, h - barH, w, barH);
-  ctx.fillStyle = "#f4e8d0";
-  ctx.font = `italic ${barH * 0.5}px serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(text, w / 2, h - barH / 2);
+type Layout = (typeof LAYOUTS)[number];
+
+/** Canvas size and cell rects of a strip; shared by the renderer and the clickable cell overlay. */
+function stripGeometry(layout: Layout, style: StripStyleId, hasFooter: boolean, themed = false) {
+  const [cellW, cellH] = CELL_SIZE[layout.aspect];
+  const roomy = themed || style === "strip-scrapbook";
+  const gap = roomy ? 56 : 28;
+  const pad = themed ? Math.round(Math.min(cellW, cellH) * 0.13) : roomy ? 64 : 40;
+  const stepX = cellW * (1 - (layout.overlap ?? 0)) + gap;
+  const innerW = (layout.cols - 1) * stepX + cellW;
+  const footer = hasFooter ? Math.round(Math.max(Math.min(cellW, cellH) * 0.42, innerW * 0.14)) : 0;
+  const heroH = layout.kind === "hero" ? Math.round(innerW * 0.75) + gap : 0;
+  const stagger = layout.kind === "zigzag" && layout.cols > 1 ? (cellH + gap) / 2 : 0;
+  const cells: { x: number; y: number; w: number; h: number }[] = Array.from({ length: layout.cols * layout.rows }, (_, i) => {
+    const col = i % layout.cols;
+    return {
+      x: pad + col * stepX,
+      y: pad + heroH + Math.floor(i / layout.cols) * (cellH + gap) + (col % 2) * stagger,
+      w: cellW,
+      h: cellH,
+    };
+  });
+  if (heroH) cells.unshift({ x: pad, y: pad, w: innerW, h: heroH - gap });
+  const gridH = heroH + layout.rows * cellH + gap * (layout.rows - 1) + stagger;
+  const width = pad * 2 + innerW;
+  const height = pad * 2 + gridH + footer;
+  return { width, height, cellW, cellH, cells, footerTop: pad + gridH, footer, pad };
 }
 
-function drawBoldBanner(ctx: CanvasRenderingContext2D, w: number, h: number, text: string) {
-  const barH = h * 0.06;
-  ctx.fillStyle = "rgba(0,0,0,0.55)";
-  ctx.fillRect(0, 0, w, barH);
-  ctx.fillRect(0, h - barH, w, barH);
-  ctx.fillStyle = "#ffffff";
-  ctx.font = `bold ${barH * 0.5}px sans-serif`;
+/** Footer band look per strip style: optional solid band behind the text, and the text color. */
+const FOOTER_LOOK: Record<StripStyleId, { band?: string; ink?: string }> = {
+  none: {},
+  "strip-checkered": { band: "rgba(30,30,20,0.88)", ink: "#f4e8d0" },
+  "strip-stripes": { band: "#fdf6ec", ink: "#b7791f" },
+  "strip-scalloped": { ink: "#9d174d" },
+  "strip-banner": { band: "rgba(0,0,0,0.78)", ink: "#ffffff" },
+  "strip-scrapbook": { ink: "#4a3520" },
+  "strip-denim": { ink: "#fdfaf3" },
+};
+
+type FooterLook = { band?: string; ink?: string; card?: boolean };
+
+/**
+ * Illustrated strip themes. Art is AI-generated (scripts/gen-frames.mjs +
+ * gen-frames-post.py) into public/photobooth/themes/: a pattern tile plus two
+ * die-cut stickers per theme.
+ */
+const THEME_CATEGORIES = ["All", "Holidays", "Moments", "Romantic", "Cute", "Sport", "Cool", "Hero & Anime", "Work & Tech", "Nature", "Food"] as const;
+type ThemeCategory = (typeof THEME_CATEGORIES)[number];
+
+const STRIP_THEMES: { id: string; name: string; cat: ThemeCategory; band: string; ink: string }[] = [
+  { id: "ramadan", name: "Ramadhan", cat: "Holidays", band: "rgba(6,78,59,0.9)", ink: "#fde68a" },
+  { id: "lebaran", name: "Lebaran", cat: "Holidays", band: "rgba(255,251,235,0.94)", ink: "#047857" },
+  { id: "imlek", name: "Imlek", cat: "Holidays", band: "rgba(127,29,29,0.9)", ink: "#fcd34d" },
+  { id: "merdeka", name: "Merdeka", cat: "Holidays", band: "rgba(255,255,255,0.94)", ink: "#b91c1c" },
+  { id: "batik", name: "Batik", cat: "Holidays", band: "rgba(255,247,237,0.94)", ink: "#713f12" },
+  { id: "christmas", name: "Christmas", cat: "Holidays", band: "rgba(20,60,40,0.9)", ink: "#fef3c7" },
+  { id: "halloween", name: "Halloween", cat: "Holidays", band: "rgba(255,237,213,0.92)", ink: "#431407" },
+  { id: "newyear", name: "New Year", cat: "Holidays", band: "rgba(15,23,42,0.88)", ink: "#fcd34d" },
+  { id: "birthday", name: "Birthday", cat: "Moments", band: "rgba(255,255,255,0.92)", ink: "#db2777" },
+  { id: "graduation", name: "Graduation", cat: "Moments", band: "rgba(23,37,84,0.9)", ink: "#fcd34d" },
+  { id: "wedding", name: "Wedding", cat: "Moments", band: "rgba(255,255,255,0.92)", ink: "#9f1239" },
+  { id: "love", name: "Love Letter", cat: "Romantic", band: "rgba(255,255,255,0.9)", ink: "#be123c" },
+  { id: "rose", name: "Red Rose", cat: "Romantic", band: "rgba(10,10,10,0.88)", ink: "#fecdd3" },
+  { id: "sakura", name: "Sakura", cat: "Romantic", band: "rgba(255,250,240,0.92)", ink: "#be185d" },
+  { id: "kpop", name: "K-Pop", cat: "Romantic", band: "rgba(255,255,255,0.9)", ink: "#a21caf" },
+  { id: "strawberry", name: "Strawberry", cat: "Cute", band: "rgba(255,247,245,0.94)", ink: "#b91c1c" },
+  { id: "daisy", name: "Daisy", cat: "Cute", band: "rgba(255,255,255,0.9)", ink: "#a16207" },
+  { id: "cafe", name: "Café", cat: "Food", band: "rgba(255,248,235,0.94)", ink: "#78350f" },
+  { id: "kitty", name: "Kitty", cat: "Cute", band: "rgba(255,255,255,0.92)", ink: "#c2410c" },
+  { id: "dino", name: "Dino", cat: "Cute", band: "rgba(255,255,255,0.9)", ink: "#3f6212" },
+  { id: "ocean", name: "Ocean", cat: "Cute", band: "rgba(255,255,255,0.9)", ink: "#0e7490" },
+  { id: "tropical", name: "Tropical", cat: "Cute", band: "rgba(19,78,74,0.9)", ink: "#fef9c3" },
+  { id: "groovy", name: "Groovy 70s", cat: "Cute", band: "rgba(255,247,237,0.94)", ink: "#9a3412" },
+  { id: "cyber", name: "Cyber Neon", cat: "Cool", band: "rgba(0,0,0,0.86)", ink: "#22d3ee" },
+  { id: "street", name: "Street", cat: "Cool", band: "rgba(23,23,23,0.9)", ink: "#facc15" },
+  { id: "graffiti", name: "Graffiti Wall", cat: "Cool", band: "rgba(10,10,10,0.88)", ink: "#f472b6" },
+  { id: "pixel", name: "Pixel Game", cat: "Cool", band: "rgba(46,16,101,0.9)", ink: "#a3e635" },
+  { id: "galaxy", name: "Galaxy", cat: "Cool", band: "rgba(30,10,60,0.88)", ink: "#e9d5ff" },
+  { id: "racing", name: "Racing", cat: "Cool", band: "rgba(17,17,17,0.9)", ink: "#fb923c" },
+  { id: "starry", name: "Starry Night", cat: "Cool", band: "rgba(15,23,42,0.86)", ink: "#fde68a" },
+  { id: "y2k", name: "Y2K", cat: "Cool", band: "rgba(255,255,255,0.88)", ink: "#7e22ce" },
+  { id: "football", name: "Football", cat: "Sport", band: "rgba(255,255,255,0.92)", ink: "#166534" },
+  { id: "basketball", name: "Basketball", cat: "Sport", band: "rgba(23,23,23,0.9)", ink: "#fb923c" },
+  { id: "skate", name: "Skate", cat: "Sport", band: "rgba(23,23,23,0.9)", ink: "#f87171" },
+  { id: "esports", name: "Esports", cat: "Cool", band: "rgba(10,10,10,0.9)", ink: "#4ade80" },
+  { id: "comic", name: "Comic Pop", cat: "Cool", band: "rgba(255,255,255,0.94)", ink: "#dc2626" },
+  { id: "rock", name: "Rock", cat: "Cool", band: "rgba(10,10,10,0.9)", ink: "#facc15" },
+  { id: "hiphop", name: "Hip-Hop", cat: "Cool", band: "rgba(10,10,10,0.88)", ink: "#fbbf24" },
+  { id: "adventure", name: "Adventure", cat: "Cool", band: "rgba(255,251,235,0.94)", ink: "#14532d" },
+  { id: "garage", name: "Garage", cat: "Cool", band: "rgba(28,25,23,0.9)", ink: "#fde68a" },
+  { id: "japan", name: "Japan Wave", cat: "Cool", band: "rgba(255,251,240,0.94)", ink: "#1e3a8a" },
+  { id: "circuit", name: "Circuit", cat: "Cool", band: "rgba(8,20,48,0.9)", ink: "#67e8f9" },
+  { id: "mono", name: "Monochrome", cat: "Cool", band: "rgba(255,255,255,0.95)", ink: "#0a0a0a" },
+  { id: "sosmed", name: "Social Media", cat: "Cool", band: "rgba(255,255,255,0.94)", ink: "#c026d3" },
+  { id: "creator", name: "Content Creator", cat: "Cool", band: "rgba(255,255,255,0.92)", ink: "#be185d" },
+  { id: "koran", name: "Koran", cat: "Cool", band: "rgba(250,245,230,0.95)", ink: "#1c1917" },
+  { id: "nihongo", name: "Japanese Letters", cat: "Cool", band: "rgba(255,251,240,0.94)", ink: "#b91c1c" },
+  { id: "alphabet", name: "Alphabet", cat: "Cute", band: "rgba(255,255,255,0.94)", ink: "#2563eb" },
+  { id: "webcity", name: "Web City", cat: "Hero & Anime", band: "rgba(30,58,138,0.9)", ink: "#ffffff" },
+  { id: "nightcity", name: "Night City", cat: "Hero & Anime", band: "rgba(10,10,10,0.9)", ink: "#fde047" },
+  { id: "ninja", name: "Ninja", cat: "Hero & Anime", band: "rgba(23,23,23,0.9)", ink: "#fb923c" },
+  { id: "pirate", name: "Pirate Adventure", cat: "Hero & Anime", band: "rgba(255,251,235,0.94)", ink: "#b91c1c" },
+  { id: "slayer", name: "Blade Hunter", cat: "Hero & Anime", band: "rgba(5,46,22,0.9)", ink: "#e9d5ff" },
+  { id: "cursed", name: "Cursed Energy", cat: "Hero & Anime", band: "rgba(20,8,40,0.9)", ink: "#a5b4fc" },
+  { id: "bengkel", name: "Bengkel", cat: "Work & Tech", band: "rgba(23,23,23,0.9)", ink: "#facc15" },
+  { id: "math", name: "Matematika", cat: "Work & Tech", band: "rgba(20,50,35,0.9)", ink: "#fef9c3" },
+  { id: "physics", name: "Fisika", cat: "Work & Tech", band: "rgba(12,25,60,0.9)", ink: "#7dd3fc" },
+  { id: "it", name: "IT Life", cat: "Work & Tech", band: "rgba(255,255,255,0.92)", ink: "#1d4ed8" },
+  { id: "coding", name: "Coding", cat: "Work & Tech", band: "rgba(15,23,42,0.9)", ink: "#4ade80" },
+  { id: "k3", name: "K3 Safety", cat: "Work & Tech", band: "rgba(23,23,23,0.9)", ink: "#fde047" },
+  { id: "bucin", name: "Bucin", cat: "Romantic", band: "rgba(255,255,255,0.92)", ink: "#db2777" },
+  { id: "gunung", name: "Anak Gunung", cat: "Nature", band: "rgba(255,255,255,0.92)", ink: "#1e3a8a" },
+  { id: "nature", name: "Nature", cat: "Nature", band: "rgba(255,255,255,0.9)", ink: "#166534" },
+  { id: "fruits", name: "Fruits", cat: "Food", band: "rgba(255,255,255,0.92)", ink: "#c2410c" },
+  { id: "kopi", name: "Coffee Shop", cat: "Food", band: "rgba(255,248,235,0.94)", ink: "#5b3a1e" },
+  { id: "kekinian", name: "Makanan Kekinian", cat: "Food", band: "rgba(255,255,255,0.94)", ink: "#c2410c" },
+  { id: "animals", name: "Animals", cat: "Nature", band: "rgba(255,255,255,0.92)", ink: "#0369a1" },
+];
+
+const themeAsset = (id: string, part: "tile" | "sticker1" | "sticker2") =>
+  `/photobooth/themes/${id}-${part}.webp`;
+
+/**
+ * Fills the canvas with the tile mirrored 2x2 (flipped copies meet edge to
+ * edge), so the repeat is seamless even if the generated tile isn't.
+ */
+function drawMirroredTile(ctx: CanvasRenderingContext2D, tile: HTMLImageElement, w: number, h: number, size: number) {
+  const block = document.createElement("canvas");
+  block.width = block.height = Math.round(size * 2);
+  const b = block.getContext("2d");
+  if (!b) return;
+  // Each copy is flipped around the block's far edge, landing in its own quadrant.
+  [[1, 1], [-1, 1], [1, -1], [-1, -1]].forEach(([sx, sy]) => {
+    b.save();
+    b.translate(sx < 0 ? size * 2 : 0, sy < 0 ? size * 2 : 0);
+    b.scale(sx, sy);
+    b.drawImage(tile, 0, 0, size, size);
+    b.restore();
+  });
+  const pattern = ctx.createPattern(block, "repeat");
+  if (!pattern) return;
+  ctx.fillStyle = pattern;
+  ctx.fillRect(0, 0, w, h);
+}
+
+function drawSticker(ctx: CanvasRenderingContext2D, img: HTMLImageElement, cx: number, cy: number, size: number, angleDeg: number) {
+  const scale = size / Math.max(img.width, img.height);
+  const w = img.width * scale;
+  const h = img.height * scale;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate((angleDeg * Math.PI) / 180);
+  ctx.shadowColor = "rgba(0,0,0,0.25)";
+  ctx.shadowBlur = size * 0.06;
+  ctx.shadowOffsetY = size * 0.02;
+  ctx.drawImage(img, -w / 2, -h / 2, w, h);
+  ctx.restore();
+}
+
+function isLightColor(hex: string) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
+  if (!m) return true;
+  const n = parseInt(m[1], 16);
+  return ((n >> 16) * 299 + ((n >> 8) & 255) * 587 + (n & 255) * 114) / 1000 > 150;
+}
+
+function drawFooter(
+  ctx: CanvasRenderingContext2D,
+  geo: ReturnType<typeof stripGeometry>,
+  look: FooterLook,
+  frameColor: string,
+  caption: string,
+  date: string,
+  fontId: FontId,
+) {
+  if (!geo.footer) return;
+  let top = geo.footerTop + geo.pad * 0.4;
+  let bandH = geo.height - top;
+  if (look.card && look.band) {
+    // Floating rounded label card instead of a full-bleed band.
+    top = geo.footerTop + geo.pad * 0.6;
+    bandH = geo.height - top - geo.pad * 0.6;
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.15)";
+    ctx.shadowBlur = geo.pad * 0.5;
+    ctx.fillStyle = look.band;
+    fillRoundRect(ctx, geo.pad, top, geo.width - geo.pad * 2, bandH, bandH * 0.18);
+    ctx.restore();
+  } else if (look.band) {
+    ctx.fillStyle = look.band;
+    ctx.fillRect(0, top, geo.width, bandH);
+  }
+  const font = FONT_OPTIONS.find((f) => f.id === fontId) ?? FONT_OPTIONS[0];
+  ctx.fillStyle = look.ink ?? (isLightColor(frameColor) ? "#1c1917" : "#fafaf9");
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(text.toUpperCase(), w / 2, barH / 2);
-  ctx.fillText(text.toUpperCase(), w / 2, h - barH / 2);
+  const cx = geo.width / 2;
+  const text = font.upper ? caption.toUpperCase() : caption;
+  const maxW = geo.width - geo.pad * 2;
+  if (text && date) {
+    ctx.font = font.css(geo.footer * 0.3);
+    ctx.fillText(text, cx, top + bandH * 0.42, maxW);
+    ctx.font = font.css(geo.footer * 0.17);
+    ctx.globalAlpha = 0.75;
+    ctx.fillText(date, cx, top + bandH * 0.72, maxW);
+    ctx.globalAlpha = 1;
+  } else {
+    ctx.font = font.css(geo.footer * (text ? 0.32 : 0.2));
+    ctx.fillText(text || date, cx, top + bandH / 2, maxW);
+  }
 }
 
 const POLAROID_ANGLES = [-4, 3, -3, 4, -2, 2];
@@ -504,7 +828,7 @@ function drawPolaroidPhoto(
   ctx.fillRect(-w / 2 - border, -h / 2 - border, w + border * 2, h + border * 2 + bottomExtra);
   ctx.restore();
 
-  ctx.drawImage(img, -w / 2, -h / 2, w, h);
+  drawCover(ctx, img, -w / 2, -h / 2, w, h);
 
   ctx.globalAlpha = 0.85;
   ctx.fillStyle = tapeColor;
@@ -611,7 +935,10 @@ export default function PhotoBoothPage() {
   const [blur, setBlur] = useState(0);
   const [mirror, setMirror] = useState(true);
   const [filter, setFilter] = useState("none");
-  const [grid, setGrid] = useState({ cols: 2, rows: 3 });
+  const [layoutId, setLayoutId] = useState("strip4");
+  const layout = LAYOUTS.find((l) => l.id === layoutId) ?? LAYOUTS[0];
+  const slots = layout.cols * layout.rows + (layout.kind === "hero" ? 1 : 0);
+  const [cellW, cellH] = CELL_SIZE[layout.aspect];
   const [radius, setRadius] = useState(0);
   const [frameColor, setFrameColor] = useState("#ffffff");
   const [selectedFrame, setSelectedFrame] = useState("none");
@@ -620,14 +947,27 @@ export default function PhotoBoothPage() {
   const [neonColor, setNeonColor] = useState("#00f2ff");
   const [neonStyle, setNeonStyle] = useState<NeonStyle>("glow");
   const [stripStyle, setStripStyle] = useState<StripStyleId>("none");
-  const [bannerText, setBannerText] = useState("Share The Moment");
+  const [themeId, setThemeId] = useState<string | null>(null);
+  const [missingThemes, setMissingThemes] = useState<string[]>([]);
+  const [themeCat, setThemeCat] = useState<ThemeCategory>("All");
+  const [caption, setCaption] = useState("Share The Moment");
+  const [showDate, setShowDate] = useState(true);
+  const [fontId, setFontId] = useState<FontId>("script");
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
 
-  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [timerSeconds, setTimerSeconds] = useState(3);
   const [timerActive, setTimerActive] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [flash, setFlash] = useState(false);
+  const [soundOn, setSoundOn] = useState(true);
+  const [retakeIndex, setRetakeIndex] = useState<number | null>(null);
+  const [canShare, setCanShare] = useState(false);
   const prevPhotoCount = useRef(0);
+  const stripRef = useRef<HTMLCanvasElement>(null);
+  const uploadRef = useRef<HTMLInputElement>(null);
+  const imgCacheRef = useRef(new Map<string, HTMLImageElement>());
+  const renderIdRef = useRef(0);
+  const primaryActionRef = useRef<() => void>(() => {});
 
   const refs = useRef({
     brightness,
@@ -644,10 +984,14 @@ export default function PhotoBoothPage() {
     customMode,
     neonColor,
     neonStyle,
+    cellW,
+    cellH,
   });
 
   useEffect(() => {
     refs.current = {
+      cellW,
+      cellH,
       brightness,
       contrast,
       vignette,
@@ -678,6 +1022,8 @@ export default function PhotoBoothPage() {
     customMode,
     neonColor,
     neonStyle,
+    cellW,
+    cellH,
   ]);
 
   const renderDecoration = (
@@ -996,8 +1342,8 @@ export default function PhotoBoothPage() {
           // pixels identical to what CSS actually shows, so border decorations
           // drawn near the canvas edge never get sliced off by object-cover
           // cropping a mismatched source aspect ratio.
-          const targetW = PREVIEW_W;
-          const targetH = PREVIEW_H;
+          const targetW = refs.current.cellW;
+          const targetH = refs.current.cellH;
           if (canvas.width !== targetW) canvas.width = targetW;
           if (canvas.height !== targetH) canvas.height = targetH;
 
@@ -1096,19 +1442,26 @@ export default function PhotoBoothPage() {
   const capturePhoto = () => {
     const canvas = previewRef.current;
     if (!canvas) return;
-    setPhotos((prev) => {
-      if (prev.length >= grid.cols * grid.rows) return prev;
-      // JPEG instead of PNG: these are photographic frames (noise/detail
-      // heavy, no transparency needed), so lossless PNG just balloons
-      // memory/file size for no visible benefit at this quality.
-      return [...prev, canvas.toDataURL("image/jpeg", 0.92)];
-    });
+    // JPEG instead of PNG: these are photographic frames (noise/detail
+    // heavy, no transparency needed), so lossless PNG just balloons
+    // memory/file size for no visible benefit at this quality.
+    const shot = canvas.toDataURL("image/jpeg", 0.92);
+    if (retakeIndex !== null) {
+      setPhotos((prev) => prev.map((p, i) => (i === retakeIndex ? shot : p)));
+      setRetakeIndex(null);
+      // A retake is one shot; the photo count doesn't change, so the
+      // sequence effect below never fires - stop the timer here instead.
+      setTimerActive(false);
+    } else {
+      setPhotos((prev) => (prev.length >= slots ? prev : [...prev, shot]));
+    }
+    if (soundOn) beep(1400, 0.2);
     setFlash(true);
     setTimeout(() => setFlash(false), 150);
   };
 
   const startTimerSequence = () => {
-    if (photos.length >= grid.cols * grid.rows) return;
+    if (photos.length >= slots && retakeIndex === null) return;
     setTimerActive(true);
     setCountdown(timerSeconds);
   };
@@ -1121,8 +1474,10 @@ export default function PhotoBoothPage() {
   // Ticks the on-screen countdown down to zero, once per second.
   useEffect(() => {
     if (!timerActive || countdown <= 0) return;
+    if (soundOn) beep(countdown === 1 ? 990 : 660, 0.1);
     const id = setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timerActive, countdown]);
 
   // Fires the capture the instant the countdown reaches zero.
@@ -1137,70 +1492,161 @@ export default function PhotoBoothPage() {
     if (photos.length === prevPhotoCount.current) return;
     prevPhotoCount.current = photos.length;
     if (!timerActive) return;
-    if (photos.length >= grid.cols * grid.rows) {
+    if (photos.length >= slots) {
       setTimerActive(false);
       setCountdown(0);
       return;
     }
-    const id = setTimeout(() => setCountdown(timerSeconds), 1000);
+    const id = setTimeout(() => setCountdown(timerSeconds), 1200);
     return () => clearTimeout(id);
-  }, [photos.length, timerActive, grid.cols, grid.rows, timerSeconds]);
+  }, [photos.length, timerActive, slots, timerSeconds]);
 
-  const buildGridCanvas = (): Promise<HTMLCanvasElement | null> => {
-    const canvas = exportRef.current;
-    if (!canvas || !previewRef.current || photos.length === 0)
-      return Promise.resolve(null);
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return Promise.resolve(null);
-    const isScrapbook = stripStyle === "strip-scrapbook";
-    const gap = isScrapbook ? 40 : 20;
-    const pad = isScrapbook ? 50 : 30;
-    const cellW = previewRef.current.width;
-    const cellH = previewRef.current.height;
-    canvas.width = pad * 2 + grid.cols * cellW + gap * (grid.cols - 1);
-    canvas.height = pad * 2 + grid.rows * cellH + gap * (grid.rows - 1);
+  // Switching to a smaller layout drops the shots that no longer fit.
+  useEffect(() => {
+    setPhotos((prev) => (prev.length > slots ? prev.slice(0, slots) : prev));
+    setRetakeIndex(null);
+  }, [slots]);
 
-    drawStripBackground(ctx, canvas.width, canvas.height, stripStyle, frameColor);
+  useEffect(() => {
+    try {
+      setCanShare(
+        typeof navigator.canShare === "function" &&
+          navigator.canShare({ files: [new File([""], "x.jpg", { type: "image/jpeg" })] }),
+      );
+    } catch {
+      setCanShare(false);
+    }
+  }, []);
 
-    return new Promise((resolve) => {
-      let loadedCount = 0;
-      photos.forEach((src, i) => {
-        const img = new window.Image();
+  const loadImage = (src: string) => {
+    const cached = imgCacheRef.current.get(src);
+    if (cached?.complete) return Promise.resolve(cached);
+    return new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = cached ?? new window.Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      if (!cached) {
         img.src = src;
-        img.onload = () => {
-          const x = pad + (i % grid.cols) * (cellW + gap);
-          const y = pad + Math.floor(i / grid.cols) * (cellH + gap);
-
-          if (stripStyle === "strip-scrapbook") {
-            const angle = POLAROID_ANGLES[i % POLAROID_ANGLES.length];
-            const tape = i % 2 === 0 ? "#f4a9b8" : "#a9d4f4";
-            drawPolaroidPhoto(ctx, img, x, y, cellW, cellH, angle, tape);
-          } else if (stripStyle === "strip-denim") {
-            const border = Math.min(cellW, cellH) * 0.035;
-            ctx.fillStyle = "#fdfaf3";
-            ctx.fillRect(x - border, y - border, cellW + border * 2, cellH + border * 2);
-            ctx.drawImage(img, x, y, cellW, cellH);
-            drawPushPin(ctx, x + cellW / 2, y - border, Math.min(cellW, cellH) * 0.06);
-          } else {
-            ctx.drawImage(img, x, y, cellW, cellH);
-            drawCellAccent(ctx, x, y, cellW, cellH, stripStyle, i);
-          }
-
-          loadedCount++;
-          if (loadedCount === photos.length) {
-            renderDecoration(ctx, canvas.width, canvas.height, selectedFrame);
-            if (stripStyle === "strip-checkered") {
-              drawScriptBanner(ctx, canvas.width, canvas.height, "Made With Love");
-            } else if (stripStyle === "strip-banner") {
-              drawBoldBanner(ctx, canvas.width, canvas.height, bannerText);
-            } else if (stripStyle === "strip-denim") {
-              drawStitchedBorder(ctx, canvas.width, canvas.height);
-            }
-            resolve(canvas);
-          }
-        };
-      });
+        imgCacheRef.current.set(src, img);
+      }
     });
+  };
+
+  const dateText = showDate
+    ? new Date().toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" })
+    : "";
+  const geometry = stripGeometry(layout, stripStyle, Boolean(caption.trim() || dateText), Boolean(themeId));
+
+  /** Composites the whole strip into `canvas`. `placeholders` draws numbered empty slots (live preview only). */
+  const renderStrip = async (canvas: HTMLCanvasElement, placeholders: boolean) => {
+    const renderId = placeholders ? ++renderIdRef.current : 0;
+    const shots = photos.slice(0, slots);
+    const imgs = await Promise.all(shots.map(loadImage));
+    const theme = STRIP_THEMES.find((th) => th.id === themeId);
+    const [tile, sticker1, sticker2] = theme
+      ? await Promise.all(
+          (["tile", "sticker1", "sticker2"] as const).map((part) =>
+            loadImage(themeAsset(theme.id, part)).catch(() => null),
+          ),
+        )
+      : [null, null, null];
+    // A newer render started while images decoded; let it win.
+    if (placeholders && renderId !== renderIdRef.current) return null;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    const geo = geometry;
+    canvas.width = geo.width;
+    canvas.height = geo.height;
+
+    if (theme) {
+      ctx.fillStyle = theme.band;
+      ctx.fillRect(0, 0, geo.width, geo.height);
+      if (tile) drawMirroredTile(ctx, tile, geo.width, geo.height, Math.min(geo.cellW, geo.cellH) * 0.75);
+    } else {
+      drawStripBackground(ctx, geo.width, geo.height, stripStyle, frameColor);
+    }
+    const cornerR = radius * (geo.cellW / 640);
+
+    geo.cells.forEach(({ x, y, w, h }, i) => {
+      const img = imgs[i];
+      const shape = shapeAt(layout, i);
+      if (!img) {
+        if (!placeholders) return;
+        ctx.save();
+        ctx.fillStyle = "rgba(0,0,0,0.12)";
+        ctx.fill(cellPath(shape, x, y, w, h, cornerR));
+        ctx.fillStyle = "rgba(0,0,0,0.35)";
+        ctx.font = `600 ${Math.min(w, h) * 0.22}px system-ui, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(String(i + 1).padStart(2, "0"), x + w / 2, y + h / 2);
+        ctx.restore();
+        return;
+      }
+      if (theme) {
+        const border = Math.min(w, h) * 0.035;
+        ctx.save();
+        ctx.shadowColor = "rgba(0,0,0,0.22)";
+        ctx.shadowBlur = border * 1.5;
+        ctx.shadowOffsetY = border * 0.4;
+        ctx.fillStyle = "#ffffff";
+        ctx.fill(cellPath(shape, x - border, y - border, w + border * 2, h + border * 2, cornerR + border));
+        ctx.restore();
+      } else if (stripStyle === "strip-scrapbook" && !shape) {
+        const angle = POLAROID_ANGLES[i % POLAROID_ANGLES.length];
+        drawPolaroidPhoto(ctx, img, x, y, w, h, angle, i % 2 === 0 ? "#f4a9b8" : "#a9d4f4");
+        return;
+      }
+      if (stripStyle === "strip-denim") {
+        const border = Math.min(w, h) * 0.035;
+        ctx.fillStyle = "#fdfaf3";
+        ctx.fill(cellPath(shape, x - border, y - border, w + border * 2, h + border * 2, 0));
+      }
+      ctx.save();
+      ctx.clip(cellPath(shape, x, y, w, h, cornerR));
+      drawCover(ctx, img, x, y, w, h);
+      ctx.restore();
+      if (theme || shape) {
+        // themed/shaped cells stay clean; rect accents would poke outside the shape
+      } else if (stripStyle === "strip-denim") {
+        drawPushPin(ctx, x + w / 2, y - Math.min(w, h) * 0.035, Math.min(w, h) * 0.06);
+      } else {
+        drawCellAccent(ctx, x, y, w, h, stripStyle, i);
+      }
+    });
+
+    renderDecoration(ctx, geo.width, geo.height, selectedFrame);
+    if (stripStyle === "strip-denim" && !theme) drawStitchedBorder(ctx, geo.width, geo.height);
+    if (theme) {
+      const size = Math.min(geo.cellW, geo.cellH) * 0.55;
+      if (sticker1) drawSticker(ctx, sticker1, geo.pad + size * 0.2, geo.pad + size * 0.15, size, -12);
+      if (sticker2) drawSticker(ctx, sticker2, geo.width - geo.pad - size * 0.2, geo.footerTop - size * 0.15, size, 10);
+    }
+    drawFooter(
+      ctx,
+      geo,
+      theme ? { band: theme.band, ink: theme.ink, card: true } : FOOTER_LOOK[stripStyle],
+      frameColor,
+      caption.trim(),
+      dateText,
+      fontId,
+    );
+    for (const key of imgCacheRef.current.keys()) {
+      if (key.startsWith("data:") && !photos.includes(key)) imgCacheRef.current.delete(key);
+    }
+    return canvas;
+  };
+
+  // Live WYSIWYG strip: re-composite whenever anything that shows up in the
+  // downloaded image changes.
+  useEffect(() => {
+    if (stripRef.current) renderStrip(stripRef.current, true).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [photos, layoutId, stripStyle, themeId, frameColor, caption, showDate, fontId, radius, selectedFrame, customEmoji, customMode, neonColor, neonStyle]);
+
+  const buildGridCanvas = async () => {
+    if (!exportRef.current || photos.length === 0) return null;
+    return renderStrip(exportRef.current, false);
   };
 
   const downloadGrid = async () => {
@@ -1216,13 +1662,86 @@ export default function PhotoBoothPage() {
     });
   };
 
-  const getGridBlob = async (): Promise<Blob | null> => {
+  const getGridBlob = async (type = "image/png"): Promise<Blob | null> => {
     const canvas = await buildGridCanvas();
     if (!canvas) return null;
-    return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.92));
+    return new Promise((resolve) => canvas.toBlob(resolve, type, 0.92));
   };
 
-  const gridFull = photos.length >= grid.cols * grid.rows;
+  const shareGrid = async () => {
+    const blob = await getGridBlob("image/jpeg");
+    if (!blob) return;
+    try {
+      await navigator.share({
+        files: [new File([blob], `photobooth-mojepict-${filenameTimestamp()}.jpg`, { type: "image/jpeg" })],
+      });
+    } catch {
+      // user dismissed the share sheet
+    }
+  };
+
+  /** Imports picked images as shots, cover-cropped to the cell and run through the active filter. */
+  const importPhotos = async (files: FileList | null) => {
+    if (!files?.length) return;
+    const shots: string[] = [];
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith("image/")) continue;
+      const url = URL.createObjectURL(file);
+      try {
+        const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+          const el = new window.Image();
+          el.onload = () => resolve(el);
+          el.onerror = reject;
+          el.src = url;
+        });
+        const c = document.createElement("canvas");
+        c.width = cellW;
+        c.height = cellH;
+        const ctx = c.getContext("2d");
+        if (!ctx) continue;
+        ctx.filter =
+          filter !== "none" ? filter : `brightness(${brightness}%) contrast(${contrast}%) blur(${blur}px)`;
+        drawCover(ctx, img, 0, 0, cellW, cellH);
+        ctx.filter = "none";
+        renderDecoration(ctx, cellW, cellH, selectedFrame);
+        shots.push(c.toDataURL("image/jpeg", 0.92));
+      } catch {
+        // skip undecodable file
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    }
+    if (!shots.length) return;
+    if (retakeIndex !== null) {
+      setPhotos((prev) => prev.map((p, i) => (i === retakeIndex ? shots[0] : p)));
+      setRetakeIndex(null);
+    } else {
+      setPhotos((prev) => [...prev, ...shots].slice(0, slots));
+    }
+  };
+
+  const gridFull = photos.length >= slots && retakeIndex === null;
+  const cameraShape = shapeAt(layout, retakeIndex ?? Math.min(photos.length, slots - 1));
+
+  const primaryAction = timerActive
+    ? cancelTimerSequence
+    : timerSeconds > 0
+      ? startTimerSequence
+      : capturePhoto;
+  primaryActionRef.current = gridFull && !timerActive ? () => {} : primaryAction;
+
+  // Space bar = shutter, like a real booth button.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code !== "Space" || e.repeat) return;
+      const el = e.target as HTMLElement;
+      if (el.closest("input, textarea, select, button, [role=combobox], [contenteditable=true]")) return;
+      e.preventDefault();
+      primaryActionRef.current();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const loupePreview = snapshotUrl ? (
     // eslint-disable-next-line @next/next/no-img-element
@@ -1239,7 +1758,7 @@ export default function PhotoBoothPage() {
         sidebar={
           <>
             <Tabs defaultValue="adjust" className="w-full">
-              <TabsList className="w-full">
+              <TabsList className="sticky top-0 z-10 w-full ring-4 ring-background">
                 <TabsTrigger value="adjust" className="flex-1 gap-1 text-[11px]">
                   <Settings2 className="h-3 w-3" /> Adjust
                 </TabsTrigger>
@@ -1348,60 +1867,169 @@ export default function PhotoBoothPage() {
                   <Label className="text-[10px] uppercase font-bold text-muted-foreground">
                     {t("tool.photobooth.label.grid")}
                   </Label>
-                  <Select
-                    value={`${grid.cols}x${grid.rows}`}
-                    onValueChange={(v) => {
-                      const [c, r] = v.split("x").map(Number);
-                      setGrid({ cols: c, rows: r });
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="2x3">2 x 3 Grid</SelectItem>
-                      <SelectItem value="2x4">2 x 4 Grid</SelectItem>
-                      <SelectItem value="3x3">3 x 3 Grid</SelectItem>
-                      <SelectItem value="1x4">4 Strip</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="grid grid-cols-4 gap-2">
+                    {LAYOUTS.map((l) => {
+                      const g = stripGeometry(l, "none", false);
+                      const scale = Math.min(40 / (g.width - g.pad * 2), 40 / (g.height - g.pad * 2));
+                      return (
+                        <button
+                          key={l.id}
+                          type="button"
+                          disabled={timerActive}
+                          onClick={() => setLayoutId(l.id)}
+                          className={cn(
+                            "flex h-20 flex-col items-center justify-between rounded-lg border p-1.5 transition-colors disabled:opacity-50",
+                            layoutId === l.id
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "text-muted-foreground hover:bg-muted",
+                          )}
+                        >
+                          <div className="flex flex-1 items-center">
+                            <svg
+                              width={(g.width - g.pad * 2) * scale}
+                              height={(g.height - g.pad * 2) * scale}
+                              className="overflow-visible fill-current opacity-50"
+                              aria-hidden
+                            >
+                              {g.cells.map((c, i) => {
+                                const shape = shapeAt(l, i);
+                                const x = (c.x - g.pad) * scale + 1;
+                                const y = (c.y - g.pad) * scale + 1;
+                                const w = c.w * scale - 2;
+                                const h = c.h * scale - 2;
+                                return shape ? (
+                                  <path key={i} d={SHAPES[shape]} transform={`translate(${x} ${y}) scale(${w / 100} ${h / 100})`} />
+                                ) : (
+                                  <rect key={i} x={x} y={y} width={w} height={h} rx={1} />
+                                );
+                              })}
+                            </svg>
+                          </div>
+                          <span className="w-full truncate text-center text-[9px] font-medium">
+                            {l.name}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div className="space-y-2 pt-2 border-t">
                   <Label className="text-[10px] uppercase font-bold text-muted-foreground">
-                    Strip style (applies to the downloaded grid)
+                    Caption
                   </Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {STRIP_STYLES.map((s) => (
+                  <Input
+                    value={caption}
+                    maxLength={40}
+                    onChange={(e) => setCaption(e.target.value)}
+                    placeholder="Share The Moment"
+                    className="text-sm"
+                  />
+                  <div className="grid grid-cols-4 gap-1">
+                    {FONT_OPTIONS.map((f) => (
                       <Button
-                        key={s.id}
+                        key={f.id}
                         type="button"
                         size="sm"
-                        variant={stripStyle === s.id ? "default" : "outline"}
-                        onClick={() => setStripStyle(s.id)}
-                        className="h-auto py-2 text-xs"
+                        variant={fontId === f.id ? "default" : "outline"}
+                        onClick={() => setFontId(f.id)}
+                        className="h-8 px-1 text-[10px]"
+                        style={{ font: f.css(11) }}
                       >
-                        {s.name}
+                        {f.upper ? f.name.toUpperCase() : f.name}
                       </Button>
                     ))}
                   </div>
-                  {stripStyle === "strip-banner" && (
-                    <Input
-                      value={bannerText}
-                      onChange={(e) => setBannerText(e.target.value)}
-                      placeholder="SHARE THE MOMENT"
-                      className="text-sm"
-                    />
-                  )}
-                  <p className="text-[10px] text-muted-foreground">
-                    Frame color (Classic / Twibbon / Holiday Banner background) is in the Frames tab.
-                  </p>
+                  <label className="flex items-center justify-between text-xs">
+                    Show date
+                    <Switch checked={showDate} onCheckedChange={setShowDate} />
+                  </label>
                 </div>
+
               </TabsContent>
 
               <TabsContent value="frames" className="space-y-4 pt-4">
                 <Label className="text-[10px] uppercase font-bold text-muted-foreground">
-                  Decorative Overlay
+                  Strip themes
+                </Label>
+                <div className="flex flex-wrap gap-1">
+                  {THEME_CATEGORIES.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setThemeCat(c)}
+                      className={cn(
+                        "rounded-full px-2.5 py-1 text-[10px] font-medium transition-colors",
+                        themeCat === c ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {STRIP_THEMES.filter(
+                    (th) => !missingThemes.includes(th.id) && (themeCat === "All" || th.cat === themeCat),
+                  ).map((th) => (
+                    <button
+                      key={th.id}
+                      type="button"
+                      onClick={() => setThemeId(themeId === th.id ? null : th.id)}
+                      className={cn(
+                        "group relative aspect-[3/4] overflow-hidden rounded-lg border-2 transition",
+                        themeId === th.id ? "border-primary ring-2 ring-primary/30" : "border-transparent hover:border-muted-foreground/40",
+                      )}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={themeAsset(th.id, "tile")}
+                        alt=""
+                        loading="lazy"
+                        className="absolute inset-0 h-full w-full object-cover"
+                        // Art not generated yet / failed to load: hide the theme instead of showing a blank card.
+                        onError={() => setMissingThemes((m) => [...m, th.id])}
+                      />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={themeAsset(th.id, "sticker1")}
+                        alt=""
+                        loading="lazy"
+                        onError={(e) => (e.currentTarget.style.display = "none")}
+                        className="absolute left-1/2 top-[42%] w-3/5 -translate-x-1/2 -translate-y-1/2 -rotate-6 drop-shadow transition-transform group-hover:scale-110"
+                      />
+                      <span
+                        className="absolute inset-x-1 bottom-1 truncate rounded px-1 py-0.5 text-center text-[10px] font-semibold"
+                        style={{ background: th.band, color: th.ink }}
+                      >
+                        {th.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                <Label className="block pt-2 text-[10px] uppercase font-bold text-muted-foreground">
+                  Classic styles
+                </Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {STRIP_STYLES.map((st) => (
+                    <Button
+                      key={st.id}
+                      type="button"
+                      size="sm"
+                      variant={!themeId && stripStyle === st.id ? "default" : "outline"}
+                      onClick={() => {
+                        setThemeId(null);
+                        setStripStyle(st.id);
+                      }}
+                      className="h-auto py-2 text-xs"
+                    >
+                      {st.name}
+                    </Button>
+                  ))}
+                </div>
+
+                <Label className="block border-t pt-4 text-[10px] uppercase font-bold text-muted-foreground">
+                  Photo overlay
                 </Label>
                 <div className="grid grid-cols-4 gap-2">
                   {DECORATIVE_FRAMES.map((f) => (
@@ -1579,33 +2207,41 @@ export default function PhotoBoothPage() {
               </TabsContent>
             </Tabs>
 
-            <div className="flex items-center gap-2 rounded-lg border p-2">
-              <Timer className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <Select
-                value={String(timerSeconds)}
-                onValueChange={(v) => setTimerSeconds(Number(v))}
-                disabled={timerActive}
-              >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TIMER_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={String(opt.value)}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex items-center gap-2">
+              <Timer className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              <div role="radiogroup" aria-label="Timer" className="grid flex-1 grid-cols-4 gap-1 rounded-md bg-muted p-1">
+                {TIMER_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={timerSeconds === opt.value}
+                    disabled={timerActive}
+                    onClick={() => setTimerSeconds(opt.value)}
+                    className={cn(
+                      "h-7 rounded text-xs font-medium transition-colors disabled:opacity-50",
+                      timerSeconds === opt.value
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <ToolActionBar
               primaryLabel={
                 timerActive
                   ? `Cancel (${countdown})`
-                  : timerSeconds > 0
-                    ? `Start Timer (${timerSeconds}s)`
-                    : t("action.capture")
+                  : retakeIndex !== null
+                    ? `Retake shot ${retakeIndex + 1}`
+                    : timerSeconds > 0
+                      ? photos.length === 0
+                        ? `Start session (${slots} shots)`
+                        : `Continue (${photos.length}/${slots})`
+                      : t("action.capture")
               }
               primaryIcon={
                 timerActive ? (
@@ -1616,16 +2252,11 @@ export default function PhotoBoothPage() {
                   <Camera className="h-4 w-4" />
                 )
               }
-              onPrimary={
-                timerActive
-                  ? cancelTimerSequence
-                  : timerSeconds > 0
-                    ? startTimerSequence
-                    : capturePhoto
-              }
+              onPrimary={primaryAction}
               primaryDisabled={!timerActive && gridFull}
               onReset={() => {
                 cancelTimerSequence();
+                setRetakeIndex(null);
                 setPhotos([]);
               }}
               resetLabel={t("action.clearAll")}
@@ -1634,103 +2265,201 @@ export default function PhotoBoothPage() {
               <Button
                 variant="outline"
                 className="w-full gap-2"
+                onClick={() => uploadRef.current?.click()}
+                disabled={timerActive || gridFull}
+              >
+                <Upload className="h-4 w-4" /> Upload photos
+              </Button>
+              <input
+                ref={uploadRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  importPhotos(e.target.files);
+                  e.target.value = "";
+                }}
+              />
+              <Button
+                variant="outline"
+                className="w-full gap-2"
                 onClick={downloadGrid}
                 disabled={photos.length === 0}
               >
                 <Download className="h-4 w-4" /> {t("action.download")}
               </Button>
-              <CopyImageButton getBlob={getGridBlob} disabled={photos.length === 0} />
+              {canShare && (
+                <Button
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={shareGrid}
+                  disabled={photos.length === 0}
+                >
+                  <Share2 className="h-4 w-4" /> Share
+                </Button>
+              )}
+              <CopyImageButton getBlob={() => getGridBlob()} disabled={photos.length === 0} />
+              <p className="text-center text-[10px] text-muted-foreground">
+                Press <kbd className="rounded border px-1 font-mono">Space</kbd> to shoot
+              </p>
             </ToolActionBar>
           </>
         }
       >
-        <div className="flex flex-col gap-4">
-          <div className="relative bg-black rounded-xl overflow-hidden aspect-video shadow-2xl group">
-            <video ref={videoRef} className="hidden" playsInline />
-            <canvas
-              ref={previewRef}
-              className="w-full h-full object-cover"
-              style={{ borderRadius: `${radius}px` }}
-            />
-
-            {timerActive && countdown > 0 && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                <span className="text-8xl font-bold text-white drop-shadow-lg">
-                  {countdown}
-                </span>
-              </div>
-            )}
-
+        <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
+          <div className="space-y-3">
             <div
-              className={cn(
-                "absolute inset-0 bg-white pointer-events-none transition-opacity duration-150",
-                flash ? "opacity-80" : "opacity-0",
+              className="relative mx-auto overflow-hidden rounded-xl bg-black shadow-2xl"
+              style={{
+                aspectRatio: `${cellW} / ${cellH}`,
+                width: `min(100%, calc(70vh * ${cellW / cellH}))`,
+                borderRadius: `${radius}px`,
+              }}
+            >
+              <video ref={videoRef} className="hidden" playsInline muted />
+              <canvas ref={previewRef} className="h-full w-full object-cover" />
+              {cameraShape && (
+                // Dims everything outside the next cell's shape so the framing is obvious before the shot.
+                <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden>
+                  <path d={`M0 0H100V100H0Z${SHAPES[cameraShape]}`} fillRule="evenodd" fill="rgba(0,0,0,0.55)" />
+                </svg>
               )}
-            />
 
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button
-                size="icon"
-                variant="secondary"
-                onClick={() => setMirror(!mirror)}
+              <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-2">
+                <span className="rounded-full bg-black/60 px-3 py-1 text-xs font-semibold tabular-nums text-white backdrop-blur">
+                  {retakeIndex !== null
+                    ? `Retake ${String(retakeIndex + 1).padStart(2, "0")}`
+                    : `Shot ${Math.min(photos.length + (gridFull ? 0 : 1), slots)} / ${slots}`}
+                </span>
+                {timerActive && (
+                  <span className="flex items-center gap-1.5 rounded-full bg-red-600/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" /> Live
+                  </span>
+                )}
+              </div>
+
+              {timerActive && countdown > 0 && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                  <span
+                    key={countdown}
+                    className="text-[9rem] font-black leading-none text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.6)] animate-in zoom-in-50 fade-in duration-500"
+                  >
+                    {countdown}
+                  </span>
+                </div>
+              )}
+
+              <div
+                className={cn(
+                  "pointer-events-none absolute inset-0 bg-white transition-opacity duration-150",
+                  flash ? "opacity-90" : "opacity-0",
+                )}
+              />
+
+              <div className="absolute right-3 top-3 flex gap-2">
+                {retakeIndex !== null && !timerActive && (
+                  <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => setRetakeIndex(null)} aria-label="Cancel retake">
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => setSoundOn(!soundOn)} aria-label="Toggle sound">
+                  {soundOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                </Button>
+                <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => setMirror(!mirror)} aria-label="Mirror">
+                  <FlipHorizontal className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="h-8 w-8"
+                  aria-label="Switch camera"
+                  onClick={() => {
+                    const next = facingMode === "user" ? "environment" : "user";
+                    setFacingMode(next);
+                    startCamera(next);
+                  }}
+                >
+                  <RefreshCcw className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <button
+                type="button"
+                aria-label="Shutter"
+                disabled={!timerActive && gridFull}
+                onClick={primaryAction}
+                className={cn(
+                  "absolute bottom-4 left-1/2 flex h-16 w-16 -translate-x-1/2 items-center justify-center rounded-full border-4 border-white/90 bg-white/20 backdrop-blur transition active:scale-90 disabled:opacity-40",
+                  timerActive && "border-red-500",
+                )}
               >
-                <FlipHorizontal className="h-4 w-4" />
-              </Button>
-              <Button
-                size="icon"
-                variant="secondary"
-                onClick={() => {
-                  const next = facingMode === "user" ? "environment" : "user";
-                  setFacingMode(next);
-                  startCamera(next);
-                }}
-              >
-                <RefreshCcw className="h-4 w-4" />
-              </Button>
+                <span className={cn("rounded-full bg-white transition-all", timerActive ? "h-6 w-6 rounded-md bg-red-500" : "h-11 w-11")} />
+              </button>
+            </div>
+
+            <div className="flex justify-center gap-1.5">
+              {Array.from({ length: slots }).map((_, i) => (
+                <span
+                  key={i}
+                  className={cn(
+                    "h-1.5 rounded-full transition-all",
+                    i < photos.length ? "w-6 bg-primary" : "w-3 bg-muted",
+                    i === retakeIndex && "bg-amber-500",
+                  )}
+                />
+              ))}
             </div>
           </div>
 
-          <div
-            className="grid gap-4 rounded-xl shadow-lg border"
-            style={{
-              gridTemplateColumns: `repeat(${grid.cols}, 1fr)`,
-              backgroundColor: frameColor,
-              padding: "24px",
-              gap: "12px",
-            }}
-          >
-            {Array.from({ length: grid.cols * grid.rows }).map((_, i) => (
-              <div
-                key={i}
-                className="aspect-video bg-muted/20 rounded-sm overflow-hidden relative group border border-white/10"
-              >
-                {photos[i] ? (
-                  <>
-                    <Image
-                      src={photos[i]}
-                      alt="Captured"
-                      fill
-                      unoptimized
-                      className="object-cover"
-                    />
+          <div className="mx-auto w-fit max-w-full">
+            <div className="relative inline-block rounded-md shadow-xl ring-1 ring-black/5">
+              <canvas
+                ref={stripRef}
+                className="block h-auto max-h-[78vh] w-auto max-w-full rounded-md"
+              />
+              {geometry.cells.map((c, i) =>
+                photos[i] ? (
+                  <div
+                    key={i}
+                    className={cn(
+                      "group absolute flex items-center justify-center gap-2",
+                      retakeIndex === i && "ring-4 ring-amber-400",
+                    )}
+                    style={{
+                      left: `${(c.x / geometry.width) * 100}%`,
+                      top: `${(c.y / geometry.height) * 100}%`,
+                      width: `${(c.w / geometry.width) * 100}%`,
+                      height: `${(c.h / geometry.height) * 100}%`,
+                    }}
+                  >
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="h-8 w-8 opacity-100 shadow transition sm:opacity-0 sm:group-hover:opacity-100"
+                      disabled={timerActive}
+                      onClick={() => setRetakeIndex(i)}
+                      aria-label={`Retake shot ${i + 1}`}
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
                     <Button
                       size="icon"
                       variant="destructive"
-                      className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100"
-                      onClick={() =>
-                        setPhotos(photos.filter((_, idx) => idx !== i))
-                      }
+                      className="h-8 w-8 opacity-100 shadow transition sm:opacity-0 sm:group-hover:opacity-100"
+                      disabled={timerActive}
+                      onClick={() => {
+                        setRetakeIndex(null);
+                        setPhotos(photos.filter((_, idx) => idx !== i));
+                      }}
+                      aria-label={`Delete shot ${i + 1}`}
                     >
-                      <X className="h-3 w-3" />
+                      <X className="h-4 w-4" />
                     </Button>
-                  </>
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center opacity-20 border-2 border-dashed border-muted-foreground">
-                    <Camera className="h-6 w-6" />
                   </div>
-                )}
-              </div>
-            ))}
+                ) : null,
+              )}
+            </div>
           </div>
         </div>
       </ToolWorkspace>

@@ -125,7 +125,13 @@ export default function VoiceToTextPage() {
 
   useEffect(() => {
     return () => {
-      recognitionRef.current?.stop();
+      const r = recognitionRef.current;
+      listeningRef.current = false;
+      if (r) {
+        r.onend = null;
+        r.onerror = null;
+        r.abort();
+      }
     };
   }, []);
 
@@ -182,19 +188,18 @@ export default function VoiceToTextPage() {
       };
 
       recognition.onerror = (event: SpeechRecognitionErrorEventLike) => {
-        if (event.error === "no-speech") return;
-        if (event.error === "not-allowed" || event.error === "service-not-allowed") {
-          setListening(false);
-          toast({
-            title: t("common.error") || "Error",
-            description: "Microphone access was denied. Please allow mic permission and try again.",
-            variant: "destructive",
-          });
-          return;
-        }
+        if (event.error === "no-speech" || event.error === "aborted") return;
+        // Fatal error: stop listening (no auto-restart in onend) and toast once.
+        if (!listeningRef.current) return;
+        listeningRef.current = false;
+        setListening(false);
+        setInterimText("");
+        const denied = event.error === "not-allowed" || event.error === "service-not-allowed";
         toast({
-          title: t("common.error") || "Error",
-          description: `Speech recognition error: ${event.error}`,
+          title: t("common.error"),
+          description: denied
+            ? t("tool.voice-to-text.micDenied")
+            : t("tool.voice-to-text.recogError").replace("{{error}}", event.error),
           variant: "destructive",
         });
       };
@@ -242,6 +247,7 @@ export default function VoiceToTextPage() {
     recognitionRef.current = recognition;
     finalizedRef.current.clear();
     setInterimText("");
+    listeningRef.current = true;
     setListening(true);
     try {
       recognition.start();
@@ -294,11 +300,11 @@ export default function VoiceToTextPage() {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(transcript);
-      toast({ title: t("common.success"), description: t("toast.success.copied") || "Copied to clipboard." });
+      toast({ title: t("common.success"), description: t("toast.success.copied") });
     } catch {
       toast({
-        title: t("common.error") || "Error",
-        description: "Failed to copy text.",
+        title: t("common.error"),
+        description: t("tool.voice-to-text.copyFailed"),
         variant: "destructive",
       });
     }
@@ -319,19 +325,16 @@ export default function VoiceToTextPage() {
 
   return (
     <ToolShell
-      title={t("tool.voice-to-text.name") || "Voice to Text"}
-      description={
-        t("tool.voice-to-text.description") ||
-        "Turn your speech into editable text right in the browser, with live transcription and voice punctuation commands."
-      }
+      title={t("tool.voice-to-text.name")}
+      description={t("tool.voice-to-text.description")}
     >
       {!supported ? (
         <ToolWorkspace>
           <div className="flex min-h-[360px] items-center justify-center rounded-xl border border-dashed">
             <ToolEmptyState
               icon={<MicOff className="h-6 w-6" />}
-              title="Speech recognition isn't supported in this browser"
-              hint="Try the latest Chrome or Edge on desktop or Android."
+              title={t("tool.voice-to-text.unsupported")}
+              hint={t("tool.voice-to-text.unsupportedHint")}
             />
           </div>
         </ToolWorkspace>
@@ -342,7 +345,7 @@ export default function VoiceToTextPage() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Language
+                    {t("tool.voice-to-text.language")}
                   </Label>
                   <Select value={language} onValueChange={(v) => handleLanguageChange(v as LanguageId)}>
                     <SelectTrigger className="h-10">
@@ -360,9 +363,9 @@ export default function VoiceToTextPage() {
 
                 <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <Label className="text-xs font-medium">Keep listening</Label>
+                    <Label className="text-xs font-medium">{t("tool.voice-to-text.keepListening")}</Label>
                     <p className="text-[11px] text-muted-foreground">
-                      Auto-restart recognition after pauses instead of stopping.
+                      {t("tool.voice-to-text.keepListeningHint")}
                     </p>
                   </div>
                   <Switch checked={continuous} onCheckedChange={setContinuous} />
@@ -370,19 +373,17 @@ export default function VoiceToTextPage() {
 
                 <div className="space-y-2 rounded-lg border p-3">
                   <div className="flex items-center justify-between gap-3">
-                    <Label className="text-xs font-medium">Voice punctuation commands</Label>
+                    <Label className="text-xs font-medium">{t("tool.voice-to-text.punctuation")}</Label>
                     <Switch checked={punctuationCommands} onCheckedChange={setPunctuationCommands} />
                   </div>
                   <p className="text-[11px] leading-relaxed text-muted-foreground">
-                    Say "titik" / "period", "koma" / "comma", "tanda tanya" / "question mark",
-                    "tanda seru" / "exclamation mark", "baris baru" / "new line", or "paragraf baru" /
-                    "new paragraph" to insert punctuation as you speak.
+                    {t("tool.voice-to-text.punctuationHint")}
                   </p>
                 </div>
               </div>
 
               <ToolActionBar
-                primaryLabel="Copy Text"
+                primaryLabel={t("tool.voice-to-text.copy")}
                 primaryIcon={<Copy className="h-4 w-4" />}
                 onPrimary={handleCopy}
                 primaryDisabled={!transcript}
@@ -397,7 +398,7 @@ export default function VoiceToTextPage() {
                   disabled={!transcript}
                 >
                   <Download className="h-4 w-4" />
-                  Download .txt
+                  {t("tool.voice-to-text.download")}
                 </Button>
               </ToolActionBar>
             </>
@@ -409,22 +410,23 @@ export default function VoiceToTextPage() {
                 type="button"
                 onClick={handleToggle}
                 aria-pressed={listening}
+                aria-label={listening ? t("tool.voice-to-text.stop") : t("tool.voice-to-text.start")}
                 className={cn(
-                  "relative flex h-20 w-20 items-center justify-center rounded-full text-white shadow-lg transition-colors",
-                  listening ? "bg-rose-500" : "bg-primary",
+                  "relative flex h-20 w-20 items-center justify-center rounded-full shadow-lg transition-colors",
+                  listening ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground",
                 )}
               >
                 {listening && (
-                  <span className="absolute inset-0 -z-10 animate-ping rounded-full bg-rose-500/60" />
+                  <span className="absolute inset-0 -z-10 animate-ping rounded-full bg-destructive/60" />
                 )}
                 {listening ? <MicOff className="h-8 w-8" /> : <Mic className="h-8 w-8" />}
               </button>
               <div className="flex flex-col items-center gap-1">
-                <span className="text-sm font-medium">{listening ? "Listening…" : "Start"}</span>
+                <span className="text-sm font-medium">{listening ? t("tool.voice-to-text.listening") : t("tool.voice-to-text.start")}</span>
                 {listening && (
                   <Badge variant="secondary" className="gap-1 text-[10px]">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-500" />
-                    Recording
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-destructive" />
+                    {t("tool.voice-to-text.recording")}
                   </Badge>
                 )}
               </div>
@@ -438,29 +440,31 @@ export default function VoiceToTextPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Transcript
+                  {t("tool.voice-to-text.transcript")}
                 </Label>
                 <span className="text-[11px] text-muted-foreground">
-                  {wordCount} words · {charCount} characters
+                  {t("tool.voice-to-text.counts")
+                    .replace("{{words}}", String(wordCount))
+                    .replace("{{chars}}", String(charCount))}
                 </span>
               </div>
               <Textarea
                 value={transcript}
                 onChange={(e) => setTranscript(e.target.value)}
                 rows={14}
-                placeholder="Your transcribed text will appear here. You can edit it freely at any time."
+                placeholder={t("tool.voice-to-text.placeholder")}
                 className="resize-y font-mono text-sm"
               />
             </div>
 
             <div className="space-y-2">
               <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Transcript history
+                {t("tool.voice-to-text.history")}
               </Label>
               <Separator />
               {segments.length === 0 ? (
                 <p className="py-6 text-center text-xs text-muted-foreground">
-                  Finalized phrases will show up here with a timestamp.
+                  {t("tool.voice-to-text.historyEmpty")}
                 </p>
               ) : (
                 <div className="max-h-60 space-y-2 overflow-y-auto pr-1">

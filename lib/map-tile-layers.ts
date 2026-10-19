@@ -9,10 +9,9 @@ export interface TileLayerDef {
 }
 
 /**
- * Free, no-API-key tile sources. The Google ones (mt1.google.com) are the
- * commonly-used unofficial tile mirror, not an officially documented public
- * API - it has no key wall today but isn't guaranteed stable long-term. The
- * Esri ones are their official free, keyless ArcGIS Online basemap tiles.
+ * Free, no-API-key tile sources: OpenStreetMap plus Esri's official free,
+ * keyless ArcGIS Online basemap tiles. (Google's mt1.google.com tiles were
+ * removed: unofficial endpoint, against Google's ToS.)
  */
 export const TILE_LAYERS: TileLayerDef[] = [
   {
@@ -21,34 +20,6 @@ export const TILE_LAYERS: TileLayerDef[] = [
     url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 19,
-  },
-  {
-    id: "streets-google",
-    label: "Streets (Google)",
-    url: "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=id",
-    attribution: "Imagery &copy; Google",
-    maxZoom: 20,
-  },
-  {
-    id: "satellite-google",
-    label: "Satellite (Google)",
-    url: "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}&hl=id",
-    attribution: "Imagery &copy; Google",
-    maxZoom: 20,
-  },
-  {
-    id: "hybrid-google",
-    label: "Hybrid (Google)",
-    url: "https://mt1.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}&hl=id",
-    attribution: "Imagery &copy; Google",
-    maxZoom: 20,
-  },
-  {
-    id: "terrain-google",
-    label: "Terrain (Google)",
-    url: "https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}&hl=id",
-    attribution: "Imagery &copy; Google",
-    maxZoom: 20,
   },
   {
     id: "light",

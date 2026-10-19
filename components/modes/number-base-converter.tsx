@@ -32,14 +32,26 @@ export default function NumberBaseConverterPage() {
   const [activeBase, setActiveBase] = useState<Base>(10);
   const [rawValue, setRawValue] = useState("42");
 
-  const decimal = rawValue.trim() && VALID_CHARS[activeBase].test(rawValue.trim())
-    ? parseInt(rawValue.trim(), activeBase)
-    : NaN;
-  const isValid = Number.isFinite(decimal) && !Number.isNaN(decimal);
+  const prefixOf = (base: Base) => BASES.find((b) => b.base === base)!.prefix;
+  const stripPrefix = (v: string, base: Base) => {
+    const p = prefixOf(base);
+    const clean = v.replace(/\s+/g, "");
+    return p && clean.toLowerCase().startsWith(p) ? clean.slice(p.length) : clean;
+  };
 
-  const copy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast({ description: t("toast.success.copied") });
+  const digits = stripPrefix(rawValue, activeBase);
+  // BigInt keeps full precision (e.g. FFFFFFFFFFFFFFFF -> 18446744073709551615)
+  const decimal: bigint | null =
+    digits && VALID_CHARS[activeBase].test(digits) ? BigInt(prefixOf(activeBase) + digits) : null;
+  const isValid = decimal !== null;
+
+  const copy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({ description: t("toast.success.copied") });
+    } catch {
+      toast({ title: t("common.error"), variant: "destructive" });
+    }
   };
 
   return (
@@ -54,7 +66,7 @@ export default function NumberBaseConverterPage() {
             const displayValue = isActive
               ? rawValue
               : isValid
-                ? decimal.toString(base)
+                ? decimal!.toString(base)
                 : "";
             return (
               <FormGroup
@@ -70,14 +82,14 @@ export default function NumberBaseConverterPage() {
                     onFocus={() => {
                       if (!isActive && isValid) {
                         setActiveBase(base);
-                        setRawValue(decimal.toString(base));
+                        setRawValue(decimal!.toString(base));
                       } else {
                         setActiveBase(base);
                       }
                     }}
                     onChange={(e) => {
                       setActiveBase(base);
-                      const v = e.target.value;
+                      const v = stripPrefix(e.target.value, base);
                       if (VALID_CHARS[base].test(v)) setRawValue(v);
                     }}
                     className="font-mono"
@@ -90,6 +102,7 @@ export default function NumberBaseConverterPage() {
                     className="h-9 w-9 shrink-0"
                     onClick={() => copy(displayValue)}
                     disabled={!displayValue}
+                    aria-label={t("action.copy")}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>

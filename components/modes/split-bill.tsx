@@ -61,8 +61,11 @@ function makeItem(): BillItem {
   return { id: uid(), name: "", price: "", qty: 1, participantIds: [] };
 }
 
-function defaultParticipants(): Participant[] {
-  return [makeParticipant("Orang 1"), makeParticipant("Orang 2")];
+function defaultParticipants(personLabel: string): Participant[] {
+  return [
+    makeParticipant(personLabel.replace("{{n}}", "1")),
+    makeParticipant(personLabel.replace("{{n}}", "2")),
+  ];
 }
 
 function formatMoney(n: number) {
@@ -70,10 +73,10 @@ function formatMoney(n: number) {
   return `Rp ${Math.round(n).toLocaleString("id-ID")}`;
 }
 
-const MODES: { id: SplitMode; label: string; icon: typeof Equal }[] = [
-  { id: "equal", label: "Equal", icon: Equal },
-  { id: "items", label: "By Item", icon: ReceiptText },
-  { id: "shares", label: "By %", icon: Percent },
+const MODES: { id: SplitMode; icon: typeof Equal }[] = [
+  { id: "equal", icon: Equal },
+  { id: "items", icon: ReceiptText },
+  { id: "shares", icon: Percent },
 ];
 
 export default function SplitBillPage() {
@@ -82,9 +85,11 @@ export default function SplitBillPage() {
 
   const previewRef = useRef<HTMLDivElement>(null);
 
-  const [billTitle, setBillTitle] = useState("Split Bill");
+  const defaultTitle = t("tool.split-bill.defaultTitle");
+  const personLabel = t("tool.split-bill.person");
+  const [billTitle, setBillTitle] = useState(defaultTitle);
   const [mode, setMode] = useState<SplitMode>("equal");
-  const [participants, setParticipants] = useState<Participant[]>(defaultParticipants());
+  const [participants, setParticipants] = useState<Participant[]>(() => defaultParticipants(personLabel));
   const [manualSubtotal, setManualSubtotal] = useState("");
   const [items, setItems] = useState<BillItem[]>([]);
   const [shares, setShares] = useState<Record<string, string>>({});
@@ -94,7 +99,7 @@ export default function SplitBillPage() {
   const [exportFormat, setExportFormat] = useState<ExportFormat>("png");
 
   const addParticipant = () => {
-    setParticipants((prev) => [...prev, makeParticipant(`Orang ${prev.length + 1}`)]);
+    setParticipants((prev) => [...prev, makeParticipant(personLabel.replace("{{n}}", String(prev.length + 1)))]);
   };
 
   const removeParticipant = (id: string) => {
@@ -126,9 +131,9 @@ export default function SplitBillPage() {
   };
 
   const handleReset = () => {
-    setBillTitle("Split Bill");
+    setBillTitle(defaultTitle);
     setMode("equal");
-    setParticipants(defaultParticipants());
+    setParticipants(defaultParticipants(personLabel));
     setManualSubtotal("");
     setItems([]);
     setShares({});
@@ -136,6 +141,9 @@ export default function SplitBillPage() {
     setServicePercent("");
     setDiscount("");
   };
+
+  const itemLabel = t("tool.split-bill.item");
+  const unnamed = t("tool.split-bill.unnamed");
 
   const subtotal = useMemo(() => {
     if (mode === "items") {
@@ -150,7 +158,7 @@ export default function SplitBillPage() {
   const serviceAmount = adjustedSubtotal * ((parseFloat(servicePercent) || 0) / 100);
   const grandTotal = adjustedSubtotal + taxAmount + serviceAmount;
 
-  const breakdown = useMemo(() => {
+  const rawBreakdown = useMemo(() => {
     const count = Math.max(1, participants.length);
     const equalFallback = () =>
       participants.map((p) => ({ participant: p, ratio: 1 / count, amount: grandTotal / count, detail: [] as string[] }));
@@ -172,7 +180,7 @@ export default function SplitBillPage() {
         const share = lineTotal / assignees.length;
         assignees.forEach((pid) => {
           bases.set(pid, (bases.get(pid) ?? 0) + share);
-          details.get(pid)?.push(it.name || "Item");
+          details.get(pid)?.push(it.name || itemLabel);
         });
       });
       return participants.map((p) => {
@@ -194,26 +202,38 @@ export default function SplitBillPage() {
       const ratio = weights[idx] / sumWeights;
       return { participant: p, ratio, amount: grandTotal * ratio, detail: [] as string[] };
     });
-  }, [mode, participants, items, shares, subtotal, grandTotal]);
+  }, [mode, participants, items, shares, subtotal, grandTotal, itemLabel]);
+
+  // Round each share to whole rupiah, then hand the leftover rupiah to the largest
+  // remainders so the shares always add up to the rounded total (e.g. 100.000 / 3).
+  const breakdown = useMemo(() => {
+    const floors = rawBreakdown.map((b) => Math.floor(b.amount));
+    let rest = Math.round(grandTotal) - floors.reduce((a, b) => a + b, 0);
+    const order = rawBreakdown
+      .map((b, i) => ({ i, frac: b.amount - floors[i] }))
+      .sort((a, b) => b.frac - a.frac);
+    for (let k = 0; rest > 0 && order.length > 0; k++, rest--) floors[order[k % order.length].i]++;
+    return rawBreakdown.map((b, i) => ({ ...b, amount: floors[i] }));
+  }, [rawBreakdown, grandTotal]);
 
   const summaryText = useMemo(() => {
-    const lines = [billTitle || "Split Bill", `Subtotal: ${formatMoney(subtotal)}`];
-    if (discountValue > 0) lines.push(`Diskon: -${formatMoney(discountValue)}`);
-    if (taxAmount > 0) lines.push(`Pajak (${taxPercent || 0}%): ${formatMoney(taxAmount)}`);
-    if (serviceAmount > 0) lines.push(`Service (${servicePercent || 0}%): ${formatMoney(serviceAmount)}`);
-    lines.push(`Total: ${formatMoney(grandTotal)}`, "");
+    const lines = [billTitle || defaultTitle, `${t("tool.split-bill.subtotal")}: ${formatMoney(subtotal)}`];
+    if (discountValue > 0) lines.push(`${t("tool.split-bill.discount")}: -${formatMoney(discountValue)}`);
+    if (taxAmount > 0) lines.push(`${t("tool.split-bill.tax")} (${taxPercent || 0}%): ${formatMoney(taxAmount)}`);
+    if (serviceAmount > 0) lines.push(`${t("tool.split-bill.service")} (${servicePercent || 0}%): ${formatMoney(serviceAmount)}`);
+    lines.push(`${t("tool.split-bill.total")}: ${formatMoney(grandTotal)}`, "");
     breakdown.forEach((b) => {
-      lines.push(`${b.participant.name || "Tanpa nama"}: ${formatMoney(b.amount)}`);
+      lines.push(`${b.participant.name || unnamed}: ${formatMoney(b.amount)}`);
     });
     return lines.join("\n");
-  }, [billTitle, subtotal, discountValue, taxAmount, taxPercent, serviceAmount, servicePercent, grandTotal, breakdown]);
+  }, [billTitle, defaultTitle, unnamed, t, subtotal, discountValue, taxAmount, taxPercent, serviceAmount, servicePercent, grandTotal, breakdown]);
 
   async function handleCopyText() {
     try {
       await navigator.clipboard.writeText(summaryText);
-      toast({ title: t("common.success") || "Success", description: t("toast.success.copied") || "Copied!" });
+      toast({ title: t("common.success"), description: t("toast.success.copied") });
     } catch {
-      toast({ title: "Failed", description: "Could not copy summary to clipboard.", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("tool.split-bill.copyFailed"), variant: "destructive" });
     }
   }
 
@@ -221,8 +241,8 @@ export default function SplitBillPage() {
     try {
       if (exportFormat === "csv") {
         downloadCsv(
-          ["Nama", "Jumlah (Rp)"],
-          breakdown.map((b) => [b.participant.name || "Tanpa nama", String(Math.round(b.amount))]),
+          [t("tool.split-bill.csvName"), t("tool.split-bill.csvAmount")],
+          breakdown.map((b) => [b.participant.name || unnamed, String(b.amount)]),
           "split-bill.csv",
         );
       } else if (!previewRef.current) {
@@ -232,37 +252,34 @@ export default function SplitBillPage() {
       } else {
         await downloadNodeAsPdf(previewRef.current, "split-bill.pdf");
       }
-      toast({ title: t("common.success") || "Success", description: t("toast.success.downloaded") || "Downloaded!" });
+      toast({ title: t("common.success"), description: t("toast.success.downloaded") });
     } catch {
-      toast({ title: "Failed", description: "Failed to export split bill.", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("tool.split-bill.exportFailed"), variant: "destructive" });
     }
   }
 
   return (
     <ToolShell
-      title={t("tool.split-bill.name") || "Split Bill"}
-      description={
-        t("tool.split-bill.description") ||
-        "Split a bill equally, by item, or by custom percentage, then copy or export the result."
-      }
+      title={t("tool.split-bill.name")}
+      description={t("tool.split-bill.description")}
     >
       <ToolWorkspace
         sidebar={
           <>
             <div className="space-y-4">
               <div className="space-y-3">
-                <Label className="text-xs font-medium">Bill Title</Label>
+                <Label className="text-xs font-medium">{t("tool.split-bill.billTitle")}</Label>
                 <Input
                   value={billTitle}
                   onChange={(e) => setBillTitle(e.target.value)}
-                  placeholder="Split Bill"
+                  placeholder={defaultTitle}
                   className="h-9 text-sm"
                 />
               </div>
 
               <div className="space-y-3">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Participants ({participants.length})
+                  {t("tool.split-bill.participants").replace("{{count}}", String(participants.length))}
                 </Label>
                 <div className="space-y-3">
                   {participants.map((p) => (
@@ -271,14 +288,14 @@ export default function SplitBillPage() {
                         value={p.name}
                         onChange={(e) => renameParticipant(p.id, e.target.value)}
                         className="h-8 text-xs"
-                        placeholder="Name"
+                        placeholder={t("tool.split-bill.csvName")}
                       />
                       <button
                         type="button"
                         onClick={() => removeParticipant(p.id)}
                         disabled={participants.length <= 1}
                         className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-destructive disabled:opacity-30"
-                        aria-label="Remove participant"
+                        aria-label={t("tool.split-bill.removeParticipant")}
                       >
                         <X className="h-3.5 w-3.5" />
                       </button>
@@ -287,7 +304,7 @@ export default function SplitBillPage() {
                 </div>
                 <Button type="button" variant="outline" size="sm" className="w-full gap-2" onClick={addParticipant}>
                   <UserPlus className="h-4 w-4" />
-                  Add Person
+                  {t("tool.split-bill.addPerson")}
                 </Button>
               </div>
 
@@ -295,14 +312,14 @@ export default function SplitBillPage() {
 
               <div className="space-y-3">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Split Mode
+                  {t("tool.split-bill.splitMode")}
                 </Label>
                 <Tabs value={mode} onValueChange={(v) => setMode(v as SplitMode)}>
                   <TabsList className="grid w-full grid-cols-3">
                     {MODES.map((m) => (
                       <TabsTrigger key={m.id} value={m.id} className="gap-2 text-xs">
                         <m.icon className="h-3.5 w-3.5" />
-                        {m.label}
+                        {t(`tool.split-bill.mode.${m.id}` as any)}
                       </TabsTrigger>
                     ))}
                   </TabsList>
@@ -311,17 +328,17 @@ export default function SplitBillPage() {
 
               {mode === "equal" && (
                 <div className="space-y-3">
-                  <Label className="text-xs font-medium">Bill Subtotal</Label>
+                  <Label className="text-xs font-medium">{t("tool.split-bill.billSubtotal")}</Label>
                   <ThousandsInput value={manualSubtotal} onChange={setManualSubtotal} className="h-11" placeholder="0" />
                 </div>
               )}
 
               {mode === "shares" && (
                 <div className="space-y-3">
-                  <Label className="text-xs font-medium">Bill Subtotal</Label>
+                  <Label className="text-xs font-medium">{t("tool.split-bill.billSubtotal")}</Label>
                   <ThousandsInput value={manualSubtotal} onChange={setManualSubtotal} className="h-11" placeholder="0" />
                   <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Shares (weight or %)
+                    {t("tool.split-bill.shares")}
                   </Label>
                   <div className="space-y-3">
                     {participants.map((p) => {
@@ -340,7 +357,7 @@ export default function SplitBillPage() {
                             type="number"
                             min="0"
                             value={raw}
-                            onChange={(e) => setShares((prev) => ({ ...prev, [p.id]: e.target.value }))}
+                            onChange={(e) => !e.target.value.includes("-") && setShares((prev) => ({ ...prev, [p.id]: e.target.value }))}
                             placeholder="1"
                             className="h-8 text-xs"
                           />
@@ -358,9 +375,9 @@ export default function SplitBillPage() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Items ({items.length})
+                      {t("tool.split-bill.items").replace("{{count}}", String(items.length))}
                     </Label>
-                    <span className="text-[10px] text-muted-foreground">Subtotal: {formatMoney(subtotal)}</span>
+                    <span className="text-[10px] text-muted-foreground">{t("tool.split-bill.subtotal")}: {formatMoney(subtotal)}</span>
                   </div>
                   <div className="max-h-80 space-y-3 overflow-y-auto pr-1">
                     {items.map((it) => (
@@ -369,14 +386,14 @@ export default function SplitBillPage() {
                           <Input
                             value={it.name}
                             onChange={(e) => updateItem(it.id, { name: e.target.value })}
-                            placeholder="Item name"
+                            placeholder={t("tool.split-bill.itemName")}
                             className="h-8 flex-1 text-xs"
                           />
                           <button
                             type="button"
                             onClick={() => removeItem(it.id)}
                             className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-destructive"
-                            aria-label="Remove item"
+                            aria-label={t("tool.split-bill.removeItem")}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -385,13 +402,14 @@ export default function SplitBillPage() {
                           <ThousandsInput
                             value={it.price}
                             onChange={(v) => updateItem(it.id, { price: v })}
-                            placeholder="Price"
+                            placeholder={t("tool.split-bill.price")}
                             className="h-8 flex-1 text-xs"
                           />
                           <div className="flex shrink-0 items-center gap-2">
                             <button
                               type="button"
                               onClick={() => updateItem(it.id, { qty: Math.max(1, it.qty - 1) })}
+                              aria-label={t("tool.split-bill.decreaseQty")}
                               className="flex h-8 w-8 items-center justify-center rounded-md border border-input text-xs hover:bg-muted"
                             >
                               -
@@ -399,7 +417,8 @@ export default function SplitBillPage() {
                             <span className="w-6 text-center text-xs tabular-nums">{it.qty}</span>
                             <button
                               type="button"
-                              onClick={() => updateItem(it.id, { qty: it.qty + 1 })}
+                              onClick={() => updateItem(it.id, { qty: Math.min(999, it.qty + 1) })}
+                              aria-label={t("tool.split-bill.increaseQty")}
                               className="flex h-8 w-8 items-center justify-center rounded-md border border-input text-xs hover:bg-muted"
                             >
                               +
@@ -427,14 +446,14 @@ export default function SplitBillPage() {
                           })}
                         </div>
                         {it.participantIds.length === 0 && (
-                          <p className="text-[10px] text-muted-foreground">Shared equally by everyone</p>
+                          <p className="text-[10px] text-muted-foreground">{t("tool.split-bill.sharedByAll")}</p>
                         )}
                       </div>
                     ))}
                   </div>
                   <Button type="button" variant="outline" size="sm" className="w-full gap-2" onClick={addItem}>
                     <Plus className="h-4 w-4" />
-                    Add Item
+                    {t("tool.split-bill.addItem")}
                   </Button>
                 </div>
               )}
@@ -443,69 +462,69 @@ export default function SplitBillPage() {
 
               <div className="space-y-3">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Charges
+                  {t("tool.split-bill.charges")}
                 </Label>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-3">
-                    <Label className="text-xs font-medium">Tax (%)</Label>
+                    <Label className="text-xs font-medium">{t("tool.split-bill.tax")} (%)</Label>
                     <Input
                       type="number"
                       min="0"
                       value={taxPercent}
-                      onChange={(e) => setTaxPercent(e.target.value)}
+                      onChange={(e) => !e.target.value.includes("-") && setTaxPercent(e.target.value)}
                       placeholder="0"
                       className="h-9 text-xs"
                     />
                   </div>
                   <div className="space-y-3">
-                    <Label className="text-xs font-medium">Service (%)</Label>
+                    <Label className="text-xs font-medium">{t("tool.split-bill.service")} (%)</Label>
                     <Input
                       type="number"
                       min="0"
                       value={servicePercent}
-                      onChange={(e) => setServicePercent(e.target.value)}
+                      onChange={(e) => !e.target.value.includes("-") && setServicePercent(e.target.value)}
                       placeholder="0"
                       className="h-9 text-xs"
                     />
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <Label className="text-xs font-medium">Discount (flat amount)</Label>
+                  <Label className="text-xs font-medium">{t("tool.split-bill.discountFlat")}</Label>
                   <ThousandsInput value={discount} onChange={setDiscount} className="h-9 text-xs" placeholder="0" />
                 </div>
               </div>
 
               <div className="space-y-3">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Export format
+                  {t("tool.split-bill.exportFormat")}
                 </Label>
                 <Select value={exportFormat} onValueChange={(v) => setExportFormat(v as ExportFormat)}>
                   <SelectTrigger className="h-10">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="png">PNG Image</SelectItem>
+                    <SelectItem value="png">{t("tool.split-bill.export.png")}</SelectItem>
                     <SelectItem value="pdf">PDF</SelectItem>
-                    <SelectItem value="csv">CSV Spreadsheet</SelectItem>
+                    <SelectItem value="csv">{t("tool.split-bill.export.csv")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             <ToolActionBar
-              primaryLabel="Copy Summary"
+              primaryLabel={t("tool.split-bill.copySummary")}
               primaryIcon={<Copy className="h-4 w-4" />}
               onPrimary={handleCopyText}
               onReset={handleReset}
             >
-              <CopyImageButton getBlob={() => nodeToPngBlob(previewRef.current!)} label="Copy as Image" />
+              <CopyImageButton getBlob={() => nodeToPngBlob(previewRef.current!)} label={t("tool.split-bill.copyImage")} />
               <button
                 type="button"
                 onClick={handleDownload}
                 className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
               >
                 <Download className="h-4 w-4" />
-                Download
+                {t("action.download")}
               </button>
             </ToolActionBar>
           </>
@@ -518,7 +537,7 @@ export default function SplitBillPage() {
             style={{ padding: 32 }}
           >
             <div className="mb-4 text-center">
-              <h2 className="text-lg font-bold text-slate-900">{billTitle || "Split Bill"}</h2>
+              <h2 className="text-lg font-bold text-slate-900">{billTitle || defaultTitle}</h2>
               <p className="text-xs text-slate-500">
                 {new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
               </p>
@@ -529,7 +548,7 @@ export default function SplitBillPage() {
                 {items.map((it) => (
                   <div key={it.id} className="flex justify-between gap-2">
                     <span className="truncate">
-                      {it.name || "Item"} x{it.qty}
+                      {it.name || itemLabel} x{it.qty}
                     </span>
                     <span className="shrink-0 tabular-nums">{formatMoney((parseFloat(it.price) || 0) * it.qty)}</span>
                   </div>
@@ -539,29 +558,29 @@ export default function SplitBillPage() {
 
             <div className="mb-3 space-y-1 border-b border-dashed border-slate-300 pb-3 text-sm">
               <div className="flex justify-between text-slate-700">
-                <span>Subtotal</span>
+                <span>{t("tool.split-bill.subtotal")}</span>
                 <span className="tabular-nums">{formatMoney(subtotal)}</span>
               </div>
               {discountValue > 0 && (
                 <div className="flex justify-between text-emerald-600">
-                  <span>Discount</span>
+                  <span>{t("tool.split-bill.discount")}</span>
                   <span className="tabular-nums">-{formatMoney(discountValue)}</span>
                 </div>
               )}
               {taxAmount > 0 && (
                 <div className="flex justify-between text-slate-700">
-                  <span>Tax ({taxPercent || 0}%)</span>
+                  <span>{t("tool.split-bill.tax")} ({taxPercent || 0}%)</span>
                   <span className="tabular-nums">{formatMoney(taxAmount)}</span>
                 </div>
               )}
               {serviceAmount > 0 && (
                 <div className="flex justify-between text-slate-700">
-                  <span>Service ({servicePercent || 0}%)</span>
+                  <span>{t("tool.split-bill.service")} ({servicePercent || 0}%)</span>
                   <span className="tabular-nums">{formatMoney(serviceAmount)}</span>
                 </div>
               )}
               <div className="flex justify-between pt-1 text-base font-bold text-slate-900">
-                <span>Total</span>
+                <span>{t("tool.split-bill.total")}</span>
                 <span className="tabular-nums">{formatMoney(grandTotal)}</span>
               </div>
             </div>
@@ -574,7 +593,7 @@ export default function SplitBillPage() {
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-slate-900">
-                      {b.participant.name || "Unnamed"}
+                      {b.participant.name || unnamed}
                     </p>
                     {b.detail.length > 0 && (
                       <p className="truncate text-[10px] text-slate-500">{b.detail.join(", ")}</p>

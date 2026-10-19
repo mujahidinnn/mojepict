@@ -15,7 +15,7 @@ export const privacyContent: Record<"en" | "id", PrivacyContent> = {
   en: {
     eyebrow: "Privacy Policy",
     title: "Your files are yours. We try hard to keep it that way.",
-    updated: "Last updated: August 2026",
+    updated: "Last updated: October 2026",
     intro:
       "This page explains, plainly, what happens to your data when you use Mojepict. There are no accounts, no trackers, and no ad networks on this site, so what follows is the complete picture.",
     sections: [
@@ -37,7 +37,11 @@ export const privacyContent: Record<"en" | "id", PrivacyContent> = {
       },
       {
         heading: "Third-party services",
-        body: "Aside from the two opt-in AI features above, this site is hosted on standard web infrastructure that, like any website, may log basic technical request data (such as IP address and timestamp) for security and reliability purposes. That's operational logging, not usage tracking, and it isn't tied to any file content.",
+        body: "Aside from the services described in this policy, this site is hosted on standard web infrastructure that, like any website, may log basic technical request data (such as IP address and timestamp) for security and reliability purposes. That's operational logging, not usage tracking, and it isn't tied to any file content.",
+      },
+      {
+        heading: "External services",
+        body: "Some tools contact outside services directly from your browser. Website Score Checker sends the URL you enter (not any file) to Google PageSpeed Insights and Mozilla Observatory to fetch the scores. Map Editor loads map tiles from OpenStreetMap and Esri (ArcGIS), so those providers see which map area is requested. Remove Background in Local mode downloads its AI model from the img.ly CDN (staticimgly.com), and Doc Scanner downloads the Tesseract OCR engine and language data from the jsDelivr CDN; in both cases your image is still processed on your device. The opt-in AI Enhanced modes use remove.bg and Tinify as described above. Each of these providers may log standard request data such as your IP address under its own privacy policy.",
       },
       {
         heading: "Changes to this policy",
@@ -52,7 +56,7 @@ export const privacyContent: Record<"en" | "id", PrivacyContent> = {
   id: {
     eyebrow: "Kebijakan Privasi",
     title: "Filemu tetap milikmu. Kami berusaha keras menjaganya begitu.",
-    updated: "Terakhir diperbarui: Agustus 2026",
+    updated: "Terakhir diperbarui: Oktober 2026",
     intro:
       "Halaman ini menjelaskan secara terus terang apa yang terjadi pada datamu saat memakai Mojepict. Tidak ada akun, tidak ada pelacak, dan tidak ada jaringan iklan di situs ini, jadi berikut gambaran lengkapnya.",
     sections: [
@@ -74,7 +78,11 @@ export const privacyContent: Record<"en" | "id", PrivacyContent> = {
       },
       {
         heading: "Layanan pihak ketiga",
-        body: "Selain dua fitur AI opsional di atas, situs ini dihosting di infrastruktur web standar yang, seperti situs pada umumnya, mungkin mencatat data teknis dasar permintaan (seperti alamat IP dan waktu akses) untuk keperluan keamanan dan keandalan. Ini adalah log operasional, bukan pelacakan penggunaan, dan tidak terkait dengan isi file apa pun.",
+        body: "Selain layanan yang dijelaskan di kebijakan ini, situs ini dihosting di infrastruktur web standar yang, seperti situs pada umumnya, mungkin mencatat data teknis dasar permintaan (seperti alamat IP dan waktu akses) untuk keperluan keamanan dan keandalan. Ini adalah log operasional, bukan pelacakan penggunaan, dan tidak terkait dengan isi file apa pun.",
+      },
+      {
+        heading: "Layanan eksternal",
+        body: "Beberapa alat menghubungi layanan luar langsung dari browsermu. Website Score Checker mengirim URL yang kamu masukkan (bukan file) ke Google PageSpeed Insights dan Mozilla Observatory untuk mengambil skornya. Map Editor memuat tile peta dari OpenStreetMap dan Esri (ArcGIS), sehingga penyedia tersebut tahu area peta yang diminta. Remove Background mode Local mengunduh model AI dari CDN img.ly (staticimgly.com), dan Doc Scanner mengunduh mesin OCR Tesseract beserta data bahasanya dari CDN jsDelivr; pada keduanya gambarmu tetap diproses di perangkatmu. Mode AI Enhanced yang opsional memakai remove.bg dan Tinify seperti dijelaskan di atas. Setiap penyedia ini dapat mencatat data permintaan standar seperti alamat IP sesuai kebijakan privasinya masing-masing.",
       },
       {
         heading: "Perubahan kebijakan ini",

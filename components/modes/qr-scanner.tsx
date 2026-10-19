@@ -22,7 +22,17 @@ export default function QRScannerPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  const notFound = () => {
+    setScanResult(null);
+    toast({
+      variant: "destructive",
+      title: t("common.error"),
+      description: t("tool.qr-scanner.not-found"),
+    });
+  };
+
   const processQRCode = (file: File) => {
+    if (!file.type.startsWith("image/")) return notFound();
     setIsProcessing(true);
     const reader = new FileReader();
 
@@ -31,17 +41,21 @@ export default function QRScannerPage() {
       setImagePreview(result);
 
       const image = new window.Image();
-      image.src = result;
+      image.onerror = () => {
+        setIsProcessing(false);
+        setImagePreview(null);
+        notFound();
+      };
       image.onload = async () => {
         const canvas = document.createElement("canvas");
         const context = canvas.getContext("2d");
-        if (!context) return;
+        if (!context) return setIsProcessing(false);
 
-        canvas.width = image.width;
-        canvas.height = image.height;
-        context.drawImage(image, 0, 0, image.width, image.height);
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        context.drawImage(image, 0, 0);
 
-        const imageData = context.getImageData(0, 0, image.width, image.height);
+        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
         const { default: jsQR } = await import("jsqr");
         const code = jsQR(imageData.data, imageData.width, imageData.height);
 
@@ -52,15 +66,15 @@ export default function QRScannerPage() {
             description: t("tool.qr-scanner.success"),
           });
         } else {
-          setScanResult(null);
-          toast({
-            variant: "destructive",
-            title: t("common.error"),
-            description: t("tool.qr-scanner.not-found"),
-          });
+          notFound();
         }
         setIsProcessing(false);
       };
+      image.src = result;
+    };
+    reader.onerror = () => {
+      setIsProcessing(false);
+      notFound();
     };
     reader.readAsDataURL(file);
   };
@@ -75,10 +89,13 @@ export default function QRScannerPage() {
     }
   }, []);
 
-  const copyToClipboard = () => {
-    if (scanResult) {
-      navigator.clipboard.writeText(scanResult);
+  const copyToClipboard = async () => {
+    if (!scanResult) return;
+    try {
+      await navigator.clipboard.writeText(scanResult);
       toast({ description: t("toast.success.copied") });
+    } catch {
+      toast({ variant: "destructive", title: t("common.error"), description: t("toast.error.generic") });
     }
   };
 
@@ -168,8 +185,8 @@ export default function QRScannerPage() {
                     </div>
 
                     {scanResult.startsWith("WIFI:") && (
-                      <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-md space-y-3">
-                        <p className="text-xs font-semibold text-blue-400 uppercase tracking-wide">
+                      <div className="p-4 bg-primary/10 border border-primary/20 rounded-md space-y-3">
+                        <p className="text-xs font-semibold text-primary uppercase tracking-wide">
                           {t("tool.qr-scanner.wifi-detected")}
                         </p>
                         <p className="text-sm">

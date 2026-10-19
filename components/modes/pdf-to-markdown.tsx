@@ -82,6 +82,9 @@ export default function PdfToMarkdownPage({ initialFile }: { initialFile?: File 
     [t, toast],
   );
 
+  // Free the pdf.js worker-side document whenever it's replaced, reset, or the tool unmounts.
+  useEffect(() => () => void pdfDoc?.destroy(), [pdfDoc]);
+
   useEffect(() => {
     if (initialFile) handleFile(initialFile);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -185,7 +188,8 @@ export default function PdfToMarkdownPage({ initialFile }: { initialFile?: File 
     try {
       const md = await convertPagesToMarkdown(pdfDoc, [...selectedPages]);
       setMarkdown(md);
-      toast({ title: t("common.success"), description: t("toast.success.processed") });
+      if (md.trim()) toast({ title: t("common.success"), description: t("toast.success.processed") });
+      else toast({ variant: "destructive", title: t("common.error"), description: t("tool.pdf-to-word.noText") });
     } catch {
       toast({
         variant: "destructive",
@@ -197,10 +201,14 @@ export default function PdfToMarkdownPage({ initialFile }: { initialFile?: File 
     }
   }, [pdfDoc, selectedPages, t, toast]);
 
-  const copyMarkdown = () => {
+  const copyMarkdown = async () => {
     if (!markdown) return;
-    navigator.clipboard.writeText(markdown);
-    toast({ description: t("toast.success.copied") });
+    try {
+      await navigator.clipboard.writeText(markdown);
+      toast({ description: t("toast.success.copied") });
+    } catch {
+      toast({ variant: "destructive", title: t("common.error"), description: t("toast.error.generic") });
+    }
   };
 
   const downloadMarkdown = () => {
@@ -211,7 +219,7 @@ export default function PdfToMarkdownPage({ initialFile }: { initialFile?: File 
     a.href = url;
     a.download = `${baseName(file.name)}.md`;
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   const handleReset = () => {
@@ -243,9 +251,9 @@ export default function PdfToMarkdownPage({ initialFile }: { initialFile?: File 
         <div className="max-w-screen-lg flex flex-col gap-8">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 items-start">
             <div className="min-w-0 flex flex-col gap-3">
-              <div className="flex justify-center overflow-auto rounded-xl border bg-muted/20 p-4">
+              <div className="flex overflow-auto rounded-xl border bg-muted/20 p-4">
                 <div
-                  className="relative select-none shadow-lg"
+                  className="relative mx-auto shrink-0 select-none shadow-lg"
                   style={{ width: pageSize.width || undefined, height: pageSize.height || undefined }}
                 >
                   <canvas ref={canvasRef} className="block" />
@@ -263,6 +271,7 @@ export default function PdfToMarkdownPage({ initialFile }: { initialFile?: File 
                     variant="outline"
                     size="icon"
                     disabled={currentPage <= 1 || rendering}
+                    aria-label={t("tool.pdf-editor.prevPage")}
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -274,6 +283,7 @@ export default function PdfToMarkdownPage({ initialFile }: { initialFile?: File 
                     variant="outline"
                     size="icon"
                     disabled={currentPage >= numPages || rendering}
+                    aria-label={t("tool.pdf-editor.nextPage")}
                     onClick={() => setCurrentPage((p) => Math.min(numPages, p + 1))}
                   >
                     <ChevronRight className="h-4 w-4" />
@@ -284,7 +294,7 @@ export default function PdfToMarkdownPage({ initialFile }: { initialFile?: File 
 
             <div className="flex flex-col gap-4 lg:sticky lg:top-6">
               <div className="flex items-center gap-3 rounded-lg border bg-muted/10 p-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-red-500 to-rose-600 text-white">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-destructive/10 text-destructive">
                   <FileType className="h-4 w-4" />
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col">

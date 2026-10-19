@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker, type DayButton } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
@@ -21,18 +21,22 @@ function Calendar({
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
       classNames={{
-        months: "flex flex-col sm:flex-row gap-2",
+        months: "relative flex flex-col sm:flex-row gap-2",
         month: "flex flex-col gap-3",
         month_caption: "flex justify-center items-center h-8 relative",
-        caption_label: "text-sm font-medium",
-        nav: "flex items-center justify-between absolute inset-x-0 top-0 h-8",
+        caption_label: "flex items-center gap-1 text-sm font-medium",
+        dropdowns: "flex items-center gap-1.5",
+        dropdown_root: "relative flex items-center h-7 rounded-md border border-border px-2 has-[select:focus-visible]:ring-2 has-[select:focus-visible]:ring-ring",
+        dropdown: "absolute inset-0 cursor-pointer opacity-0 bg-popover text-popover-foreground",
+        // nav overlays the caption: let clicks pass through except on the buttons
+        nav: "pointer-events-none z-10 flex items-center justify-between absolute inset-x-0 top-0 h-8",
         button_previous: cn(
           buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-60 hover:opacity-100"
+          "pointer-events-auto h-7 w-7 bg-transparent p-0 opacity-60 hover:opacity-100"
         ),
         button_next: cn(
           buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-60 hover:opacity-100"
+          "pointer-events-auto h-7 w-7 bg-transparent p-0 opacity-60 hover:opacity-100"
         ),
         month_grid: "w-full border-collapse",
         weekdays: "flex",
@@ -58,6 +62,8 @@ function Calendar({
         Chevron: ({ orientation, className: chevronClassName, ...chevronProps }) =>
           orientation === "left" ? (
             <ChevronLeft className={cn("h-4 w-4", chevronClassName)} {...chevronProps} />
+          ) : orientation === "down" ? (
+            <ChevronDown className={cn("h-3.5 w-3.5 opacity-60", chevronClassName)} {...chevronProps} />
           ) : (
             <ChevronRight className={cn("h-4 w-4", chevronClassName)} {...chevronProps} />
           ),

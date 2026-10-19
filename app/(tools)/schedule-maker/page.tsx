@@ -577,7 +577,9 @@ function buildIcsContent(items: ScheduleItem[]): string {
     lines.push(`UID:${crypto.randomUUID()}@mojepict.vercel.app`);
     lines.push(`DTSTAMP:${dtstamp}`);
     lines.push(`DTSTART:${toIcsDate(it.date, it.start)}`);
-    lines.push(`DTEND:${toIcsDate(it.date, it.end)}`);
+    // end <= start means the event runs past midnight (e.g. night shift 23:00-07:00)
+    const endDate = it.end <= it.start ? isoDate(addDays(parseISO(it.date), 1)) : it.date;
+    lines.push(`DTEND:${toIcsDate(endDate, it.end)}`);
     lines.push(`SUMMARY:${escapeIcsText(it.title)}`);
     if (it.location) lines.push(`LOCATION:${escapeIcsText(it.location)}`);
     if (it.notes) lines.push(`DESCRIPTION:${escapeIcsText(it.notes)}`);
@@ -648,16 +650,24 @@ export default function ScheduleMakerPage() {
   const saveItem = () => {
     if (!form.title.trim()) {
       toast({
-        title: "Failed",
-        description: "Please enter an activity title.",
+        title: t("common.error"),
+        description: t("tool.schedule-maker.errTitle"),
         variant: "destructive",
       });
       return;
     }
     if (!form.date) {
       toast({
-        title: "Failed",
-        description: "Please pick a date.",
+        title: t("common.error"),
+        description: t("tool.schedule-maker.errDate"),
+        variant: "destructive",
+      });
+      return;
+    }
+    if (form.start === form.end) {
+      toast({
+        title: t("common.error"),
+        description: t("tool.schedule-maker.errDuration"),
         variant: "destructive",
       });
       return;
@@ -720,24 +730,32 @@ export default function ScheduleMakerPage() {
   const generateRecurring = () => {
     if (!recurForm.title.trim()) {
       toast({
-        title: "Failed",
-        description: "Please enter an activity title.",
+        title: t("common.error"),
+        description: t("tool.schedule-maker.errTitle"),
         variant: "destructive",
       });
       return;
     }
     if (recurForm.days.length === 0) {
       toast({
-        title: "Failed",
-        description: "Select at least one day of the week.",
+        title: t("common.error"),
+        description: t("tool.schedule-maker.errDays"),
         variant: "destructive",
       });
       return;
     }
     if (!recurForm.from || !recurForm.to) {
       toast({
-        title: "Failed",
-        description: "Please set both a start and end date.",
+        title: t("common.error"),
+        description: t("tool.schedule-maker.errRange"),
+        variant: "destructive",
+      });
+      return;
+    }
+    if (recurForm.start === recurForm.end) {
+      toast({
+        title: t("common.error"),
+        description: t("tool.schedule-maker.errDuration"),
         variant: "destructive",
       });
       return;
@@ -747,8 +765,8 @@ export default function ScheduleMakerPage() {
     const toDate = parseISO(recurForm.to);
     if (toDate < fromDate) {
       toast({
-        title: "Failed",
-        description: "'To' date must be on or after 'From' date.",
+        title: t("common.error"),
+        description: t("tool.schedule-maker.errRangeOrder"),
         variant: "destructive",
       });
       return;
@@ -757,8 +775,8 @@ export default function ScheduleMakerPage() {
     const spanDays = Math.round((toDate.getTime() - fromDate.getTime()) / 86_400_000) + 1;
     if (spanDays > MAX_RECURRING_SPAN_DAYS) {
       toast({
-        title: "Failed",
-        description: "Date range is too large. Please narrow it down.",
+        title: t("common.error"),
+        description: t("tool.schedule-maker.errRangeTooLarge"),
         variant: "destructive",
       });
       return;
@@ -794,8 +812,8 @@ export default function ScheduleMakerPage() {
         );
         if (generated.length > MAX_RECURRING_ITEMS) {
           toast({
-            title: "Failed",
-            description: `Too many items would be generated (max ${MAX_RECURRING_ITEMS}). Narrow the date range.`,
+            title: t("common.error"),
+            description: t("tool.schedule-maker.errTooMany").replace("{{max}}", String(MAX_RECURRING_ITEMS)),
             variant: "destructive",
           });
           return;
@@ -806,8 +824,8 @@ export default function ScheduleMakerPage() {
 
     if (generated.length === 0) {
       toast({
-        title: "Failed",
-        description: "No matching dates found in that range.",
+        title: t("common.error"),
+        description: t("tool.schedule-maker.errNoMatch"),
         variant: "destructive",
       });
       return;
@@ -816,7 +834,7 @@ export default function ScheduleMakerPage() {
     setItems((prev) => [...prev, ...generated]);
     toast({
       title: t("common.success"),
-      description: `${generated.length} items added.`,
+      description: t("tool.schedule-maker.itemsAdded").replace("{{count}}", String(generated.length)),
     });
     setRecurForm(createEmptyRecurringForm());
     setExcludeDraft(todayIso());
@@ -861,8 +879,8 @@ export default function ScheduleMakerPage() {
       toast({ title: t("common.success"), description: t("toast.success.downloaded") });
     } catch {
       toast({
-        title: "Failed",
-        description: "Failed to export schedule.",
+        title: t("common.error"),
+        description: t("tool.schedule-maker.errExport"),
         variant: "destructive",
       });
     }
@@ -920,7 +938,7 @@ export default function ScheduleMakerPage() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Template
+                  {t("tool.schedule-maker.template")}
                 </Label>
                 <Combobox
                   value={templateId}
@@ -930,7 +948,7 @@ export default function ScheduleMakerPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs font-medium">Title</Label>
+                <Label className="text-xs font-medium">{t("tool.schedule-maker.title")}</Label>
                 <Input
                   value={scheduleTitle}
                   onChange={(e) => setScheduleTitle(e.target.value)}
@@ -940,7 +958,7 @@ export default function ScheduleMakerPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs font-medium">Subtitle</Label>
+                <Label className="text-xs font-medium">{t("tool.schedule-maker.subtitle")}</Label>
                 <Input
                   value={scheduleSubtitle}
                   onChange={(e) => setScheduleSubtitle(e.target.value)}
@@ -951,7 +969,7 @@ export default function ScheduleMakerPage() {
 
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  View
+                  {t("tool.schedule-maker.view")}
                 </Label>
                 <div className="flex gap-2">
                   <Button
@@ -962,7 +980,7 @@ export default function ScheduleMakerPage() {
                     onClick={() => setViewMode("table")}
                   >
                     <Table2 className="h-4 w-4" />
-                    Table
+                    {t("tool.schedule-maker.view.table")}
                   </Button>
                   <Button
                     type="button"
@@ -972,7 +990,7 @@ export default function ScheduleMakerPage() {
                     onClick={() => setViewMode("card")}
                   >
                     <LayoutGrid className="h-4 w-4" />
-                    Card
+                    {t("tool.schedule-maker.view.card")}
                   </Button>
                   <Button
                     type="button"
@@ -982,7 +1000,7 @@ export default function ScheduleMakerPage() {
                     onClick={() => setViewMode("month")}
                   >
                     <CalendarDays className="h-4 w-4" />
-                    Month
+                    {t("tool.schedule-maker.view.month")}
                   </Button>
                 </div>
               </div>
@@ -991,10 +1009,10 @@ export default function ScheduleMakerPage() {
 
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Items ({items.length})
+                  {t("tool.schedule-maker.items").replace("{{count}}", String(items.length))}
                 </Label>
                 {items.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">No items yet. Add one below.</p>
+                  <p className="text-xs text-muted-foreground">{t("tool.schedule-maker.noItems")}</p>
                 ) : (
                   <div className="max-h-56 space-y-1 overflow-y-auto pr-1">
                     {sorted.map((it) => (
@@ -1016,7 +1034,7 @@ export default function ScheduleMakerPage() {
                           type="button"
                           onClick={() => startEdit(it)}
                           className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-                          aria-label="Edit item"
+                          aria-label={t("tool.schedule-maker.editItem")}
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
@@ -1024,7 +1042,7 @@ export default function ScheduleMakerPage() {
                           type="button"
                           onClick={() => deleteItem(it.id)}
                           className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-destructive"
-                          aria-label="Delete item"
+                          aria-label={t("tool.schedule-maker.deleteItem")}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
@@ -1036,17 +1054,17 @@ export default function ScheduleMakerPage() {
 
               <div className="space-y-3 rounded-lg border border-input p-3">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {editingId ? "Edit Item" : "Add Item"}
+                  {editingId ? t("tool.schedule-maker.editItemTitle") : t("tool.schedule-maker.addItem")}
                 </Label>
 
                 {!editingId && (
                   <Tabs value={formMode} onValueChange={(v) => setFormMode(v as FormMode)}>
                     <TabsList className="grid w-full grid-cols-2">
                       <TabsTrigger value="single" className="text-xs">
-                        Single
+                        {t("tool.schedule-maker.single")}
                       </TabsTrigger>
                       <TabsTrigger value="recurring" className="text-xs">
-                        Recurring
+                        {t("tool.schedule-maker.recurring")}
                       </TabsTrigger>
                     </TabsList>
                   </Tabs>
@@ -1056,7 +1074,7 @@ export default function ScheduleMakerPage() {
                   <>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <Label className="text-xs font-medium">Date</Label>
+                        <Label className="text-xs font-medium">{t("tool.schedule-maker.date")}</Label>
                         <Input
                           type="date"
                           value={form.date}
@@ -1065,7 +1083,7 @@ export default function ScheduleMakerPage() {
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs font-medium">Title</Label>
+                        <Label className="text-xs font-medium">{t("tool.schedule-maker.title")}</Label>
                         <Input
                           value={form.title}
                           onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
@@ -1077,7 +1095,7 @@ export default function ScheduleMakerPage() {
 
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <Label className="text-xs font-medium">Start</Label>
+                        <Label className="text-xs font-medium">{t("tool.schedule-maker.start")}</Label>
                         <Input
                           type="time"
                           value={form.start}
@@ -1086,7 +1104,7 @@ export default function ScheduleMakerPage() {
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs font-medium">End</Label>
+                        <Label className="text-xs font-medium">{t("tool.schedule-maker.end")}</Label>
                         <Input
                           type="time"
                           value={form.end}
@@ -1097,7 +1115,7 @@ export default function ScheduleMakerPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium">Location (optional)</Label>
+                      <Label className="text-xs font-medium">{t("tool.schedule-maker.location")}</Label>
                       <Input
                         value={form.location}
                         onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
@@ -1107,17 +1125,17 @@ export default function ScheduleMakerPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium">Notes (optional)</Label>
+                      <Label className="text-xs font-medium">{t("tool.schedule-maker.notes")}</Label>
                       <Textarea
                         value={form.notes}
                         onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-                        placeholder="Additional notes..."
+                        placeholder={t("tool.schedule-maker.notesPlaceholder")}
                         className="min-h-[60px] text-xs"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium">Color</Label>
+                      <Label className="text-xs font-medium">{t("tool.schedule-maker.color")}</Label>
                       <div className="flex flex-wrap gap-2">
                         {SWATCHES.map((c) => (
                           <button
@@ -1139,11 +1157,11 @@ export default function ScheduleMakerPage() {
                     <div className="flex gap-2">
                       <Button type="button" size="sm" className="flex-1 gap-2" onClick={saveItem}>
                         <Plus className="h-4 w-4" />
-                        {editingId ? "Save Item" : "Add Item"}
+                        {editingId ? t("tool.schedule-maker.saveItem") : t("tool.schedule-maker.addItem")}
                       </Button>
                       {editingId && (
                         <Button type="button" size="sm" variant="outline" onClick={cancelEdit}>
-                          Cancel
+                          {t("common.cancel")}
                         </Button>
                       )}
                     </div>
@@ -1151,7 +1169,7 @@ export default function ScheduleMakerPage() {
                 ) : (
                   <>
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium">Title</Label>
+                      <Label className="text-xs font-medium">{t("tool.schedule-maker.title")}</Label>
                       <Input
                         value={recurForm.title}
                         onChange={(e) => setRecurForm((f) => ({ ...f, title: e.target.value }))}
@@ -1162,7 +1180,7 @@ export default function ScheduleMakerPage() {
 
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <Label className="text-xs font-medium">Start</Label>
+                        <Label className="text-xs font-medium">{t("tool.schedule-maker.start")}</Label>
                         <Input
                           type="time"
                           value={recurForm.start}
@@ -1171,7 +1189,7 @@ export default function ScheduleMakerPage() {
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs font-medium">End</Label>
+                        <Label className="text-xs font-medium">{t("tool.schedule-maker.end")}</Label>
                         <Input
                           type="time"
                           value={recurForm.end}
@@ -1182,7 +1200,7 @@ export default function ScheduleMakerPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium">Location (optional)</Label>
+                      <Label className="text-xs font-medium">{t("tool.schedule-maker.location")}</Label>
                       <Input
                         value={recurForm.location}
                         onChange={(e) => setRecurForm((f) => ({ ...f, location: e.target.value }))}
@@ -1192,17 +1210,17 @@ export default function ScheduleMakerPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium">Notes (optional)</Label>
+                      <Label className="text-xs font-medium">{t("tool.schedule-maker.notes")}</Label>
                       <Textarea
                         value={recurForm.notes}
                         onChange={(e) => setRecurForm((f) => ({ ...f, notes: e.target.value }))}
-                        placeholder="Additional notes..."
+                        placeholder={t("tool.schedule-maker.notesPlaceholder")}
                         className="min-h-[50px] text-xs"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium">Color</Label>
+                      <Label className="text-xs font-medium">{t("tool.schedule-maker.color")}</Label>
                       <div className="flex flex-wrap gap-2">
                         {SWATCHES.map((c) => (
                           <button
@@ -1222,7 +1240,7 @@ export default function ScheduleMakerPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium">Repeat on</Label>
+                      <Label className="text-xs font-medium">{t("tool.schedule-maker.repeatOn")}</Label>
                       <div className="flex flex-wrap gap-1">
                         {DAYS.map((d) => {
                           const active = recurForm.days.includes(d);
@@ -1246,7 +1264,7 @@ export default function ScheduleMakerPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium">Repeat every (weeks)</Label>
+                      <Label className="text-xs font-medium">{t("tool.schedule-maker.repeatEvery")}</Label>
                       <Input
                         type="number"
                         min={1}
@@ -1264,7 +1282,7 @@ export default function ScheduleMakerPage() {
 
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <Label className="text-xs font-medium">From</Label>
+                        <Label className="text-xs font-medium">{t("common.from")}</Label>
                         <Input
                           type="date"
                           value={recurForm.from}
@@ -1273,7 +1291,7 @@ export default function ScheduleMakerPage() {
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs font-medium">To</Label>
+                        <Label className="text-xs font-medium">{t("common.to")}</Label>
                         <Input
                           type="date"
                           value={recurForm.to}
@@ -1284,7 +1302,7 @@ export default function ScheduleMakerPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium">Exclude dates (optional)</Label>
+                      <Label className="text-xs font-medium">{t("tool.schedule-maker.excludeDates")}</Label>
                       <div className="flex gap-2">
                         <Input
                           type="date"
@@ -1293,7 +1311,7 @@ export default function ScheduleMakerPage() {
                           className="h-9 flex-1 text-xs"
                         />
                         <Button type="button" size="sm" variant="outline" onClick={addExcludeDate}>
-                          Add
+                          {t("tool.schedule-maker.add")}
                         </Button>
                       </div>
                       {recurForm.excludeDates.length > 0 && (
@@ -1303,7 +1321,7 @@ export default function ScheduleMakerPage() {
                               key={d}
                               type="button"
                               onClick={() => removeExcludeDate(d)}
-                              title="Click to remove"
+                              title={t("tool.schedule-maker.clickToRemove")}
                               className="inline-flex items-center gap-1 rounded-full border border-input px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
                             >
                               {formatDateLabel(d)}
@@ -1322,7 +1340,7 @@ export default function ScheduleMakerPage() {
                       disabled={isEditingRecurring}
                     >
                       <Plus className="h-4 w-4" />
-                      Generate
+                      {t("tool.schedule-maker.generate")}
                     </Button>
                   </>
                 )}
@@ -1330,7 +1348,7 @@ export default function ScheduleMakerPage() {
 
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Export
+                  {t("tool.schedule-maker.export")}
                 </Label>
                 <Select value={exportFormat} onValueChange={(v) => setExportFormat(v as ExportFormat)}>
                   <SelectTrigger className="h-10">
@@ -1339,7 +1357,7 @@ export default function ScheduleMakerPage() {
                   <SelectContent>
                     {EXPORT_FORMATS.map((f) => (
                       <SelectItem key={f.id} value={f.id}>
-                        {f.label}
+                        {t(`tool.schedule-maker.export.${f.id}` as any)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -1365,13 +1383,13 @@ export default function ScheduleMakerPage() {
           {viewMode !== "table" && (
             <div className="mx-auto mb-3 flex w-full max-w-3xl items-center justify-between gap-2">
               <div className="flex items-center gap-1">
-                <Button type="button" variant="outline" size="icon" onClick={goPrevMonth} aria-label="Previous month">
+                <Button type="button" variant="outline" size="icon" onClick={goPrevMonth} aria-label={t("tool.schedule-maker.prevMonth")}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <Button type="button" variant="outline" size="sm" onClick={goToday}>
-                  Today
+                  {t("tool.schedule-maker.today")}
                 </Button>
-                <Button type="button" variant="outline" size="icon" onClick={goNextMonth} aria-label="Next month">
+                <Button type="button" variant="outline" size="icon" onClick={goNextMonth} aria-label={t("tool.schedule-maker.nextMonth")}>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -1397,8 +1415,8 @@ export default function ScheduleMakerPage() {
               {items.length === 0 ? (
                 <ToolEmptyState
                   icon={<CalendarClock className="h-6 w-6" />}
-                  title="No schedule items yet"
-                  hint="Add items from the sidebar to build your schedule."
+                  title={t("tool.schedule-maker.emptyTitle")}
+                  hint={t("tool.schedule-maker.emptyHint")}
                   className="py-12"
                 />
               ) : viewMode === "table" ? (
@@ -1406,10 +1424,10 @@ export default function ScheduleMakerPage() {
                   <table className="w-full border-collapse text-sm">
                     <thead>
                       <tr className="border-b border-slate-200 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                        <th className="py-2 pr-3">Date</th>
-                        <th className="py-2 pr-3">Time</th>
-                        <th className="py-2 pr-3">Activity</th>
-                        <th className="py-2 pr-3">Location</th>
+                        <th className="py-2 pr-3">{t("tool.schedule-maker.col.date")}</th>
+                        <th className="py-2 pr-3">{t("tool.schedule-maker.col.time")}</th>
+                        <th className="py-2 pr-3">{t("tool.schedule-maker.col.activity")}</th>
+                        <th className="py-2 pr-3">{t("tool.schedule-maker.col.location")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1440,8 +1458,8 @@ export default function ScheduleMakerPage() {
                 monthDates.length === 0 ? (
                   <ToolEmptyState
                     icon={<CalendarClock className="h-6 w-6" />}
-                    title="No items this month"
-                    hint="Use the arrows above to browse other months, or add items for this one."
+                    title={t("tool.schedule-maker.emptyMonth")}
+                    hint={t("tool.schedule-maker.emptyMonthHint")}
                     className="py-12"
                   />
                 ) : (
@@ -1524,7 +1542,7 @@ export default function ScheduleMakerPage() {
                           ))}
                           {dayItems.length > 3 && (
                             <p className="px-1 text-[10px] font-medium text-slate-400">
-                              +{dayItems.length - 3} more
+                              {t("tool.schedule-maker.more").replace("{{count}}", String(dayItems.length - 3))}
                             </p>
                           )}
                         </div>

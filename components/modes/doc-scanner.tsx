@@ -18,7 +18,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
-import { autoDetectQuad, warpToRect, type Quad } from "@/lib/perspective";
+import { warpToRect, type Quad } from "@/lib/perspective";
 import { ArrowDown, ArrowUp, Camera, Download, ScanLine, Wand2, X } from "lucide-react";
 import { TwoColumnLayout, InputSection, OutputSection } from "@/components/tools/ToolTemplates";
 
@@ -42,6 +42,106 @@ function loadImage(file: File): Promise<HTMLImageElement> {
     img.onerror = reject;
     img.src = URL.createObjectURL(file);
   });
+}
+
+/** Otsu threshold -> largest bright connected blob -> its 4 extreme corners.
+ * Returns null when no plausible document is found. Works for a white page on a
+ * dark background even when the page fills most of the frame. */
+function quadFromGray(gray: Uint8ClampedArray | number[], w: number, h: number): Quad | null {
+  const n = w * h;
+  const hist = new Array<number>(256).fill(0);
+  for (let i = 0; i < n; i++) hist[gray[i]]++;
+  let sumAll = 0;
+  for (let i = 0; i < 256; i++) sumAll += i * hist[i];
+  let wB = 0;
+  let sumB = 0;
+  let best = -1;
+  let threshold = 127;
+  for (let i = 0; i < 256; i++) {
+    wB += hist[i];
+    if (!wB || wB === n) continue;
+    sumB += i * hist[i];
+    const mB = sumB / wB;
+    const mF = (sumAll - sumB) / (n - wB);
+    const between = wB * (n - wB) * (mB - mF) ** 2;
+    if (between > best) {
+      best = between;
+      threshold = i;
+    }
+  }
+
+  const label = new Int32Array(n).fill(-1);
+  const stack = new Int32Array(n);
+  let bestPixels: number[] = [];
+  for (let start = 0; start < n; start++) {
+    if (label[start] !== -1 || gray[start] <= threshold) continue;
+    const pixels: number[] = [];
+    let top = 0;
+    stack[top++] = start;
+    label[start] = start;
+    while (top) {
+      const i = stack[--top];
+      pixels.push(i);
+      const x = i % w;
+      const neighbors = [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, i - w, i + w];
+      for (const j of neighbors) {
+        if (j < 0 || j >= n || label[j] !== -1 || gray[j] <= threshold) continue;
+        label[j] = start;
+        stack[top++] = j;
+      }
+    }
+    if (pixels.length > bestPixels.length) bestPixels = pixels;
+  }
+  if (bestPixels.length < n * 0.08 || bestPixels.length > n * 0.97) return null;
+
+  let tl = bestPixels[0], tr = tl, br = tl, bl = tl;
+  const sum = (i: number) => (i % w) + Math.floor(i / w);
+  const diff = (i: number) => (i % w) - Math.floor(i / w);
+  for (const i of bestPixels) {
+    if (sum(i) < sum(tl)) tl = i;
+    if (sum(i) > sum(br)) br = i;
+    if (diff(i) > diff(tr)) tr = i;
+    if (diff(i) < diff(bl)) bl = i;
+  }
+  return [tl, tr, br, bl].map((i) => ({ x: (i % w) + 0.5, y: Math.floor(i / w) + 0.5 })) as Quad;
+}
+
+function detectDocumentQuad(img: HTMLImageElement): Quad | null {
+  try {
+    const { naturalWidth: nw, naturalHeight: nh } = img;
+    const scale = Math.min(1, 300 / Math.max(nw, nh));
+    const w = Math.max(1, Math.round(nw * scale));
+    const h = Math.max(1, Math.round(nh * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(img, 0, 0, w, h);
+    const { data } = ctx.getImageData(0, 0, w, h);
+    const gray = new Uint8ClampedArray(w * h);
+    for (let i = 0; i < w * h; i++) gray[i] = data[i * 4] * 0.299 + data[i * 4 + 1] * 0.587 + data[i * 4 + 2] * 0.114;
+    const quad = quadFromGray(gray, w, h);
+    return quad && (quad.map((p) => ({ x: (p.x / w) * nw, y: (p.y / h) * nh })) as Quad);
+  } catch {
+    return null;
+  }
+}
+
+/** Auto-detected quad, or the inset full-frame fallback (detected=false) for manual adjustment. */
+function detectOrFallback(img: HTMLImageElement): { quad: Quad; detected: boolean } {
+  const quad = detectDocumentQuad(img);
+  return quad ? { quad, detected: true } : { quad: fullQuad(img), detected: false };
+}
+
+function fullQuad(img: HTMLImageElement): Quad {
+  const inset = 0.04;
+  const { naturalWidth: w, naturalHeight: h } = img;
+  return [
+    { x: w * inset, y: h * inset },
+    { x: w * (1 - inset), y: h * inset },
+    { x: w * (1 - inset), y: h * (1 - inset) },
+    { x: w * inset, y: h * (1 - inset) },
+  ];
 }
 
 const CORNER_LABELS = ["TL", "TR", "BR", "BL"] as const;
@@ -114,22 +214,39 @@ export default function DocScannerPage() {
   const [progress, setProgress] = useState(0);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
 
+  // Revoke page image URLs and the result URL on unmount.
+  const pagesRef = useRef<ScanPage[]>([]);
+  const resultUrlRef = useRef<string | null>(null);
   useEffect(() => {
-    return () => {
-      setResultUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return prev;
-      });
-    };
-  }, []);
+    pagesRef.current = pages;
+    resultUrlRef.current = resultUrl;
+  }, [pages, resultUrl]);
+  useEffect(
+    () => () => {
+      pagesRef.current.forEach((p) => URL.revokeObjectURL(p.img.src));
+      if (resultUrlRef.current) URL.revokeObjectURL(resultUrlRef.current);
+    },
+    [],
+  );
 
   const addFiles = useCallback(
     async (files: File[]) => {
+      const rejected = files.filter((f) => !f.type.startsWith("image/"));
+      if (rejected.length) {
+        const isPdf = rejected.some((f) => f.type === "application/pdf" || /\.pdf$/i.test(f.name));
+        toast({
+          variant: "destructive",
+          title: t("common.error"),
+          description: t(isPdf ? "tool.doc-scanner.pdfRejected" : "toast.error.unsupported"),
+        });
+      }
       const images = files.filter((f) => f.type.startsWith("image/"));
+      let undetected = 0;
       for (const file of images) {
         try {
           const img = await loadImage(file);
-          const quad = autoDetectQuad(img, img.naturalWidth, img.naturalHeight);
+          const { quad, detected } = detectOrFallback(img);
+          if (!detected) undetected++;
           const page: ScanPage = { id: uid(), file, img, quad };
           setPages((prev) => [...prev, page]);
           setActiveId((prev) => prev ?? page.id);
@@ -137,6 +254,7 @@ export default function DocScannerPage() {
           toast({ variant: "destructive", title: t("common.error"), description: t("toast.error.unsupported") });
         }
       }
+      if (undetected) toast({ title: t("tool.doc-scanner.detectFailedTitle"), description: t("tool.doc-scanner.detectFailed") });
     },
     [t, toast],
   );
@@ -146,10 +264,13 @@ export default function DocScannerPage() {
   const updateQuad = (id: string, quad: Quad) =>
     setPages((prev) => prev.map((p) => (p.id === id ? { ...p, quad } : p)));
 
-  const resetQuad = (id: string) =>
-    setPages((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, quad: autoDetectQuad(p.img, p.img.naturalWidth, p.img.naturalHeight) } : p)),
-    );
+  const resetQuad = (id: string) => {
+    const page = pages.find((p) => p.id === id);
+    if (!page) return;
+    const { quad, detected } = detectOrFallback(page.img);
+    if (!detected) toast({ title: t("tool.doc-scanner.detectFailedTitle"), description: t("tool.doc-scanner.detectFailed") });
+    setPages((prev) => prev.map((p) => (p.id === id ? { ...p, quad } : p)));
+  };
 
   const move = (index: number, dir: -1 | 1) => {
     setPages((prev) => {
@@ -162,13 +283,20 @@ export default function DocScannerPage() {
   };
 
   const remove = (id: string) => {
+    const page = pages.find((p) => p.id === id);
+    if (page) URL.revokeObjectURL(page.img.src);
     setPages((prev) => prev.filter((p) => p.id !== id));
     setActiveId((prev) => (prev === id ? null : prev));
   };
 
   const clearAll = () => {
+    pages.forEach((p) => URL.revokeObjectURL(p.img.src));
     setPages([]);
     setActiveId(null);
+    setResultUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
   };
 
   const process = useCallback(async () => {
@@ -176,14 +304,20 @@ export default function DocScannerPage() {
     setProcessing(true);
     setProgress(2);
 
+    let worker: Awaited<ReturnType<typeof import("tesseract.js").createWorker>> | null = null;
     try {
       const pdf = await PDFDocument.create();
-      let worker: Awaited<ReturnType<typeof import("tesseract.js").createWorker>> | null = null;
       if (outputMode === "ocr") {
         const { createWorker } = await import("tesseract.js");
         worker = await createWorker(ocrLang);
       }
       const font = outputMode === "ocr" ? await pdf.embedFont(StandardFonts.Helvetica) : null;
+      // Helvetica only covers WinAnsi; drop anything else OCR returns so drawText can't throw.
+      const charset = new Set(font?.getCharacterSet() ?? []);
+      const toWinAnsi = (text: string) =>
+        Array.from(text)
+          .filter((ch) => charset.has(ch.codePointAt(0)!))
+          .join("");
 
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i];
@@ -214,7 +348,7 @@ export default function DocScannerPage() {
 
           let pdfPage = pdf.addPage([pw, ph]);
           let y = ph - margin;
-          const words = (data.text || "").split(/\s+/).filter(Boolean);
+          const words = (data.text || "").split(/\s+/).map(toWinAnsi).filter(Boolean);
           let line = "";
           const flushLine = () => {
             if (!line) return;
@@ -244,8 +378,6 @@ export default function DocScannerPage() {
         setProgress(5 + Math.round(((i + 1) / pages.length) * 90));
       }
 
-      if (worker) await worker.terminate();
-
       const bytes = await pdf.save();
       const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
@@ -258,6 +390,7 @@ export default function DocScannerPage() {
     } catch {
       toast({ variant: "destructive", title: t("common.error"), description: t("toast.error.generic") });
     } finally {
+      worker?.terminate();
       setTimeout(() => {
         setProcessing(false);
         setProgress(0);
@@ -316,6 +449,7 @@ export default function DocScannerPage() {
                           size="icon"
                           className="h-7 w-7"
                           disabled={index === 0}
+                          aria-label={t("tool.merge-pdf.moveUp")}
                           onClick={(e) => {
                             e.stopPropagation();
                             move(index, -1);
@@ -328,6 +462,7 @@ export default function DocScannerPage() {
                           size="icon"
                           className="h-7 w-7"
                           disabled={index === pages.length - 1}
+                          aria-label={t("tool.merge-pdf.moveDown")}
                           onClick={(e) => {
                             e.stopPropagation();
                             move(index, 1);
@@ -339,6 +474,7 @@ export default function DocScannerPage() {
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 text-destructive hover:text-destructive"
+                          aria-label={t("tool.pdf-editor.remove")}
                           onClick={(e) => {
                             e.stopPropagation();
                             remove(p.id);

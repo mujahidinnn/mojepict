@@ -107,7 +107,7 @@ export default function TextDiffPage() {
                 {t("tool.text-diff.result")}
               </Label>
               <div className="flex items-center gap-2">
-                <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-transparent">
+                <Badge className="bg-success/15 text-success border-transparent">
                   +{added}
                 </Badge>
                 <Badge className="bg-destructive/15 text-destructive border-transparent">
@@ -125,7 +125,7 @@ export default function TextDiffPage() {
                     className={cn(
                       "whitespace-pre-wrap break-words px-4 py-0.5 border-l-2",
                       entry.type === "add" &&
-                        "bg-emerald-500/10 border-l-emerald-500 text-emerald-700 dark:text-emerald-400",
+                        "bg-success/10 border-l-success text-success",
                       entry.type === "remove" &&
                         "bg-destructive/10 border-l-destructive text-destructive",
                       entry.type === "same" && "border-l-transparent text-foreground/80",

@@ -29,9 +29,13 @@ export default function GradientGeneratorPage() {
 
   const fullCss = `background: ${css};`;
 
-  const copy = () => {
-    navigator.clipboard.writeText(fullCss);
-    toast({ description: t("toast.success.copied") });
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(fullCss);
+      toast({ description: t("toast.success.copied") });
+    } catch {
+      toast({ variant: "destructive", description: t("toast.error.generic") });
+    }
   };
 
   const updateColor = (i: number, value: string) => {
@@ -103,6 +107,7 @@ export default function GradientGeneratorPage() {
                   className="h-6 w-6"
                   onClick={addColor}
                   disabled={colors.length >= 5}
+                  aria-label={t("media.gradient.addColor")}
                 >
                   <Plus className="h-3.5 w-3.5" />
                 </Button>
@@ -114,6 +119,7 @@ export default function GradientGeneratorPage() {
                       type="color"
                       value={c}
                       onChange={(e) => updateColor(i, e.target.value)}
+                      aria-label={`${t("tool.gradient-generator.colors")} ${i + 1}`}
                       className="h-9 w-9 shrink-0 cursor-pointer rounded-md border bg-transparent p-0.5"
                     />
                     <span className="flex-1 font-mono text-sm uppercase text-muted-foreground">
@@ -126,6 +132,7 @@ export default function GradientGeneratorPage() {
                       className="h-7 w-7 shrink-0"
                       onClick={() => removeColor(i)}
                       disabled={colors.length <= 2}
+                      aria-label={`${t("media.gradient.removeColor")} ${i + 1}`}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>

@@ -10,11 +10,19 @@ import { useI18n } from "@/lib/i18n/context";
 import { Braces, Code2, Copy, Minimize2, Trash2 } from "lucide-react";
 import { useState } from "react";
 
+/** True if the JSON text has an integer literal JSON.parse can't represent exactly. */
+function hasUnsafeInteger(json: string): boolean {
+  const withoutStrings = json.replace(/"(?:[^"\\]|\\.)*"/g, '""');
+  const ints = withoutStrings.match(/(?<![\d.eE+-])-?\d+(?![\d.eE])/g) ?? [];
+  return ints.some((n) => BigInt(n.replace("-", "")) > BigInt(Number.MAX_SAFE_INTEGER));
+}
+
 export default function JsonFormatterPage() {
   const { t } = useI18n();
   const { toast } = useToast();
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
+  const [precisionLoss, setPrecisionLoss] = useState(false);
 
   const handleAction = (action: "beautify" | "minify") => {
     try {
@@ -26,11 +34,14 @@ export default function JsonFormatterPage() {
           : JSON.stringify(parsed);
 
       setOutput(result);
+      setPrecisionLoss(hasUnsafeInteger(input));
       toast({
         title: t("common.success"),
         description: t("toast.success.processed"),
       });
     } catch (err: any) {
+      setOutput("");
+      setPrecisionLoss(false);
       toast({
         variant: "destructive",
         title: t("common.error"),
@@ -39,10 +50,13 @@ export default function JsonFormatterPage() {
     }
   };
 
-  const copyToClipboard = () => {
-    if (output) {
-      navigator.clipboard.writeText(output);
+  const copyToClipboard = async () => {
+    if (!output) return;
+    try {
+      await navigator.clipboard.writeText(output);
       toast({ description: t("toast.success.copied") });
+    } catch {
+      toast({ title: t("common.error"), variant: "destructive" });
     }
   };
 
@@ -111,6 +125,9 @@ export default function JsonFormatterPage() {
               <Copy className="h-4 w-4 mr-2" /> {t("action.copy")}
             </Button>
           </div>
+          {precisionLoss && (
+            <p className="text-xs text-warning">{t("tool.json-formatter.precisionLoss")}</p>
+          )}
           <Card className="min-h-[500px] bg-muted/10 border-2 overflow-hidden relative">
             <Textarea
               readOnly

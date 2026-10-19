@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { differenceInCalendarDays, format, intervalToDuration } from "date-fns";
 import { useI18n } from "@/lib/i18n/context";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolEmptyState } from "@/components/tools/ToolEmptyState";
@@ -9,33 +10,18 @@ import { FormGroup } from "@/components/tools/ToolTemplates";
 import { Cake, PartyPopper } from "lucide-react";
 
 function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  return format(new Date(), "yyyy-MM-dd");
 }
 
 function calculateAge(birth: Date, asOf: Date) {
-  let years = asOf.getFullYear() - birth.getFullYear();
-  let months = asOf.getMonth() - birth.getMonth();
-  let days = asOf.getDate() - birth.getDate();
-
-  if (days < 0) {
-    months -= 1;
-    const daysInPrevMonth = new Date(asOf.getFullYear(), asOf.getMonth(), 0).getDate();
-    days += daysInPrevMonth;
-  }
-  if (months < 0) {
-    years -= 1;
-    months += 12;
-  }
-
-  const totalDays = Math.floor((asOf.getTime() - birth.getTime()) / 86_400_000);
+  const { years = 0, months = 0, days = 0 } = intervalToDuration({ start: birth, end: asOf });
+  const totalDays = differenceInCalendarDays(asOf, birth);
 
   let nextBirthday = new Date(asOf.getFullYear(), birth.getMonth(), birth.getDate());
-  if (nextBirthday.getTime() < asOf.getTime()) {
+  if (nextBirthday < asOf) {
     nextBirthday = new Date(asOf.getFullYear() + 1, birth.getMonth(), birth.getDate());
   }
-  const daysToNextBirthday = Math.ceil(
-    (nextBirthday.getTime() - asOf.getTime()) / 86_400_000,
-  );
+  const daysToNextBirthday = differenceInCalendarDays(nextBirthday, asOf);
 
   return { years, months, days, totalDays, daysToNextBirthday };
 }
@@ -45,6 +31,7 @@ export default function AgeCalculatorPage() {
   const [birthDate, setBirthDate] = useState("");
   const [asOfDate, setAsOfDate] = useState(todayISO());
 
+  const asOfBeforeBirth = !!birthDate && !!asOfDate && asOfDate < birthDate;
   const age = useMemo(() => {
     if (!birthDate || !asOfDate) return null;
     const birth = new Date(birthDate + "T00:00:00");
@@ -120,7 +107,7 @@ export default function AgeCalculatorPage() {
           <div className="flex min-h-[200px] items-center justify-center rounded-xl border bg-muted/10">
             <ToolEmptyState
               icon={<Cake className="h-6 w-6" />}
-              title={t("tool.age-calculator.placeholder")}
+              title={t(asOfBeforeBirth ? "tool.age-calculator.asOfBeforeBirth" : "tool.age-calculator.placeholder")}
             />
           </div>
         )}

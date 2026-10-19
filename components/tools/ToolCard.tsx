@@ -21,7 +21,7 @@ export function ToolCard({ tool, featured }: ToolCardProps) {
   const badge = getToolBadge(tool);
 
   return (
-    <Link
+    <Link prefetch={false}
       href={`/${tool.slug}`}
       className={cn(
         "group relative flex flex-col gap-3 rounded-xl border border-t-2 bg-card p-5",

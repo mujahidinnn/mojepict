@@ -25,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -353,6 +354,9 @@ export default function BroadcastMakerPage() {
   const templates = TEMPLATES[categoryId] ?? [];
   const detectedVariables = useMemo(() => extractVariables(sourceText), [sourceText]);
   const renderedText = useMemo(() => renderTemplate(sourceText, variables), [sourceText, variables]);
+  // What leaves the app (copy/share/.txt) carries the sender line, same as the preview.
+  const outputText = senderName.trim() ? `${renderedText}\n\n${senderName.trim()}` : renderedText;
+  const isEmpty = renderedText.trim() === "";
 
   function handleSelectCategory(id: string) {
     setCategoryId(id);
@@ -379,12 +383,12 @@ export default function BroadcastMakerPage() {
 
   async function handleCopyText() {
     try {
-      await navigator.clipboard.writeText(renderedText);
-      toast({ title: t("common.success") || "Success", description: t("toast.success.copied") || "Copied!" });
+      await navigator.clipboard.writeText(outputText);
+      toast({ title: t("common.success"), description: t("toast.success.copied") });
     } catch {
       toast({
-        title: "Failed",
-        description: "Could not copy text to clipboard.",
+        title: t("common.error"),
+        description: t("media.broadcast.copyFailed"),
         variant: "destructive",
       });
     }
@@ -393,21 +397,21 @@ export default function BroadcastMakerPage() {
   async function handleShare() {
     if (typeof navigator.share === "function") {
       try {
-        await navigator.share({ text: renderedText });
+        await navigator.share({ text: outputText });
       } catch (err) {
         // AbortError fires when the user cancels the native share sheet - not a real failure.
         if (err instanceof Error && err.name === "AbortError") return;
         toast({
-          title: "Failed",
-          description: "Could not share this message.",
+          title: t("common.error"),
+          description: t("media.broadcast.shareFailed"),
           variant: "destructive",
         });
       }
       return;
     }
     toast({
-      title: "Not supported",
-      description: "Web Share isn't supported in this browser. Use Copy instead.",
+      title: t("media.broadcast.shareUnsupported"),
+      description: t("media.broadcast.shareUnsupportedHint"),
     });
   }
 
@@ -419,13 +423,13 @@ export default function BroadcastMakerPage() {
       } else if (format === "pdf") {
         await downloadNodeAsPdf(previewRef.current!, "broadcast.pdf");
       } else {
-        downloadTextFile(renderedText, "broadcast.txt");
+        downloadTextFile(outputText, "broadcast.txt");
       }
-      toast({ title: t("common.success") || "Success", description: t("toast.success.downloaded") || "Downloaded!" });
+      toast({ title: t("common.success"), description: t("toast.success.downloaded") });
     } catch {
       toast({
-        title: "Failed",
-        description: "Could not export the broadcast message.",
+        title: t("common.error"),
+        description: t("media.broadcast.exportFailed"),
         variant: "destructive",
       });
     }
@@ -445,27 +449,25 @@ export default function BroadcastMakerPage() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Category
+                  {t("common.category")}
                 </Label>
                 <div className="flex flex-wrap gap-1.5">
                   {CATEGORIES.map((c) => {
                     const Icon = c.icon;
                     const active = c.id === categoryId;
                     return (
-                      <button
+                      <Button
                         key={c.id}
                         type="button"
+                        size="sm"
+                        variant={active ? "default" : "outline"}
+                        aria-pressed={active}
                         onClick={() => handleSelectCategory(c.id)}
-                        className={cn(
-                          "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors",
-                          active
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-input bg-background text-muted-foreground hover:text-foreground",
-                        )}
+                        className={cn("gap-2 text-xs", !active && "text-muted-foreground")}
                       >
                         <Icon className="h-3.5 w-3.5" />
                         {c.label}
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>
@@ -474,41 +476,40 @@ export default function BroadcastMakerPage() {
               {templates.length > 0 && templates[0].text !== "" && (
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Templates
+                    {t("media.broadcast.templates")}
                   </Label>
                   <div className="flex flex-col gap-1.5">
                     {templates.map((tmpl) => (
-                      <button
+                      <Button
                         key={tmpl.id}
                         type="button"
+                        variant="outline"
                         onClick={() => handleSelectTemplate(tmpl)}
                         className={cn(
-                          "rounded-md border px-3 py-2 text-left text-xs transition-colors",
-                          sourceText === tmpl.text
-                            ? "border-primary bg-primary/5"
-                            : "border-input bg-background hover:bg-muted",
+                          "h-auto w-full flex-col items-start gap-0 whitespace-normal px-3 py-2 text-left text-xs font-normal",
+                          sourceText === tmpl.text && "border-primary bg-primary/5",
                         )}
                       >
                         <div className="font-medium">{tmpl.label}</div>
-                        <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                          {tmpl.text.replace(/\n/g, " ").slice(0, 60) || "Empty template"}
+                        <div className="mt-0.5 w-full truncate text-[11px] text-muted-foreground">
+                          {tmpl.text.replace(/\n/g, " ").slice(0, 60) || t("media.broadcast.emptyTemplate")}
                         </div>
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
               )}
 
               <div className="space-y-2">
-                <Label className="text-xs font-medium">Message</Label>
+                <Label className="text-xs font-medium">{t("media.broadcast.message")}</Label>
                 <p className="text-[11px] text-muted-foreground">
-                  Edit freely. Wrap words in curly braces like {"{name}"} to turn them into fill-in fields below.
+                  {t("media.broadcast.messageHint")}
                 </p>
                 <Textarea
                   value={sourceText}
                   onChange={(e) => setSourceText(e.target.value)}
                   rows={10}
-                  placeholder="Write your broadcast message..."
+                  placeholder={t("media.broadcast.messagePlaceholder")}
                   className="text-sm"
                 />
               </div>
@@ -516,7 +517,7 @@ export default function BroadcastMakerPage() {
               {detectedVariables.length > 0 && (
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Fill in variables
+                    {t("media.broadcast.variables")}
                   </Label>
                   <div className="space-y-2">
                     {detectedVariables.map((tag) => (
@@ -525,7 +526,7 @@ export default function BroadcastMakerPage() {
                         <Input
                           value={variables[tag] ?? ""}
                           onChange={(e) => handleVariableChange(tag, e.target.value)}
-                          placeholder={`Value for {${tag}}`}
+                          placeholder={`${t("media.broadcast.valueFor")} {${tag}}`}
                           className="h-9 text-xs"
                         />
                       </div>
@@ -535,60 +536,52 @@ export default function BroadcastMakerPage() {
               )}
 
               <div className="space-y-2">
-                <Label className="text-xs font-medium">Sender name (optional)</Label>
+                <Label className="text-xs font-medium">{t("media.broadcast.sender")}</Label>
                 <Input
                   value={senderName}
                   onChange={(e) => setSenderName(e.target.value)}
-                  placeholder="e.g. Toko Berkah"
+                  placeholder={t("media.broadcast.senderPlaceholder")}
                   className="h-9 text-xs"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Export format
+                  {t("media.broadcast.exportFormat")}
                 </Label>
                 <Select value={format} onValueChange={(v) => setFormat(v as ExportFormat)}>
                   <SelectTrigger className="h-10">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="png">PNG Image</SelectItem>
+                    <SelectItem value="png">{t("media.broadcast.png")}</SelectItem>
                     <SelectItem value="pdf">PDF</SelectItem>
-                    <SelectItem value="txt">Text File</SelectItem>
+                    <SelectItem value="txt">{t("media.broadcast.txt")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             <ToolActionBar
-              primaryLabel="Copy Text"
+              primaryLabel={t("media.copyText")}
               primaryIcon={<Copy className="h-4 w-4" />}
               onPrimary={handleCopyText}
-              primaryDisabled={!renderedText}
+              primaryDisabled={isEmpty}
               onReset={handleReset}
             >
               <CopyImageButton
                 getBlob={() => nodeToPngBlob(previewRef.current!)}
-                disabled={!renderedText}
-                label="Copy as Image"
+                disabled={isEmpty}
+                label={t("media.broadcast.copyImage")}
               />
-              <button
-                type="button"
-                onClick={handleShare}
-                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
-              >
+              <Button type="button" variant="outline" className="w-full gap-2" onClick={handleShare} disabled={isEmpty}>
                 <Share2 className="h-4 w-4" />
-                Share
-              </button>
-              <button
-                type="button"
-                onClick={handleDownload}
-                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
-              >
+                {t("media.broadcast.share")}
+              </Button>
+              <Button type="button" variant="outline" className="w-full gap-2" onClick={handleDownload} disabled={isEmpty}>
                 <Download className="h-4 w-4" />
-                Download
-              </button>
+                {t("action.download")}
+              </Button>
             </ToolActionBar>
           </>
         }
@@ -623,7 +616,7 @@ export default function BroadcastMakerPage() {
                 wordBreak: "break-word",
               }}
             >
-              {renderedText || "Your broadcast message will appear here..."}
+              {renderedText || t("media.broadcast.previewEmpty")}
             </div>
             {senderName && (
               <div style={{ marginTop: 8, textAlign: "right", fontSize: 12, color: "#54656f" }}>

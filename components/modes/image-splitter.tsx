@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Download, Grid3X3, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { createZip } from "@/lib/archive";
 
 export default function ImageSplitterPage() {
   const { t } = useI18n();
@@ -31,30 +32,25 @@ export default function ImageSplitterPage() {
     const img = sourceImageRef.current;
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) return setIsProcessing(false);
 
-    const pieceW = img.naturalWidth / grid.cols;
-    const pieceH = img.naturalHeight / grid.rows;
-
-    canvas.width = pieceW;
-    canvas.height = pieceH;
+    // Integer cut lines; the last row/column absorbs the remainder so no edge pixels are lost.
+    const edge = (i: number, n: number, total: number) =>
+      i >= n ? total : Math.round((i * total) / n);
+    const W = img.naturalWidth;
+    const H = img.naturalHeight;
 
     const newPieces: string[] = [];
 
     for (let r = 0; r < grid.rows; r++) {
       for (let c = 0; c < grid.cols; c++) {
-        ctx.clearRect(0, 0, pieceW, pieceH);
-        ctx.drawImage(
-          img,
-          c * pieceW,
-          r * pieceH,
-          pieceW,
-          pieceH,
-          0,
-          0,
-          pieceW,
-          pieceH,
-        );
+        const x = edge(c, grid.cols, W);
+        const y = edge(r, grid.rows, H);
+        const pw = edge(c + 1, grid.cols, W) - x;
+        const ph = edge(r + 1, grid.rows, H) - y;
+        canvas.width = pw;
+        canvas.height = ph;
+        ctx.drawImage(img, x, y, pw, ph, 0, 0, pw, ph);
         newPieces.push(canvas.toDataURL("image/png"));
       }
     }
@@ -71,29 +67,66 @@ export default function ImageSplitterPage() {
         sourceImageRef.current = img;
         splitImage();
       };
+      img.onerror = () => {
+        toast({
+          variant: "destructive",
+          title: t("common.error"),
+          description: t("toast.error.unsupported"),
+        });
+        clearAll();
+      };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [image, splitImage]);
 
+  const imageRef = useRef<string | null>(null);
+  useEffect(() => () => {
+    if (imageRef.current) URL.revokeObjectURL(imageRef.current);
+  }, []);
+
   const handleUpload = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast({
+        variant: "destructive",
+        title: t("common.error"),
+        description: t("toast.error.unsupported"),
+      });
+      return;
+    }
+    if (imageRef.current) URL.revokeObjectURL(imageRef.current);
     const url = URL.createObjectURL(file);
+    imageRef.current = url;
     setImage(url);
     setPieces([]);
   };
 
-  const downloadAll = () => {
-    pieces.forEach((src, i) => {
+  const downloadAll = async () => {
+    try {
+      const entries = await Promise.all(
+        pieces.map(async (src, i) => ({
+          path: `mojepict-grid-${i + 1}.png`,
+          data: new Uint8Array(await (await fetch(src)).arrayBuffer()),
+        })),
+      );
+      const zip = createZip(entries);
+      const url = URL.createObjectURL(new Blob([zip as BlobPart], { type: "application/zip" }));
       const link = document.createElement("a");
-      link.href = src;
-      link.download = `mojepict-grid-${i + 1}.png`;
+      link.href = url;
+      link.download = "mojepict-grid.zip";
       link.click();
-    });
-    toast({
-      title: t("common.success"),
-      description: t("toast.success.downloaded"),
-    });
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      toast({
+        title: t("common.success"),
+        description: t("toast.success.downloaded"),
+      });
+    } catch {
+      toast({ variant: "destructive", title: t("common.error"), description: t("toast.error.failed") });
+    }
   };
 
   const clearAll = () => {
+    if (imageRef.current) URL.revokeObjectURL(imageRef.current);
+    imageRef.current = null;
     setImage(null);
     setPieces([]);
     sourceImageRef.current = null;
@@ -138,7 +171,7 @@ export default function ImageSplitterPage() {
               <div className="flex items-center gap-2">
                 <Grid3X3 className="h-4 w-4 text-primary" />
                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Grid Configuration
+                  {t("media.splitter.grid")}
                 </Label>
               </div>
 
@@ -232,7 +265,7 @@ export default function ImageSplitterPage() {
           <Dropzone
             onFile={handleUpload}
             title={t("common.upload-click")}
-            subtitle="Supports JPG, PNG, WEBP"
+            subtitle={t("media.splitter.subtitle")}
           />
         )}
       </ToolWorkspace>

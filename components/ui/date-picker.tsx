@@ -79,6 +79,9 @@ export function DatePicker({
           }}
           disabled={disabledMatchers.length ? disabledMatchers : undefined}
           defaultMonth={selected ?? maxDate}
+          captionLayout="dropdown"
+          startMonth={minDate ?? new Date(1900, 0)}
+          endMonth={maxDate ?? new Date(new Date().getFullYear() + 50, 11)}
           locale={dateLocale}
           autoFocus
         />

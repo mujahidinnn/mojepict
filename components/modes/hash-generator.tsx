@@ -29,26 +29,31 @@ export default function HashGeneratorPage() {
   const { toast } = useToast();
   const [text, setText] = useState("");
   const [hashes, setHashes] = useState<Record<string, string>>({});
+  const shown = text ? hashes : {};
 
   useEffect(() => {
-    if (!text) {
-      setHashes({});
-      return;
-    }
+    if (!text) return;
     let cancelled = false;
-    Promise.all(ALGORITHMS.map((algo) => hash(algo, text))).then((results) => {
-      if (cancelled) return;
-      setHashes(Object.fromEntries(ALGORITHMS.map((algo, i) => [algo, results[i]])));
-    });
+    Promise.all(ALGORITHMS.map((algo) => hash(algo, text)))
+      .then((results) => {
+        if (cancelled) return;
+        setHashes(Object.fromEntries(ALGORITHMS.map((algo, i) => [algo, results[i]])));
+      })
+      .catch(() => {
+        if (!cancelled) toast({ variant: "destructive", description: t("tool.hash-generator.unsupported") });
+      });
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text]);
 
   const copyHash = (value: string) => {
     if (!value) return;
-    navigator.clipboard.writeText(value);
-    toast({ description: t("toast.success.copied") });
+    navigator.clipboard
+      .writeText(value)
+      .then(() => toast({ description: t("toast.success.copied") }))
+      .catch(() => toast({ variant: "destructive", description: t("toast.error.generic") }));
   };
 
   return (
@@ -85,9 +90,9 @@ export default function HashGeneratorPage() {
             <ResultCard
               key={algo}
               label={algo}
-              content={hashes[algo] ?? "..."}
+              content={shown[algo] ?? "..."}
               onCopy={copyHash}
-              disabled={!hashes[algo]}
+              disabled={!shown[algo]}
             />
           ))}
         </OutputSection>

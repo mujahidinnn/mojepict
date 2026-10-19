@@ -30,18 +30,28 @@ export default function PdfToWordPage({ initialFile }: { initialFile?: File } = 
   const load = async (f: File) => {
     if (f.type !== "application/pdf") return fail();
     setLoading(true);
+    let doc: PDFDocumentProxy | null = null;
     try {
       const pdfjsLib = await import("pdfjs-dist");
       pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.mjs";
       const bytes = await f.arrayBuffer();
-      const doc: PDFDocumentProxy = await pdfjsLib.getDocument({ data: bytes }).promise;
+      doc = await pdfjsLib.getDocument({ data: bytes }).promise;
       const pages = Array.from({ length: doc.numPages }, (_, i) => i + 1);
       const md = await convertPagesToMarkdown(doc, pages);
+      if (!md.trim()) {
+        setFile(null);
+        setMarkdown("");
+        toast({ variant: "destructive", title: t("common.error"), description: t("tool.pdf-to-word.noText") });
+        return;
+      }
       setFile(f);
       setMarkdown(md);
     } catch {
+      setFile(null);
+      setMarkdown("");
       fail();
     } finally {
+      doc?.destroy();
       setLoading(false);
     }
   };
@@ -59,7 +69,7 @@ export default function PdfToWordPage({ initialFile }: { initialFile?: File } = 
     a.href = url;
     a.download = `${baseName(file.name)}.docx`;
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   return (

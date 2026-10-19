@@ -45,8 +45,10 @@ export default function Base64EncoderPage() {
 
   const copyResult = (content: string) => {
     if (!content) return;
-    navigator.clipboard.writeText(content);
-    toast({ description: t("toast.success.copied") });
+    navigator.clipboard
+      .writeText(content)
+      .then(() => toast({ description: t("toast.success.copied") }))
+      .catch(() => toast({ variant: "destructive", description: t("toast.error.generic") }));
   };
 
   return (
@@ -56,7 +58,7 @@ export default function Base64EncoderPage() {
     >
       <TwoColumnLayout>
         <InputSection
-          label={t("tool.base64-encoder.input-label")}
+          label={t(mode === "encode" ? "tool.base64-encoder.input-label" : "tool.base64-encoder.output-label")}
           action={
             <div className="flex items-center gap-2">
               <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)}>
@@ -92,7 +94,7 @@ export default function Base64EncoderPage() {
           />
         </InputSection>
 
-        <OutputSection label={t("tool.base64-encoder.output-label")}>
+        <OutputSection label={t(mode === "encode" ? "tool.base64-encoder.output-label" : "tool.base64-encoder.input-label")}>
           <ResultCard
             content={isInvalid ? t("tool.base64-encoder.invalid") : output || "..."}
             onCopy={copyResult}

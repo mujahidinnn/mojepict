@@ -152,6 +152,9 @@ export default function PdfEditorPage() {
     [t, toast],
   );
 
+  // Free the pdf.js worker-side document whenever it's replaced, reset, or the tool unmounts.
+  useEffect(() => () => void pdfDoc?.destroy(), [pdfDoc]);
+
   useEffect(() => {
     if (!pdfDoc) return;
     let cancelled = false;
@@ -345,6 +348,10 @@ export default function PdfEditorPage() {
       }
     }
     if (activeTool === "text") {
+      // Clicking an existing box edits it; only empty page space creates a new one.
+      if (e.target !== overlayRef.current) return;
+      // Keep the mousedown default (blur to <body>) from stealing focus from the new box.
+      e.preventDefault();
       const { x, y } = getRelPos(e);
       const id = uid();
       addAnnotation({ id, type: "text", x, y, text: "", fontSize: textSize, color: textColor });
@@ -443,6 +450,18 @@ export default function PdfEditorPage() {
       const bytes = await file.arrayBuffer();
       const doc = await PDFDocument.load(bytes);
       const font = await doc.embedFont(StandardFonts.Helvetica);
+      // Helvetica only covers WinAnsi; no Unicode font (fontkit) is bundled, so
+      // unsupported characters are replaced with "?" instead of failing the export.
+      const charset = new Set(font.getCharacterSet());
+      let replacedChars = false;
+      const toWinAnsi = (text: string) =>
+        Array.from(text.replace(/\t/g, " "))
+          .map((ch) => {
+            if (ch === "\n" || charset.has(ch.codePointAt(0)!)) return ch;
+            replacedChars = true;
+            return "?";
+          })
+          .join("");
 
       for (const [pageNumStr, list] of Object.entries(annotations)) {
         if (!list.length) continue;
@@ -454,7 +473,7 @@ export default function PdfEditorPage() {
         for (const a of list) {
           if (a.type === "text") {
             if (!a.text.trim()) continue;
-            page.drawText(a.text, {
+            page.drawText(toWinAnsi(a.text), {
               x: a.x / scale,
               y: pageH - (a.y + a.fontSize * 0.8) / scale,
               size: a.fontSize / scale,
@@ -491,8 +510,11 @@ export default function PdfEditorPage() {
       a.href = url;
       a.download = `${file.name.replace(/\.pdf$/i, "")}-edited.pdf`;
       a.click();
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
       toast({ title: t("common.success"), description: t("toast.success.downloaded") });
+      if (replacedChars) {
+        toast({ title: t("tool.pdf-editor.unsupportedCharsTitle"), description: t("tool.pdf-editor.unsupportedChars") });
+      }
     } catch {
       toast({
         variant: "destructive",
@@ -536,6 +558,7 @@ export default function PdfEditorPage() {
                   size="sm"
                   variant={activeTool === id ? "default" : "outline"}
                   className="gap-2"
+                  aria-label={label}
                   onClick={() => setActiveTool(id)}
                 >
                   <Icon className="h-4 w-4" />
@@ -567,8 +590,9 @@ export default function PdfEditorPage() {
                     key={c}
                     type="button"
                     onClick={() => setTextColor(c)}
+                    aria-label={c}
                     className={cn(
-                      "h-6 w-6 rounded-full ring-1 ring-inset ring-black/10",
+                      "h-6 w-6 rounded-full ring-1 ring-inset ring-foreground/10",
                       textColor === c && "ring-2 ring-primary ring-offset-2 ring-offset-background",
                     )}
                     style={{ background: c }}
@@ -599,8 +623,9 @@ export default function PdfEditorPage() {
                     key={c}
                     type="button"
                     onClick={() => setHighlightColor(c)}
+                    aria-label={c}
                     className={cn(
-                      "h-6 w-6 rounded-full ring-1 ring-inset ring-black/10",
+                      "h-6 w-6 rounded-full ring-1 ring-inset ring-foreground/10",
                       highlightColor === c &&
                         "ring-2 ring-primary ring-offset-2 ring-offset-background",
                     )}
@@ -608,6 +633,12 @@ export default function PdfEditorPage() {
                   />
                 ))}
               </div>
+            )}
+
+            {activeTool === "whiteout" && (
+              <p className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-xs text-warning">
+                {t("tool.pdf-editor.whiteoutNote")}
+              </p>
             )}
 
             {activeTool === "pen" && (
@@ -636,9 +667,10 @@ export default function PdfEditorPage() {
               </div>
             )}
 
-            <div className="flex justify-center overflow-auto rounded-xl border bg-muted/20 p-4">
+            {/* mx-auto (not justify-center) so a page wider than the pane overflows only to the right and stays fully scrollable. */}
+            <div className="flex overflow-auto rounded-xl border bg-muted/20 p-4">
               <div
-                className="relative select-none shadow-lg"
+                className="relative mx-auto shrink-0 select-none shadow-lg"
                 style={{ width: pageSize.width || undefined, height: pageSize.height || undefined }}
               >
                 <canvas ref={canvasRef} className="block" />
@@ -690,7 +722,7 @@ export default function PdfEditorPage() {
                             </span>
                           )}
                           <div
-                            contentEditable={activeTool === "select"}
+                            contentEditable={activeTool === "select" || activeTool === "text"}
                             suppressContentEditableWarning
                             onBlur={(e) => {
                               updateAnnotation(a.id, { text: e.currentTarget.textContent ?? "" });
@@ -713,6 +745,7 @@ export default function PdfEditorPage() {
                               type="button"
                               onMouseDown={(e) => e.stopPropagation()}
                               onClick={() => removeAnnotation(a.id)}
+                              aria-label={t("tool.pdf-editor.remove")}
                               className="mt-1 rounded bg-background/80 p-0.5 opacity-0 ring-1 ring-border group-hover:opacity-100"
                             >
                               <X className="h-3 w-3" />
@@ -739,6 +772,7 @@ export default function PdfEditorPage() {
                             <button
                               type="button"
                               onClick={() => removeAnnotation(a.id)}
+                              aria-label={t("tool.pdf-editor.remove")}
                               className="absolute -right-2 -top-2 rounded-full bg-background p-0.5 opacity-0 ring-1 ring-border group-hover:opacity-100"
                             >
                               <X className="h-3 w-3" />
@@ -803,6 +837,7 @@ export default function PdfEditorPage() {
                   size="icon"
                   className="h-9 w-9"
                   disabled={currentPage <= 1 || rendering}
+                  aria-label={t("tool.pdf-editor.prevPage")}
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -815,6 +850,7 @@ export default function PdfEditorPage() {
                   size="icon"
                   className="h-9 w-9"
                   disabled={currentPage >= numPages || rendering}
+                  aria-label={t("tool.pdf-editor.nextPage")}
                   onClick={() => setCurrentPage((p) => Math.min(numPages, p + 1))}
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -825,7 +861,7 @@ export default function PdfEditorPage() {
 
           <div className="flex flex-col gap-4 lg:sticky lg:top-6">
             <div className="flex items-center gap-3 rounded-lg border bg-muted/10 p-4">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-red-500 to-rose-600 text-white">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-destructive/10 text-destructive">
                 <FileText className="h-4 w-4" />
               </div>
               <div className="flex min-w-0 flex-1 flex-col">
@@ -858,7 +894,7 @@ export default function PdfEditorPage() {
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={thumbnails[pageNum - 1]}
-                            alt={`Page ${pageNum}`}
+                            alt={`${t("tool.pdf-editor.pagesLabel")} ${pageNum}`}
                             className="h-full w-full object-contain"
                           />
                         ) : (

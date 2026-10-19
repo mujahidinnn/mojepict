@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n/context";
 import { useToast } from "@/hooks/use-toast";
 import { ToolShell } from "@/components/tools/ToolShell";
@@ -130,6 +130,7 @@ export default function ColorPalettePage() {
 
   // Recompute whenever the generation inputs change, keeping locked slots fixed.
   useEffect(() => {
+    if (source === "color" && !isValidHex(baseColor)) return; // keep last palette; the input shows an error
     const fresh =
       source === "image"
         ? (imageColors ?? [])
@@ -145,20 +146,30 @@ export default function ColorPalettePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [source, baseColor, mode, imageColors]);
 
+  const previewRef = useRef<string | null>(null);
+  useEffect(() => () => {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+  }, []);
+
   const handleImage = async (file: File) => {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    const url = URL.createObjectURL(file);
+    previewRef.current = url;
     setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    setImagePreview(url);
     try {
       const colors = await extractPaletteFromImage(file, 6);
       setImageColors(colors);
     } catch (error) {
       console.error("Palette extraction error:", error);
-      toast({ variant: "destructive", description: t("toast.error.generic") });
+      clearImage();
+      toast({ variant: "destructive", description: t("toast.error.unsupported") });
     }
   };
 
   const clearImage = () => {
-    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    previewRef.current = null;
     setImageFile(null);
     setImagePreview(null);
     setImageColors(null);
@@ -168,15 +179,20 @@ export default function ColorPalettePage() {
     setLocks((prev) => prev.map((locked, idx) => (idx === i ? !locked : locked)));
   };
 
-  const copyColor = (hex: string) => {
-    navigator.clipboard.writeText(hex.toUpperCase());
-    toast({ description: `${hex.toUpperCase()} ${t("action.copied")}` });
+  const copyText = async (text: string, description: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({ description });
+    } catch {
+      toast({ variant: "destructive", description: t("toast.error.generic") });
+    }
   };
 
-  const copyAll = () => {
-    navigator.clipboard.writeText(formatPalette(palette, exportFormat));
-    toast({ description: t("tool.color-palette.copied-all") });
-  };
+  const copyColor = (hex: string) =>
+    copyText(hex.toUpperCase(), `${hex.toUpperCase()} ${t("action.copied")}`);
+
+  const copyAll = () =>
+    copyText(formatPalette(palette, exportFormat), t("tool.color-palette.copied-all"));
 
   const randomize = () => {
     const hue = Math.floor(Math.random() * 360);
@@ -246,8 +262,13 @@ export default function ColorPalettePage() {
                       onChange={(e) => setBaseColor(e.target.value)}
                       className="font-mono"
                       maxLength={7}
+                      aria-invalid={!isValidHex(baseColor)}
+                      aria-label={t("tool.color-palette.base-color")}
                     />
                   </div>
+                  {!isValidHex(baseColor) && (
+                    <p className="text-xs text-destructive">{t("media.palette.invalidHex")}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">

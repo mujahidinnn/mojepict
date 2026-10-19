@@ -10,7 +10,7 @@ import { ToolEmptyState } from "@/components/tools/ToolEmptyState";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
-import { rasterizeToPngBlob } from "@/lib/copy-image";
+import { rasterizeToPngBlob, svgSize } from "@/lib/copy-image";
 import { Download, Loader2, PenTool } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -23,6 +23,10 @@ export default function SvgTracerPage({ initialFile }: { initialFile?: File } = 
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleFile = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast({ variant: "destructive", title: t("common.error"), description: t("toast.error.unsupported") });
+      return;
+    }
     setIsProcessing(true);
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -59,14 +63,14 @@ export default function SvgTracerPage({ initialFile }: { initialFile?: File } = 
     link.href = url;
     link.download = "mojepict-vector.svg";
     link.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
     toast({ description: t("toast.success.downloaded") });
   };
 
   const getSvgPngBlob = (): Promise<Blob | null> => {
     if (!svgOutput) return Promise.resolve(null);
     const url = URL.createObjectURL(new Blob([svgOutput], { type: "image/svg+xml" }));
-    return rasterizeToPngBlob(url).finally(() => URL.revokeObjectURL(url));
+    return rasterizeToPngBlob(url, svgSize(svgOutput)).finally(() => URL.revokeObjectURL(url));
   };
 
   const handleReset = () => {

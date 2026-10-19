@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseKeyPool, withKeyRotation } from "@/lib/api-key-pool";
+import { readImageUpload } from "../guard";
 
 export const runtime = "nodejs";
 
@@ -17,23 +18,16 @@ const ROTATE_ON_STATUS = new Set([402, 403, 429]);
 export async function POST(req: NextRequest) {
   const keys = parseKeyPool(process.env.REMOVE_BG_API_KEY);
   if (keys.length === 0) {
+    console.error("[remove-bg] REMOVE_BG_API_KEY is not set");
     return NextResponse.json(
-      {
-        error: "not_configured",
-        message: "REMOVE_BG_API_KEY is not set on the server.",
-      },
+      { error: "not_configured", message: "This feature is not available right now." },
       { status: 503 },
     );
   }
 
-  const incoming = await req.formData();
-  const file = incoming.get("image");
-  if (!(file instanceof File)) {
-    return NextResponse.json(
-      { error: "bad_request", message: "Missing 'image' file in form data." },
-      { status: 400 },
-    );
-  }
+  const upload = await readImageUpload(req, "remove-bg");
+  if (upload instanceof NextResponse) return upload;
+  const { file } = upload;
 
   let upstreamRes: Response;
   try {
@@ -51,17 +45,18 @@ export async function POST(req: NextRequest) {
       },
       (res) => ROTATE_ON_STATUS.has(res.status),
     );
-  } catch {
+  } catch (err) {
+    console.error("[remove-bg] upstream unreachable", err);
     return NextResponse.json(
-      { error: "upstream_unreachable", message: "Could not reach remove.bg." },
+      { error: "upstream_unreachable", message: "Background removal service is unreachable." },
       { status: 502 },
     );
   }
 
   if (!upstreamRes.ok) {
     const body = await upstreamRes.json().catch(() => null);
-    const message =
-      body?.errors?.[0]?.title ?? "Background removal failed upstream.";
+    console.error("[remove-bg] upstream error", upstreamRes.status, body?.errors?.[0]?.title);
+    const message = "Background removal failed.";
     const status =
       upstreamRes.status === 429
         ? 429

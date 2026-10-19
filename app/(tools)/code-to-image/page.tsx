@@ -117,20 +117,31 @@ export default function CodeToImagePage() {
   const [themeColors, setThemeColors] = useState({ bg: "#1e1e2e", fg: "#f8f8f2" });
 
   const cardRef = useRef<HTMLDivElement>(null);
+  const [shikiFailed, setShikiFailed] = useState(false);
+  const ready = !!highlighter || shikiFailed;
+  const canExport = ready && code.trim() !== "";
 
   useEffect(() => {
     let cancelled = false;
-    import("shiki").then(({ createHighlighter }) =>
-      createHighlighter({
-        langs: [...LANGUAGES],
-        themes: THEMES.map((t) => t.id),
-      }).then((h) => {
+    import("shiki")
+      .then(({ createHighlighter }) =>
+        createHighlighter({
+          langs: [...LANGUAGES],
+          themes: THEMES.map((t) => t.id),
+        }),
+      )
+      .then((h) => {
         if (!cancelled) setHighlighter(h);
-      }),
-    );
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setShikiFailed(true);
+        toast({ variant: "destructive", title: t("common.error"), description: t("media.code.shikiFailed") });
+      });
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -147,10 +158,18 @@ export default function CodeToImagePage() {
 
   const font = FONT_OPTIONS.find((f) => f.id === fontId) ?? FONT_OPTIONS[0];
 
+  // Browsers fail silently on huge canvases; cap at 8000px per side and 40MP.
+  const MAX_SIDE = 8000;
+  const MAX_PIXELS = 40_000_000;
   const getExportBlob = useCallback(async () => {
     if (!cardRef.current) return null;
-    return toBlob(cardRef.current, { pixelRatio: 3, backgroundColor: undefined });
-  }, []);
+    const { offsetWidth: w, offsetHeight: h } = cardRef.current;
+    const pixelRatio = Math.min(3, MAX_SIDE / w, MAX_SIDE / h, Math.sqrt(MAX_PIXELS / (w * h)));
+    if (pixelRatio < 3) {
+      toast({ title: t("media.code.downscaled"), description: t("media.code.downscaledHint") });
+    }
+    return toBlob(cardRef.current, { pixelRatio, backgroundColor: undefined });
+  }, [t, toast]);
 
   const handleDownload = async () => {
     const blob = await getExportBlob();
@@ -160,7 +179,7 @@ export default function CodeToImagePage() {
     a.href = url;
     a.download = `${title.replace(/\.[a-z0-9]+$/i, "") || "code"}-mojepict.png`;
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
     toast({ title: t("common.success"), description: t("toast.success.downloaded") });
   };
 
@@ -206,7 +225,7 @@ export default function CodeToImagePage() {
           <>
             <div className="space-y-2">
               <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Language
+                {t("media.code.language")}
               </Label>
               <Select value={language} onValueChange={(v) => setLanguage(v as typeof language)}>
                 <SelectTrigger className="h-10">
@@ -224,7 +243,7 @@ export default function CodeToImagePage() {
 
             <div className="space-y-2">
               <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Theme
+                {t("media.code.theme")}
               </Label>
               <Select value={themeId} onValueChange={(v) => setThemeId(v as typeof themeId)}>
                 <SelectTrigger className="h-10">
@@ -242,7 +261,7 @@ export default function CodeToImagePage() {
 
             <div className="space-y-2">
               <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Font
+                {t("media.code.font")}
               </Label>
               <Select value={fontId} onValueChange={(v) => setFontId(v as typeof fontId)}>
                 <SelectTrigger className="h-10">
@@ -260,7 +279,7 @@ export default function CodeToImagePage() {
 
             <div className="space-y-2">
               <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Background
+                {t("media.code.background")}
               </Label>
               <div className="flex flex-wrap gap-2">
                 {BACKGROUNDS.map((bg) => (
@@ -268,6 +287,7 @@ export default function CodeToImagePage() {
                     key={bg.id}
                     type="button"
                     title={bg.label}
+                    aria-label={bg.label}
                     onClick={() => setBackground(bg)}
                     className={cn(
                       "h-8 w-8 rounded-full ring-1 ring-inset ring-black/10 dark:ring-white/10",
@@ -286,7 +306,7 @@ export default function CodeToImagePage() {
 
             <div className="space-y-2">
               <div className="flex justify-between">
-                <Label className="text-xs font-medium">Font size</Label>
+                <Label className="text-xs font-medium">{t("media.code.fontSize")}</Label>
                 <span className="text-xs font-mono">{fontSize}px</span>
               </div>
               <Slider
@@ -301,7 +321,7 @@ export default function CodeToImagePage() {
 
             <div className="space-y-2">
               <div className="flex justify-between">
-                <Label className="text-xs font-medium">Padding</Label>
+                <Label className="text-xs font-medium">{t("media.code.padding")}</Label>
                 <span className="text-xs font-mono">{padding}px</span>
               </div>
               <Slider
@@ -321,12 +341,12 @@ export default function CodeToImagePage() {
                 onChange={(e) => setShowWindowControls(e.target.checked)}
                 className="h-4 w-4 rounded border-input accent-primary"
               />
-              Window controls
+              {t("media.code.windowControls")}
             </label>
 
             {showWindowControls && (
               <div className="space-y-2">
-                <Label className="text-xs font-medium">Window title</Label>
+                <Label className="text-xs font-medium">{t("media.code.windowTitle")}</Label>
                 <Input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -343,16 +363,16 @@ export default function CodeToImagePage() {
                 onChange={(e) => setShowLineNumbers(e.target.checked)}
                 className="h-4 w-4 rounded border-input accent-primary"
               />
-              Line numbers
+              {t("media.code.lineNumbers")}
             </label>
 
             <ToolActionBar
               primaryLabel={t("action.download")}
               primaryIcon={<Download className="h-4 w-4" />}
               onPrimary={handleDownload}
-              primaryDisabled={!highlighter}
+              primaryDisabled={!canExport}
             >
-              <CopyImageButton getBlob={getExportBlob} disabled={!highlighter} />
+              <CopyImageButton getBlob={getExportBlob} disabled={!canExport} />
             </ToolActionBar>
           </>
         }
@@ -360,7 +380,7 @@ export default function CodeToImagePage() {
         <div className="flex flex-col gap-4">
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <ImageIcon className="h-3 w-3" /> Code
+              <ImageIcon className="h-3 w-3" /> {t("media.code.code")}
             </Label>
             <Textarea
               value={code}
@@ -371,9 +391,9 @@ export default function CodeToImagePage() {
           </div>
 
           <div className="overflow-x-auto rounded-xl border bg-muted/10 p-6 sm:p-10">
-            {!highlighter ? (
+            {!ready ? (
               <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-                Loading syntax highlighter…
+                {t("media.code.loading")}
               </div>
             ) : (
               <div
@@ -403,15 +423,30 @@ export default function CodeToImagePage() {
                       )}
                     </div>
                   )}
-                  <div
-                    className={cn("cti-code", showLineNumbers && "cti-line-numbers")}
-                    style={{
-                      fontFamily: font.stack,
-                      fontSize,
-                      lineHeight: 1.6,
-                    }}
-                    dangerouslySetInnerHTML={{ __html: html }}
-                  />
+                  {highlighter ? (
+                    <div
+                      className={cn("cti-code", showLineNumbers && "cti-line-numbers")}
+                      style={{
+                        fontFamily: font.stack,
+                        fontSize,
+                        lineHeight: 1.6,
+                      }}
+                      dangerouslySetInnerHTML={{ __html: html }}
+                    />
+                  ) : (
+                    <pre
+                      className="m-0 p-6 whitespace-pre"
+                      style={{
+                        fontFamily: font.stack,
+                        fontSize,
+                        lineHeight: 1.6,
+                        background: themeColors.bg,
+                        color: themeColors.fg,
+                      }}
+                    >
+                      {code}
+                    </pre>
+                  )}
                 </div>
               </div>
             )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { CSSProperties, ReactNode, useCallback, useMemo, useRef, useState } from "react";
+import { CSSProperties, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toBlob } from "html-to-image";
 import { Download, Image as ImageIcon } from "lucide-react";
 import { ToolShell } from "@/components/tools/ToolShell";
@@ -331,7 +331,7 @@ function MonitorDevice({ bezel, screenshotUrl, emptyLabel }: DeviceProps) {
   );
 }
 
-const DEVICE_RENDERERS: Record<DeviceId, (props: DeviceProps) => JSX.Element> = {
+const DEVICE_RENDERERS: Record<DeviceId, (props: DeviceProps) => ReactNode> = {
   iphone: PhoneIOS,
   android: PhoneAndroid,
   tablet: TabletDevice,
@@ -364,11 +364,24 @@ export default function DeviceMockupPage() {
 
   const emptyLabel = t("tool.device-mockup.empty") || "Upload a screenshot to preview";
 
-  const handleUpload = (file: File) => {
+  useEffect(() => () => {
     if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+  }, []);
+
+  const handleUpload = (file: File) => {
     const url = URL.createObjectURL(file);
-    objectUrlRef.current = url;
-    setScreenshotUrl(url);
+    // CSS background-image fails silently, so decode first to catch broken/non-image files.
+    const img = new window.Image();
+    img.onload = () => {
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = url;
+      setScreenshotUrl(url);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      toast({ variant: "destructive", title: t("common.error"), description: t("toast.error.unsupported") });
+    };
+    img.src = url;
   };
 
   const handleReset = () => {
@@ -390,7 +403,7 @@ export default function DeviceMockupPage() {
     a.href = url;
     a.download = `mojepict-${layout === "combo" ? comboId : device}-mockup.png`;
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
     toast({ title: t("common.success"), description: t("toast.success.downloaded") });
   };
 
@@ -579,7 +592,7 @@ export default function DeviceMockupPage() {
                     <input
                       type="color"
                       value={customColor}
-                      aria-label="Custom frame color"
+                      aria-label={t("media.mockup.customColor")}
                       onChange={(e) => {
                         setCustomColor(e.target.value);
                         setFrameColorId("custom");

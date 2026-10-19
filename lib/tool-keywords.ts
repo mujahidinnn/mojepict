@@ -4,7 +4,7 @@
  * as separate lists (not interleaved) so each language reads as its own
  * coherent block when rendered. Keyed by Tool.id (see lib/tools.ts).
  */
-import { CONVERTER_LEGACY } from "@/lib/converter-formats";
+import { CONVERTER_EDGES } from "@/lib/converter-formats";
 import { HUB_MODES } from "@/lib/hubs";
 
 export interface ToolKeywordSet {
@@ -1546,13 +1546,47 @@ export const TOOL_KEYWORDS: Record<string, ToolKeywordSet> = {
       "lighthouse checker online",
     ],
   },
+
+  // --- HUBS (merged with their modes' keywords below) ---
+  "image-toolkit": {
+    en: ["image toolkit", "online image editor", "resize crop compress image", "image tools online"],
+    id: ["alat gambar online", "edit gambar online", "ubah ukuran potong kompres gambar"],
+  },
+  "pdf-toolkit": {
+    en: ["pdf toolkit", "pdf tools online", "merge split edit pdf"],
+    id: ["alat pdf online", "gabung pisah edit pdf"],
+  },
+  "text-tools": {
+    en: ["text tools", "text case converter and slug generator", "online text utilities"],
+    id: ["alat teks online", "ubah huruf teks dan buat slug"],
+  },
+  "finance-calculator": {
+    en: ["finance calculator", "business calculator", "percentage discount tax tip calculator"],
+    id: ["kalkulator keuangan", "kalkulator bisnis", "hitung persen diskon pajak"],
+  },
+  "date-calculator": {
+    en: ["date calculator", "age and date difference calculator"],
+    id: ["kalkulator tanggal", "hitung umur dan selisih tanggal"],
+  },
+  "code-generator": {
+    en: ["qr code and barcode generator", "qr code scanner online", "code generator"],
+    id: ["buat qr code dan barcode", "scan qr code online"],
+  },
+  "random-generator": {
+    en: ["random generator", "password uuid lorem ipsum generator", "random picker"],
+    id: ["generator acak", "buat password uuid lorem ipsum", "pengundi acak"],
+  },
+  "encoder-decoder": {
+    en: ["encoder decoder", "base64 url encode decode", "jwt decoder and hash generator"],
+    id: ["encode decode online", "encode decode base64 url"],
+  },
 };
 
 // Merged hubs inherit every keyword of the legacy tools they replaced, so
 // old search phrases ("csv to json", "hitung diskon") still find the hub.
 const HUB_SOURCES: Record<string, string[]> = {
   ...HUB_MODES,
-  converter: Object.keys(CONVERTER_LEGACY),
+  converter: Array.from(new Set(CONVERTER_EDGES.map((e) => e.module))),
 };
 for (const [hub, ids] of Object.entries(HUB_SOURCES)) {
   const sets = [hub, ...ids].map((id) => TOOL_KEYWORDS[id]).filter(Boolean);

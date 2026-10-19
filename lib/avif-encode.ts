@@ -23,9 +23,9 @@ export async function encodeAvif(
   data: ImageData,
   options: Partial<EncodeOptions> = {},
 ): Promise<ArrayBuffer> {
-  const module = await getModule();
+  const encoder = await getModule();
   const opts = { ...defaultOptions, ...options };
-  const output = module.encode(new Uint8Array(data.data.buffer), data.width, data.height, opts);
+  const output = encoder.encode(new Uint8Array(data.data.buffer), data.width, data.height, opts);
   if (!output) throw new Error("AVIF encoding failed.");
   return output.buffer;
 }

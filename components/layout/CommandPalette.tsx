@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/context";
 import { TOOLS, CATEGORIES, CATEGORY_ORDER, Tool, getPopularTools } from "@/lib/tools";
@@ -85,7 +85,7 @@ const FORMAT_ALIASES: Partial<Record<FormatId, string[]>> = {
 const formatTerms = (id: FormatId) =>
   [FORMATS[id].label, id, ...(FORMAT_ALIASES[id] ?? [])].map(normalize);
 
-const CONVERT_WORDS = ["convert", "converter", "conversion", "konversi", "konverter", "ubah", "ganti", "jadi", "ke", "to", "into", "dari", "from", "2", "->", "→", "as", "ke"];
+const CONVERT_WORDS = ["convert", "converter", "conversion", "konversi", "konverter", "ubah", "ganti", "jadi", "ke", "to", "into", "dari", "from", "2", "->", "→", "as"];
 
 /** Query words that carry no meaning of their own ("png TO jpg", "ubah png ke jpg"). */
 const STOPWORDS = new Set(CONVERT_WORDS);
@@ -261,10 +261,12 @@ function HighlightMatch({ text, query }: { text: string; query: string }) {
   );
 }
 
-export function CommandPalette() {
-  const [open, setOpen] = useState(false);
+export function CommandPalette({ defaultQuery = "" }: { defaultQuery?: string }) {
+  // Mounted lazily by CommandPaletteLoader on the first open request.
+  const [open, setOpen] = useState(true);
   const [search, setSearch] = useState("");
   const [recentSlugs, setRecentSlugs] = useState<string[]>([]);
+  const initialQuery = useRef(defaultQuery);
   const router = useRouter();
   const { t } = useI18n();
 
@@ -288,7 +290,8 @@ export function CommandPalette() {
 
   useEffect(() => {
     if (open) {
-      setSearch("");
+      setSearch(initialQuery.current);
+      initialQuery.current = "";
       setRecentSlugs(getRecentTools());
     }
   }, [open]);
@@ -350,9 +353,9 @@ export function CommandPalette() {
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false}>
-      <DialogTitle className="sr-only">Search Tools</DialogTitle>
+      <DialogTitle className="sr-only">{t("palette.title")}</DialogTitle>
       <DialogDescription className="sr-only">
-        Quickly access any tool
+        {t("palette.description")}
       </DialogDescription>
       <CommandInput
         value={search}
@@ -363,7 +366,7 @@ export function CommandPalette() {
         {trimmedQuery ? (
           results.length > 0 ? (
             <CommandGroup
-              heading={`${results.length} ${t("palette.resultsFor")} "${trimmedQuery}"`}
+              heading={`${results.length} ${t(results.length === 1 ? "palette.resultFor" : "palette.resultsFor")} "${trimmedQuery}"`}
             >
               {results.map((entry) => renderEntry(entry, true))}
             </CommandGroup>

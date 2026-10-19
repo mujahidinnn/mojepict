@@ -56,12 +56,24 @@ export default function WatermarkPage() {
 
   const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
 
+  const loadError = () =>
+    toast({ variant: "destructive", title: t("common.error"), description: t("toast.error.unsupported") });
+
+  // The decoded <img> keeps its pixels after its object URL is revoked, so revoke right after load.
   const handleImageUpload = (file: File) => {
     if (allowedTypes.includes(file.type)) {
       const url = URL.createObjectURL(file);
-      setBgImage(url);
       const img = new Image();
-      img.onload = () => setImageElement(img);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        setBgImage(file.name);
+        setImageElement(img);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        handleReset();
+        loadError();
+      };
       img.src = url;
     } else {
       toast({
@@ -73,11 +85,18 @@ export default function WatermarkPage() {
 
   const handleWatermarkImageUpload = (file: File) => {
     const url = URL.createObjectURL(file);
-    setWatermarkImage(url);
     const img = new Image();
     img.onload = () => {
+      URL.revokeObjectURL(url);
+      setWatermarkImage(file.name);
       setWatermarkImgElement(img);
       setImgSize({ width: img.width * 0.2, height: img.height * 0.2 });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      setWatermarkImage(null);
+      setWatermarkImgElement(null);
+      loadError();
     };
     img.src = url;
   };
@@ -144,7 +163,7 @@ export default function WatermarkPage() {
     redrawCanvas();
   }, [redrawCanvas]);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
     const scaleX = canvasRef.current.width / rect.width;
@@ -159,6 +178,7 @@ export default function WatermarkPage() {
       y >= imgPos.y &&
       y <= imgPos.y + imgSize.height
     ) {
+      e.currentTarget.setPointerCapture(e.pointerId);
       setIsDragging(true);
       dragOffset.current = { x: x - imgPos.x, y: y - imgPos.y };
       return;
@@ -174,13 +194,14 @@ export default function WatermarkPage() {
         y >= textPos.y - fontSize &&
         y <= textPos.y
       ) {
+        e.currentTarget.setPointerCapture(e.pointerId);
         setIsDraggingText(true);
         dragOffset.current = { x: x - textPos.x, y: y - textPos.y };
       }
     }
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
     const scaleX = canvasRef.current.width / rect.width;
@@ -238,18 +259,20 @@ export default function WatermarkPage() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                  <Type className="h-3 w-3" /> Text Watermark
+                  <Type className="h-3 w-3" /> {t("tool.watermark.text-label")}
                 </Label>
                 <div className="flex gap-2">
                   <Input
                     value={watermarkText}
                     onChange={(e) => setWatermarkText(e.target.value)}
-                    placeholder="Enter text..."
+                    placeholder={t("media.watermark.textPlaceholder")}
+                    aria-label={t("tool.watermark.text-label")}
                   />
                   <Input
                     type="color"
                     value={textColor}
                     onChange={(e) => setTextColor(e.target.value)}
+                    aria-label={t("media.watermark.textColor")}
                     className="w-12 p-1 h-10"
                   />
                 </div>
@@ -257,11 +280,12 @@ export default function WatermarkPage() {
 
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                  <ImageIcon className="h-3 w-3" /> Logo Watermark
+                  <ImageIcon className="h-3 w-3" /> {t("tool.watermark.logo-label")}
                 </Label>
                 <Dropzone
                   onFile={handleWatermarkImageUpload}
-                  title={watermarkImage ? "Change Logo" : "Upload Logo"}
+                  accept="image/*"
+                  title={watermarkImage ? t("media.qr.changeLogo") : t("media.qr.uploadLogo")}
                   className="min-h-[100px] p-4"
                 />
               </div>
@@ -271,7 +295,7 @@ export default function WatermarkPage() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <Label className="text-xs font-medium">Font Size</Label>
+                    <Label className="text-xs font-medium">{t("tool.watermark.font-size")}</Label>
                     <span className="text-xs font-mono">{fontSize}px</span>
                   </div>
                   <Slider
@@ -285,7 +309,7 @@ export default function WatermarkPage() {
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <Label className="text-xs font-medium">Opacity</Label>
+                    <Label className="text-xs font-medium">{t("tool.watermark.opacity")}</Label>
                     <span className="text-xs font-mono">
                       {Math.round(opacity * 100)}%
                     </span>
@@ -300,7 +324,7 @@ export default function WatermarkPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-medium">Font Family</Label>
+                  <Label className="text-xs font-medium">{t("media.watermark.fontFamily")}</Label>
                   <Select value={fontFamily} onValueChange={setFontFamily}>
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue />
@@ -340,7 +364,7 @@ export default function WatermarkPage() {
             </ToolActionBar>
 
             <p className="text-[10px] text-muted-foreground text-center bg-muted/50 p-2 rounded border italic">
-              * Tip: Drag text or logo on the canvas to reposition.
+              {t("media.watermark.tip")}
             </p>
           </>
         }
@@ -349,14 +373,14 @@ export default function WatermarkPage() {
           <ImageZoomPreview>
             <canvas
               ref={canvasRef}
-              className="shadow-2xl border bg-white max-w-full h-auto cursor-move"
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={() => {
+              className="shadow-2xl border bg-white max-w-full h-auto cursor-move touch-none"
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={() => {
                 setIsDragging(false);
                 setIsDraggingText(false);
               }}
-              onMouseLeave={() => {
+              onPointerCancel={() => {
                 setIsDragging(false);
                 setIsDraggingText(false);
               }}

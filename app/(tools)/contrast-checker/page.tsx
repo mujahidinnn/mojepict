@@ -33,7 +33,7 @@ function ResultRow({ label, pass }: { label: string; pass: boolean }) {
       <span
         className={cn(
           "flex items-center gap-1.5 text-sm font-semibold",
-          pass ? "text-emerald-500" : "text-destructive",
+          pass ? "text-success" : "text-destructive",
         )}
       >
         {pass ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}

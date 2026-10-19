@@ -9,6 +9,7 @@ import { FormGroup } from "@/components/tools/ToolTemplates";
 import { cn } from "@/lib/utils";
 
 const TIP_PRESETS = [10, 15, 20, 25];
+const MAX_TIP_PERCENT = 100;
 
 function formatMoney(n: number) {
   if (!Number.isFinite(n)) return "0.00";
@@ -22,10 +23,14 @@ export default function TipCalculatorPage() {
   const [customTip, setCustomTip] = useState("");
   const [people, setPeople] = useState(1);
 
-  const effectiveTip = customTip.trim() ? parseFloat(customTip) || 0 : tipPercent;
+  const effectiveTip = Math.min(
+    MAX_TIP_PERCENT,
+    Math.max(0, customTip.trim() ? parseFloat(customTip) || 0 : tipPercent),
+  );
+  const tipTooHigh = (parseFloat(customTip) || 0) > MAX_TIP_PERCENT;
 
   const { tipAmount, total, perPerson } = useMemo(() => {
-    const billValue = parseFloat(bill) || 0;
+    const billValue = Math.max(0, parseFloat(bill) || 0);
     const tipAmt = billValue * (effectiveTip / 100);
     const totalValue = billValue + tipAmt;
     const count = Math.max(1, people);
@@ -38,8 +43,11 @@ export default function TipCalculatorPage() {
         <FormGroup label={t("tool.tip-calculator.bill")}>
           <Input
             type="number"
+            min="0"
             value={bill}
-            onChange={(e) => setBill(e.target.value)}
+            onChange={(e) => {
+              if (!e.target.value.includes("-")) setBill(e.target.value);
+            }}
             className="h-12 text-lg font-semibold"
           />
         </FormGroup>
@@ -63,10 +71,17 @@ export default function TipCalculatorPage() {
             </div>
             <Input
               type="number"
+              min="0"
+              max={MAX_TIP_PERCENT}
               placeholder={t("tool.tip-calculator.customTip")}
               value={customTip}
-              onChange={(e) => setCustomTip(e.target.value)}
+              onChange={(e) => {
+                if (!e.target.value.includes("-")) setCustomTip(e.target.value);
+              }}
             />
+            {tipTooHigh && (
+              <p className="text-xs text-warning">{t("tool.tip-calculator.tipTooHigh")}</p>
+            )}
           </div>
         </FormGroup>
 
@@ -78,6 +93,7 @@ export default function TipCalculatorPage() {
               size="icon"
               className="h-9 w-9"
               onClick={() => setPeople((p) => Math.max(1, p - 1))}
+              aria-label={t("tool.tip-calculator.decreasePeople")}
             >
               -
             </Button>
@@ -88,6 +104,7 @@ export default function TipCalculatorPage() {
               size="icon"
               className="h-9 w-9"
               onClick={() => setPeople((p) => Math.min(50, p + 1))}
+              aria-label={t("tool.tip-calculator.increasePeople")}
             >
               +
             </Button>

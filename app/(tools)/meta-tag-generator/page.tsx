@@ -13,10 +13,13 @@ import { Copy, ImageIcon, Search, Tag } from "lucide-react";
 
 function counterColor(len: number, ideal: number, max: number) {
   if (len === 0) return "text-muted-foreground";
-  if (len <= ideal) return "text-emerald-500";
-  if (len <= max) return "text-amber-500";
+  if (len <= ideal) return "text-success";
+  if (len <= max) return "text-warning";
   return "text-destructive";
 }
+
+const esc = (v: string) =>
+  v.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 export default function MetaTagGeneratorPage() {
   const { t } = useI18n();
@@ -38,30 +41,34 @@ export default function MetaTagGeneratorPage() {
 
   const code = useMemo(() => {
     const lines: string[] = [];
-    if (title) lines.push(`<title>${title}</title>`);
-    if (description) lines.push(`<meta name="description" content="${description}" />`);
-    if (url) lines.push(`<link rel="canonical" href="${url}" />`);
+    if (title) lines.push(`<title>${esc(title)}</title>`);
+    if (description) lines.push(`<meta name="description" content="${esc(description)}" />`);
+    if (url) lines.push(`<link rel="canonical" href="${esc(url)}" />`);
     lines.push("");
     lines.push(`<meta property="og:type" content="website" />`);
-    if (title) lines.push(`<meta property="og:title" content="${title}" />`);
+    if (title) lines.push(`<meta property="og:title" content="${esc(title)}" />`);
     if (description)
-      lines.push(`<meta property="og:description" content="${description}" />`);
-    if (url) lines.push(`<meta property="og:url" content="${url}" />`);
-    if (siteName) lines.push(`<meta property="og:site_name" content="${siteName}" />`);
-    if (image) lines.push(`<meta property="og:image" content="${image}" />`);
+      lines.push(`<meta property="og:description" content="${esc(description)}" />`);
+    if (url) lines.push(`<meta property="og:url" content="${esc(url)}" />`);
+    if (siteName) lines.push(`<meta property="og:site_name" content="${esc(siteName)}" />`);
+    if (image) lines.push(`<meta property="og:image" content="${esc(image)}" />`);
     lines.push("");
     lines.push(`<meta name="twitter:card" content="summary_large_image" />`);
-    if (title) lines.push(`<meta name="twitter:title" content="${title}" />`);
+    if (title) lines.push(`<meta name="twitter:title" content="${esc(title)}" />`);
     if (description)
-      lines.push(`<meta name="twitter:description" content="${description}" />`);
-    if (image) lines.push(`<meta name="twitter:image" content="${image}" />`);
-    if (twitterHandle) lines.push(`<meta name="twitter:site" content="${twitterHandle}" />`);
+      lines.push(`<meta name="twitter:description" content="${esc(description)}" />`);
+    if (image) lines.push(`<meta name="twitter:image" content="${esc(image)}" />`);
+    if (twitterHandle) lines.push(`<meta name="twitter:site" content="${esc(twitterHandle)}" />`);
     return lines.join("\n");
   }, [title, description, url, siteName, image, twitterHandle]);
 
-  const copy = () => {
-    navigator.clipboard.writeText(code);
-    toast({ description: t("toast.success.copied") });
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      toast({ description: t("toast.success.copied") });
+    } catch {
+      toast({ variant: "destructive", description: t("toast.error.generic") });
+    }
   };
 
   return (

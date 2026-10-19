@@ -20,11 +20,26 @@ const CHARSETS = {
 
 type CharsetKey = keyof typeof CHARSETS;
 
-function generatePassword(length: number, charset: string) {
-  if (!charset) return "";
-  const randomValues = new Uint32Array(length);
-  crypto.getRandomValues(randomValues);
-  return Array.from(randomValues, (v) => charset[v % charset.length]).join("");
+/** Uniform crypto random integer in [0, max), rejection sampling avoids modulo bias. */
+function randomInt(max: number) {
+  const limit = Math.floor(2 ** 32 / max) * max;
+  const buf = new Uint32Array(1);
+  do crypto.getRandomValues(buf);
+  while (buf[0] >= limit);
+  return buf[0] % max;
+}
+
+/** One char from every selected set is guaranteed, the rest from the union, then shuffled. */
+function generatePassword(length: number, sets: string[]) {
+  if (!sets.length) return "";
+  const all = sets.join("");
+  const chars = sets.map((set) => set[randomInt(set.length)]);
+  while (chars.length < length) chars.push(all[randomInt(all.length)]);
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = randomInt(i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  return chars.slice(0, length).join("");
 }
 
 export default function PasswordGeneratorPage() {
@@ -40,18 +55,18 @@ export default function PasswordGeneratorPage() {
   });
   const [password, setPassword] = useState("");
 
-  const charset = useMemo(
+  const sets = useMemo(
     () =>
       (Object.keys(CHARSETS) as CharsetKey[])
         .filter((key) => options[key])
-        .map((key) => CHARSETS[key])
-        .join(""),
+        .map((key) => CHARSETS[key] as string),
     [options],
   );
+  const charset = sets.join("");
 
   const regenerate = useCallback(() => {
-    setPassword(generatePassword(length, charset));
-  }, [length, charset]);
+    setPassword(generatePassword(length, sets));
+  }, [length, sets]);
 
   useEffect(() => {
     regenerate();
@@ -64,9 +79,9 @@ export default function PasswordGeneratorPage() {
       length >= 20 && variety >= 3 ? 3 : length >= 14 && variety >= 2 ? 2 : length >= 8 ? 1 : 0;
     const levels = [
       { label: t("tool.password-generator.strength.weak"), color: "bg-destructive" },
-      { label: t("tool.password-generator.strength.fair"), color: "bg-amber-500" },
-      { label: t("tool.password-generator.strength.strong"), color: "bg-blue-500" },
-      { label: t("tool.password-generator.strength.veryStrong"), color: "bg-emerald-500" },
+      { label: t("tool.password-generator.strength.fair"), color: "bg-warning" },
+      { label: t("tool.password-generator.strength.strong"), color: "bg-primary" },
+      { label: t("tool.password-generator.strength.veryStrong"), color: "bg-success" },
     ];
     return { ...levels[score], score };
   }, [length, options, t]);
@@ -85,10 +100,14 @@ export default function PasswordGeneratorPage() {
     });
   };
 
-  const copyPassword = () => {
+  const copyPassword = async () => {
     if (!password) return;
-    navigator.clipboard.writeText(password);
-    toast({ description: t("toast.success.copied") });
+    try {
+      await navigator.clipboard.writeText(password);
+      toast({ description: t("toast.success.copied") });
+    } catch {
+      toast({ title: t("common.error"), variant: "destructive" });
+    }
   };
 
   return (

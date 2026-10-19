@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n/context";
 import { useToast } from "@/hooks/use-toast";
 import { ToolShell } from "@/components/tools/ToolShell";
@@ -28,12 +28,26 @@ export default function RemoveBgPage() {
   const [outputImage, setOutputImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
+  const urlsRef = useRef<{ input: string | null; output: string | null }>({ input: null, output: null });
+
+  useEffect(() => () => {
+    if (urlsRef.current.input) URL.revokeObjectURL(urlsRef.current.input);
+    if (urlsRef.current.output) URL.revokeObjectURL(urlsRef.current.output);
+  }, []);
+
+  const setOutput = (url: string | null) => {
+    if (urlsRef.current.output) URL.revokeObjectURL(urlsRef.current.output);
+    urlsRef.current.output = url;
+    setOutputImage(url);
+  };
 
   const handleFile = (file: File) => {
-    if (inputImage) URL.revokeObjectURL(inputImage);
+    if (urlsRef.current.input) URL.revokeObjectURL(urlsRef.current.input);
+    const url = URL.createObjectURL(file);
+    urlsRef.current.input = url;
     setInputFile(file);
-    setInputImage(URL.createObjectURL(file));
-    setOutputImage(null);
+    setInputImage(url);
+    setOutput(null);
     setProgress(0);
   };
 
@@ -47,8 +61,11 @@ export default function RemoveBgPage() {
     const env = (imgly as any).env;
     if (env) env.wasm.numThreads = 1;
 
+    // Inference only moves to a worker when WebGPU is available (imgly ignores proxyToWorker on WASM).
     const blob = await removeFn(inputImage, {
-      debug: true,
+      debug: process.env.NODE_ENV !== "production",
+      device: "gpu",
+      proxyToWorker: true,
       model: "isnet_fp16",
       progress: (_key: string, current: number, total: number) => {
         if (total > 0) {
@@ -94,11 +111,13 @@ export default function RemoveBgPage() {
     if (!inputImage) return;
     setIsProcessing(true);
     setProgress(1);
+    // Let the "may be unresponsive" overlay paint before local inference blocks the main thread.
+    await new Promise((r) => setTimeout(r, 50));
 
     try {
       const url = mode === "ai" ? await processAi() : await processLocal();
       if (!url) return;
-      setOutputImage(url);
+      setOutput(url);
       setProgress(100);
       toast({
         title: t("common.success"),
@@ -109,7 +128,7 @@ export default function RemoveBgPage() {
       toast({
         variant: "destructive",
         title: t("common.error"),
-        description: t("toast.error.failed"),
+        description: error instanceof Error && error.message ? error.message : t("toast.error.failed"),
       });
     } finally {
       setIsProcessing(false);
@@ -117,10 +136,11 @@ export default function RemoveBgPage() {
   };
 
   const handleReset = () => {
-    if (inputImage) URL.revokeObjectURL(inputImage);
+    if (urlsRef.current.input) URL.revokeObjectURL(urlsRef.current.input);
+    urlsRef.current.input = null;
     setInputFile(null);
     setInputImage(null);
-    setOutputImage(null);
+    setOutput(null);
     setProgress(0);
   };
 
@@ -169,6 +189,10 @@ export default function RemoveBgPage() {
                 <Image
                   src={inputImage}
                   alt="Original"
+                  onError={() => {
+                    handleReset();
+                    toast({ variant: "destructive", title: t("common.error"), description: t("toast.error.unsupported") });
+                  }}
                   width={480}
                   height={480}
                   unoptimized
@@ -202,6 +226,11 @@ export default function RemoveBgPage() {
                         ? t("tool.remove-bg.processing")
                         : t("tool.remove-bg.finalizing")}
                   </p>
+                  {mode === "local" && (
+                    <p className="mt-2 max-w-[240px] text-center text-xs opacity-70">
+                      {t("media.removeBg.unresponsive")}
+                    </p>
+                  )}
                 </div>
               )}
 

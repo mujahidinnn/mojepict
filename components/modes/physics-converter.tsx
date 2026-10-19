@@ -94,10 +94,9 @@ function convert(value: number, category: Category, from: string, to: string): n
 
 function formatResult(value: number): string {
   if (!isFinite(value)) return "";
-  return value
-    .toPrecision(8)
-    .replace(/\.?0+$/, "")
-    .replace(/\.$/, "");
+  const [m, e] = value.toPrecision(8).split("e");
+  const trimmed = m.includes(".") ? m.replace(/0+$/, "").replace(/\.$/, "") : m;
+  return e ? `${trimmed}e${e}` : trimmed;
 }
 
 export default function PhysicsConverterPage() {
@@ -124,9 +123,13 @@ export default function PhysicsConverterPage() {
     setToUnit(fromUnit);
   };
 
-  const copyResult = () => {
-    navigator.clipboard.writeText(result);
-    toast({ title: t("action.copied"), description: result });
+  const copyResult = async () => {
+    try {
+      await navigator.clipboard.writeText(result);
+      toast({ title: t("action.copied"), description: result });
+    } catch {
+      toast({ title: t("common.error"), variant: "destructive" });
+    }
   };
 
   const toUnitLabel =
@@ -173,7 +176,7 @@ export default function PhysicsConverterPage() {
               </SelectContent>
             </Select>
           </FormGroup>
-          <Button variant="ghost" size="icon" onClick={swap} className="h-9 w-9">
+          <Button variant="ghost" size="icon" onClick={swap} className="h-9 w-9" aria-label={t("common.swap")}>
             <ArrowLeftRight className="h-4 w-4" />
           </Button>
           <FormGroup label={t("common.to")}>

@@ -255,7 +255,7 @@ export const TOOLS: Tool[] = [
   {
     id: "random-generator",
     slug: "random-generator",
-    icon: "KeyRound",
+    icon: "Dices",
     category: "dev",
     createdAt: "2026-09-24",
     popular: true,
@@ -403,10 +403,16 @@ export const FEATURE_COUNT = TOOLS.reduce((n, tool) => n + getToolFeatureCount(t
 /** A tool is "new" for this many days after its createdAt date. */
 export const NEW_WINDOW_DAYS = 90;
 
+// Age is measured from the newest tool's ship date, not Date.now(): pages are
+// prerendered at build time, and a clock-based badge flips between build and
+// visit, causing hydration mismatches (React #418).
+// ponytail: badges never expire while no new tool ships; inject a build timestamp if that matters.
+const BADGE_REFERENCE = Math.max(...TOOLS.map((t) => new Date(t.createdAt).getTime()));
+
 /** Computes the badge to display: manual "beta" flags win, otherwise date-driven "new". */
 export function getToolBadge(tool: Tool): "new" | "beta" | undefined {
   if (tool.badge === "beta") return "beta";
-  const ageDays = (Date.now() - new Date(tool.createdAt).getTime()) / 86_400_000;
+  const ageDays = (BADGE_REFERENCE - new Date(tool.createdAt).getTime()) / 86_400_000;
   return ageDays >= 0 && ageDays <= NEW_WINDOW_DAYS ? "new" : undefined;
 }
 

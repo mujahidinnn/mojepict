@@ -60,13 +60,17 @@ export default function ImageCropperPage() {
   const [aspect, setAspect] = useState<number | undefined>(undefined);
 
   const processFile = useCallback((file: File | undefined) => {
+    if (file && !file.type.startsWith("image/")) {
+      toast({ variant: "destructive", title: t("common.error"), description: t("toast.error.unsupported") });
+      return;
+    }
     if (file) {
       setFileDetails({ name: file.name, size: file.size, type: file.type });
       const reader = new FileReader();
       reader.onload = () => setUpImg(reader.result as string);
       reader.readAsDataURL(file);
     }
-  }, []);
+  }, [t, toast]);
 
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     if (aspect) {
@@ -79,8 +83,8 @@ export default function ImageCropperPage() {
     const canvas = previewCanvasRef.current;
     if (!completedCrop || !canvas || !image) {
       toast({
-        title: "Error",
-        description: "Please select an area first",
+        title: t("common.error"),
+        description: t("media.cropper.selectArea"),
         variant: "destructive",
       });
       return;
@@ -109,7 +113,7 @@ export default function ImageCropperPage() {
     );
     toast({
       title: t("common.success"),
-      description: "Preview generated successfully.",
+      description: t("media.cropper.previewDone"),
     });
   };
 
@@ -218,6 +222,10 @@ export default function ImageCropperPage() {
                   height={500}
                   unoptimized
                   onLoad={onImageLoad}
+                  onError={() => {
+                    toast({ variant: "destructive", title: t("common.error"), description: t("toast.error.unsupported") });
+                    handleReset();
+                  }}
                   className="max-h-[500px] w-auto object-contain rounded-md"
                 />
               </ReactCrop>

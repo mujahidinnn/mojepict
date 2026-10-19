@@ -62,15 +62,18 @@ export default function DataConverterPage() {
     setToUnit("MB");
   };
 
-  const copyToClipboard = (val: string) => {
-    navigator.clipboard.writeText(val);
-    toast({
-      description: t("toast.success.copied"),
-    });
+  const copyToClipboard = async (val: string) => {
+    try {
+      await navigator.clipboard.writeText(val);
+      toast({ description: t("toast.success.copied") });
+    } catch {
+      toast({ title: t("common.error"), variant: "destructive" });
+    }
   };
 
-  const formattedResult =
-    result % 1 === 0 ? result.toString() : result.toFixed(4).replace(/\.?0+$/, "");
+  const [mantissa, exp] = (result === 0 ? 0 : result).toPrecision(8).split("e");
+  const trimmed = mantissa.includes(".") ? mantissa.replace(/0+$/, "").replace(/\.$/, "") : mantissa;
+  const formattedResult = exp ? `${trimmed}e${exp}` : trimmed;
 
   return (
     <ToolShell
@@ -114,6 +117,7 @@ export default function DataConverterPage() {
                 variant="ghost"
                 size="icon"
                 title={t("common.swap")}
+                aria-label={t("common.swap")}
                 onClick={handleSwap}
                 className="h-9 w-9"
               >

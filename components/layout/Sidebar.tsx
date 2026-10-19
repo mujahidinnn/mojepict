@@ -1,10 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n/context";
-import { TOOLS, CATEGORIES, CATEGORY_ORDER, getToolBadge } from "@/lib/tools";
+import {
+  TOOLS,
+  CATEGORIES,
+  CATEGORY_ORDER,
+  getToolBadge,
+  type Tool,
+} from "@/lib/tools";
+import { HUB_MODES } from "@/lib/hubs";
 import { getToolIconComponent } from "@/lib/tool-icons";
 import { Badge } from "@/components/ui/badge";
 import { ImageIcon } from "lucide-react";
@@ -14,6 +22,43 @@ import { MojepictLogo } from "@/components/icons/MojepictLogo";
 function Icon({ name, className }: { name: string; className?: string }) {
   const LIcon = getToolIconComponent(name);
   return <LIcon className={cn("h-4 w-4", className)} />;
+}
+
+/** Sub-items for the open hub; `current` is the active ?mode (null until search params are read). */
+function HubModeLinks({
+  tool,
+  current,
+}: {
+  tool: Tool;
+  current: string | null;
+}) {
+  const { t } = useI18n();
+  const modes = HUB_MODES[tool.id] ?? [];
+  const active = modes.includes(current ?? "") ? current : modes[0];
+  return (
+    <div className="ml-4 mt-0.5 flex flex-col border-l border-[hsl(var(--sidebar-border))] pl-2">
+      {modes.map((m) => (
+        <Link prefetch={false}
+          key={m}
+          href={`/${tool.slug}?mode=${m}`}
+          scroll={false}
+          className={cn(
+            "truncate rounded-md px-2 py-1 text-xs transition-colors",
+            "text-muted-foreground hover:text-foreground hover:bg-accent",
+            current !== null && m === active && "font-medium text-primary",
+          )}
+        >
+          {t((m === tool.id ? `hub.mode.${m}` : `tool.${m}.name`) as any)}
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function ActiveHubModeLinks({ tool }: { tool: Tool }) {
+  return (
+    <HubModeLinks tool={tool} current={useSearchParams().get("mode") ?? ""} />
+  );
 }
 
 export function Sidebar() {
@@ -46,15 +91,15 @@ export function Sidebar() {
         a plain overflow-y-auto div gives the same look without the bug.
       */}
       <div className="flex-1 overflow-y-auto px-3 py-3 scrollbar-none">
-        <Link
-          href="/"
+        <Link prefetch={false}
+          href="/#all-tools"
           className={cn(
             "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm mb-4",
             "text-muted-foreground hover:text-foreground hover:bg-accent transition-colors",
             pathname === "/" && "bg-accent font-medium text-primary",
           )}
         >
-          <ImageIcon className="h-4 w-4" aria-label="All Tools" role="img" />
+          <ImageIcon className="h-4 w-4" aria-hidden />
           {t("nav.allTools")}
         </Link>
 
@@ -80,30 +125,38 @@ export function Sidebar() {
                 const active = pathname === href;
                 const badge = getToolBadge(tool);
                 return (
-                  <Link
-                    key={tool.id}
-                    href={href}
-                    className={cn(
-                      "flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
-                      "text-slate-800 dark:text-muted-foreground hover:text-foreground hover:bg-accent",
-                      active && "bg-accent font-medium text-primary",
-                    )}
-                  >
-                    <span className="flex min-w-0 items-center gap-2">
-                      <Icon name={tool.icon} className="shrink-0" />
-                      <span className="min-w-0 truncate">
-                        {t(`tool.${tool.id}.name` as any)}
+                  <div key={tool.id}>
+                    <Link prefetch={false}
+                      href={href}
+                      className={cn(
+                        "flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
+                        "text-slate-800 dark:text-muted-foreground hover:text-foreground hover:bg-accent",
+                        active && "bg-accent font-medium text-primary",
+                      )}
+                    >
+                      <span className="flex min-w-0 items-center gap-2">
+                        <Icon name={tool.icon} className="shrink-0" />
+                        <span className="min-w-0 truncate">
+                          {t(`tool.${tool.id}.name` as any)}
+                        </span>
                       </span>
-                    </span>
-                    {badge && (
-                      <Badge
-                        variant="secondary"
-                        className="h-4 shrink-0 px-1 text-[10px] leading-none"
+                      {badge && (
+                        <Badge
+                          variant="secondary"
+                          className="h-4 shrink-0 px-1 text-[10px] leading-none"
+                        >
+                          {t(`landing.badge.${badge}` as any)}
+                        </Badge>
+                      )}
+                    </Link>
+                    {active && HUB_MODES[tool.id] && (
+                      <Suspense
+                        fallback={<HubModeLinks tool={tool} current={null} />}
                       >
-                        {t(`landing.badge.${badge}` as any)}
-                      </Badge>
+                        <ActiveHubModeLinks tool={tool} />
+                      </Suspense>
                     )}
-                  </Link>
+                  </div>
                 );
               })}
             </div>
@@ -112,14 +165,14 @@ export function Sidebar() {
       </div>
       <div className="border-t border-[hsl(var(--sidebar-border))] px-4 py-3 flex flex-col gap-1.5">
         <div className="flex items-center gap-2 text-[11px]">
-          <Link
+          <Link prefetch={false}
             href="/about"
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
             {t("nav.about")}
           </Link>
           <span className="text-muted-foreground/40">·</span>
-          <Link
+          <Link prefetch={false}
             href="/privacy"
             className="text-muted-foreground hover:text-foreground transition-colors"
           >

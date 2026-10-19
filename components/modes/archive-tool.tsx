@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
-import { createArchive, extractArchive, type ArchiveEntry, type ArchiveFormat } from "@/lib/archive";
+import { ArchiveTooLargeError, createArchive, extractArchive, type ArchiveEntry, type ArchiveFormat } from "@/lib/archive";
 import { Archive, Download, File as FileIcon, FolderOpen, FolderUp, X } from "lucide-react";
 import { TwoColumnLayout, InputSection, OutputSection } from "@/components/tools/ToolTemplates";
 
@@ -35,7 +35,7 @@ function downloadBytes(data: Uint8Array, filename: string) {
   a.href = url;
   a.download = filename;
   a.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 const FORMAT_EXT: Record<ArchiveFormat, string> = { zip: "zip", tar: "tar", "tar.gz": "tar.gz" };
@@ -132,7 +132,13 @@ function CompressPanel() {
                     <span className="truncate text-sm font-medium">{f.path}</span>
                     <span className="text-xs text-muted-foreground">{formatBytes(f.file.size)}</span>
                   </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => remove(f.id)}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    aria-label={t("tool.archive-tool.remove")}
+                    onClick={() => remove(f.id)}
+                  >
                     <X className="h-3.5 w-3.5" />
                   </Button>
                 </div>
@@ -177,11 +183,11 @@ function ExtractPanel() {
       if (!extracted.length) throw new Error("empty");
       setArchiveName(file.name);
       setEntries(extracted);
-    } catch {
+    } catch (err) {
       toast({
         variant: "destructive",
         title: t("common.error"),
-        description: t("tool.archive-tool.invalidFile"),
+        description: t(err instanceof ArchiveTooLargeError ? "tool.archive-tool.tooLarge" : "tool.archive-tool.invalidFile"),
       });
     }
   };
@@ -234,7 +240,13 @@ function ExtractPanel() {
                   <span className="truncate text-sm font-medium">{entry.path}</span>
                   <span className="text-xs text-muted-foreground">{formatBytes(entry.data.length)}</span>
                 </div>
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => downloadOne(entry)}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  aria-label={`${t("action.download")} ${entry.path}`}
+                  onClick={() => downloadOne(entry)}
+                >
                   <Download className="h-3.5 w-3.5" />
                 </Button>
               </div>

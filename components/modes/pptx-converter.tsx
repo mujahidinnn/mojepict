@@ -25,7 +25,7 @@ function save(blob: Blob, name: string) {
   a.href = url;
   a.download = name;
   a.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 // 10in x 5.625in (16:9) at 96dpi, same size on screen and on the printed page.
@@ -75,11 +75,15 @@ export default function PptxConverterPage({ to, initialFile }: { to?: FormatId; 
           // PDF points → inches for the pptx slide size.
           pages.push({ src: canvas.toDataURL("image/jpeg", 0.9), w: base.width / 72, h: base.height / 72 });
         }
+        doc.destroy();
+        if (!pages.length) throw new Error("empty pdf");
         setPdfPages(pages);
       }
       setFile(f);
       setSource(src);
     } catch {
+      // Don't leave a previous file's output on screen next to the error.
+      reset();
       fail();
     } finally {
       setLoading(false);

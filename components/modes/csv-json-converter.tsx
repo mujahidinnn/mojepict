@@ -71,7 +71,12 @@ function csvToJson(text: string): string {
 }
 
 function csvField(value: unknown): string {
-  const str = value === null || value === undefined ? "" : String(value);
+  const str =
+    value === null || value === undefined
+      ? ""
+      : typeof value === "object"
+        ? JSON.stringify(value)
+        : String(value);
   if (/[",\n\r]/.test(str)) {
     return `"${str.replace(/"/g, '""')}"`;
   }
@@ -125,6 +130,7 @@ export default function CsvJsonConverterPage({
       setOutput(result);
       toast({ title: t("common.success"), description: t("toast.success.processed") });
     } catch {
+      setOutput("");
       toast({
         variant: "destructive",
         title: t("common.error"),
@@ -140,10 +146,14 @@ export default function CsvJsonConverterPage({
     setOutput("");
   };
 
-  const copy = () => {
+  const copy = async () => {
     if (!output) return;
-    navigator.clipboard.writeText(output);
-    toast({ description: t("toast.success.copied") });
+    try {
+      await navigator.clipboard.writeText(output);
+      toast({ description: t("toast.success.copied") });
+    } catch {
+      toast({ title: t("common.error"), variant: "destructive" });
+    }
   };
 
   const download = () => {

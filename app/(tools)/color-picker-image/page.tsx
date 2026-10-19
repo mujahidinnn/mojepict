@@ -23,6 +23,7 @@ export default function ColorPickerImagePage() {
     hex: string;
     rgb: string;
     hsl: string;
+    transparent: boolean;
   } | null>(null);
   const [magnifier, setMagnifier] = useState<{
     x: number;
@@ -41,7 +42,7 @@ export default function ColorPickerImagePage() {
     const canvas = canvasRef.current;
     const img = imgRef.current;
     if (!canvas || !img) return;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
     if (!ctx) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -58,8 +59,15 @@ export default function ColorPickerImagePage() {
       return;
     }
 
+    const url = URL.createObjectURL(file);
     const img = new Image();
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      handleReset();
+      toast({ variant: "destructive", title: t("common.error"), description: t("toast.error.unsupported") });
+    };
     img.onload = () => {
+      URL.revokeObjectURL(url);
       imgRef.current = img;
 
       const canvas = canvasRef.current;
@@ -70,7 +78,7 @@ export default function ColorPickerImagePage() {
 
       drawImage();
     };
-    img.src = URL.createObjectURL(file);
+    img.src = url;
     setImageFile(file);
     setPickedColor(null);
   };
@@ -96,18 +104,9 @@ export default function ColorPickerImagePage() {
     return { x, y };
   };
 
-  /** Offscreen canvas holding the raw source image at native resolution, for pixel sampling. */
-  const getSourceCanvas = (): HTMLCanvasElement | null => {
-    const img = imgRef.current;
-    if (!img) return null;
-    const tempCanvas = document.createElement("canvas");
-    tempCanvas.width = img.width;
-    tempCanvas.height = img.height;
-    const tempCtx = tempCanvas.getContext("2d");
-    if (!tempCtx) return null;
-    tempCtx.drawImage(img, 0, 0);
-    return tempCanvas;
-  };
+  /** The visible canvas already holds the source at native resolution, so sample it directly. */
+  const getSourceCanvas = (): HTMLCanvasElement | null =>
+    imgRef.current ? canvasRef.current : null;
 
   const handleCanvasClick = (e: React.MouseEvent) => {
     const coords = getImageCoords(e);
@@ -115,16 +114,21 @@ export default function ColorPickerImagePage() {
     const { x, y } = coords;
 
     const tempCanvas = getSourceCanvas();
-    const tempCtx = tempCanvas?.getContext("2d");
+    const tempCtx = tempCanvas?.getContext("2d", { willReadFrequently: true });
     if (!tempCtx) return;
 
     const pixel = tempCtx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
-    const rgb = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
+    const alpha = pixel[3];
+    const rgb =
+      alpha === 255
+        ? `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`
+        : `rgba(${pixel[0]}, ${pixel[1]}, ${pixel[2]}, ${(alpha / 255).toFixed(2)})`;
     const hex =
       "#" +
       [pixel[0], pixel[1], pixel[2]]
         .map((x) => x.toString(16).padStart(2, "0"))
-        .join("");
+        .join("") +
+      (alpha === 255 ? "" : alpha.toString(16).padStart(2, "0"));
 
     const r = pixel[0] / 255,
       g = pixel[1] / 255,
@@ -144,7 +148,7 @@ export default function ColorPickerImagePage() {
     }
     const hsl = `hsl(${Math.round(h * 360)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`;
 
-    setPickedColor({ hex, rgb, hsl });
+    setPickedColor({ hex, rgb, hsl, transparent: alpha === 0 });
   };
 
   const handleCanvasMouseMove = (e: React.MouseEvent) => {
@@ -169,7 +173,7 @@ export default function ColorPickerImagePage() {
     if (!img) return;
 
     const tempCanvas = getSourceCanvas();
-    const tempCtx = tempCanvas?.getContext("2d");
+    const tempCtx = tempCanvas?.getContext("2d", { willReadFrequently: true });
     if (!tempCtx) return;
 
     const SAMPLE = 17; // odd, so there's a well-defined center pixel
@@ -228,10 +232,13 @@ export default function ColorPickerImagePage() {
     magCtx.strokeRect(cx - 0.5, cy - 0.5, 1, 1);
   }, [magnifier]);
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text).then(() => {
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
       toast({ description: t("toast.success.copied") });
-    });
+    } catch {
+      toast({ variant: "destructive", title: t("common.error"), description: t("toast.error.generic") });
+    }
   };
 
   const handleReset = () => {
@@ -262,9 +269,12 @@ export default function ColorPickerImagePage() {
                 {pickedColor ? (
                   <>
                     <div
-                      className="w-20 h-20 rounded-xl border-4 border-white shadow-lg"
-                      style={{ backgroundColor: pickedColor.hex }}
+                      className="w-20 h-20 rounded-xl border-4 border-background shadow-lg"
+                      style={{ backgroundColor: pickedColor.rgb }}
                     />
+                    {pickedColor.transparent && (
+                      <p className="text-xs text-warning">{t("media.picker.transparent")}</p>
+                    )}
                     <div className="w-full space-y-3">
                       {[
                         { label: "HEX", value: pickedColor.hex },
@@ -283,6 +293,7 @@ export default function ColorPickerImagePage() {
                               variant="ghost"
                               size="icon"
                               className="h-6 w-6"
+                              aria-label={`${t("action.copy")} ${item.label}`}
                               onClick={() => copyToClipboard(item.value)}
                             >
                               <Copy className="h-3 w-3" />
@@ -322,8 +333,7 @@ export default function ColorPickerImagePage() {
               />
             </ImageZoomPreview>
             <p className="mt-2 text-center text-[10px] text-muted-foreground flex items-center justify-center gap-1">
-              <MousePointer2 className="h-3 w-3" /> Click to pick color • Use
-              the zoom controls to scale the view
+              <MousePointer2 className="h-3 w-3" /> {t("media.picker.hint")}
             </p>
 
             {magnifier && (

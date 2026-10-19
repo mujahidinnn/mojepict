@@ -36,11 +36,42 @@ if (typeof window !== "undefined") {
 
 const STORAGE_KEY = "mojepict-diagram-maker";
 
+// Transient UI state that must not survive a reload (e.g. an open export dialog reopening by itself).
+const TRANSIENT_APP_STATE_KEYS = [
+  "collaborators",
+  "openDialog",
+  "openMenu",
+  "openPopup",
+  "openSidebar",
+  "contextMenu",
+  "pasteDialog",
+  "errorMessage",
+  "toast",
+  "isLoading",
+  "activeEmbeddable",
+  "editingTextElement",
+  "newElement",
+  "resizingElement",
+  "multiElement",
+  "selectionElement",
+  "editingLinearElement",
+] as const;
+
+function stripTransient<T extends object>(appState: T): Partial<T> {
+  const copy: Record<string, unknown> = { ...(appState as Record<string, unknown>) };
+  for (const key of TRANSIENT_APP_STATE_KEYS) delete copy[key];
+  return copy as Partial<T>;
+}
+
 function loadInitialData(): ExcalidrawInitialDataState | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const data = JSON.parse(raw) as ExcalidrawInitialDataState;
+    // Also cleans data saved by older versions that persisted openDialog.
+    if (data.appState) data.appState = stripTransient(data.appState);
+    return data;
   } catch {
     return null;
   }
@@ -70,7 +101,7 @@ function PdfExportButton({
     a.href = url;
     a.download = "diagram-mojepict.pdf";
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   return (
@@ -109,10 +140,9 @@ export default function DiagramMakerPage() {
       // falling back to "just don't autosave" beats crashing the canvas.
       saveTimer.current = setTimeout(() => {
         try {
-          const { collaborators: _collaborators, ...persistableAppState } = appState;
           localStorage.setItem(
             STORAGE_KEY,
-            JSON.stringify({ elements, appState: persistableAppState, files }),
+            JSON.stringify({ elements, appState: stripTransient(appState), files }),
           );
         } catch {
           // ignore quota errors
@@ -131,7 +161,12 @@ export default function DiagramMakerPage() {
 
   const confirmClear = () => {
     apiRef.current?.resetScene();
-    localStorage.removeItem(STORAGE_KEY);
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // storage unavailable (private mode) - nothing persisted anyway
+    }
     setConfirmClearOpen(false);
   };
 
@@ -183,6 +218,7 @@ export default function DiagramMakerPage() {
               <mod.MainMenu.DefaultItems.LoadScene />
               <mod.MainMenu.DefaultItems.SaveToActiveFile />
               <mod.MainMenu.DefaultItems.Export />
+              <mod.MainMenu.DefaultItems.SaveAsImage />
               <mod.MainMenu.DefaultItems.ChangeCanvasBackground />
               <mod.MainMenu.Separator />
               <mod.MainMenu.DefaultItems.ClearCanvas />

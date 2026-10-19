@@ -33,11 +33,11 @@ export function CopyImageButton({
       if (!blob) throw new Error("No image to copy.");
       await copyImageToClipboard(blob);
       setCopied(true);
-      toast({ title: "Done!", description: t("toast.success.copied") });
+      toast({ title: t("common.success"), description: t("toast.success.copied") });
       setTimeout(() => setCopied(false), 1500);
     } catch {
       toast({
-        title: "Failed",
+        title: t("common.error"),
         description: t("toast.error.copyImage"),
         variant: "destructive",
       });

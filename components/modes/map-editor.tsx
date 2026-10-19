@@ -88,6 +88,22 @@ interface ImageOverlayEntry {
 
 let nextId = 1;
 
+const GEOJSON_TYPES = new Set([
+  "FeatureCollection",
+  "Feature",
+  "Point",
+  "MultiPoint",
+  "LineString",
+  "MultiLineString",
+  "Polygon",
+  "MultiPolygon",
+  "GeometryCollection",
+]);
+
+function isGeoJson(data: unknown): data is GeoJSON.GeoJsonObject {
+  return typeof data === "object" && data !== null && GEOJSON_TYPES.has((data as { type?: unknown }).type as string);
+}
+
 function tagLayer(layer: L.Layer) {
   const l = layer as TaggedLayer;
   if (l._mapEditorId == null) l._mapEditorId = nextId++;
@@ -182,6 +198,7 @@ export default function MapEditorPage() {
   const [cutModeActive, setCutModeActive] = useState(false);
   const [lat, setLat] = useState("-6.2088");
   const [lng, setLng] = useState("106.8456");
+  const [overlayCount, setOverlayCount] = useState(0);
 
   const tile = TILE_LAYERS.find((l) => l.id === tileId) ?? TILE_LAYERS[0];
 
@@ -252,6 +269,17 @@ export default function MapEditorPage() {
 
     map.pm.setGlobalOptions({ layerGroup: fg });
     map.pm.addControls({ position: "topleft", drawText: false });
+    // Geoman's toolbar buttons are icon-only anchors; expose their tooltip text to screen readers.
+    map
+      .getContainer()
+      .querySelectorAll<HTMLElement>(".leaflet-pm-toolbar .button-container[title]")
+      .forEach((c) => {
+        const a = c.querySelector("a");
+        if (a) {
+          a.setAttribute("aria-label", c.title);
+          a.setAttribute("role", "button");
+        }
+      });
 
     map.on("pm:create", (e) => {
       tagLayer(e.layer);
@@ -271,7 +299,11 @@ export default function MapEditorPage() {
   const addPointMarker = () => {
     const la = parseFloat(lat);
     const lo = parseFloat(lng);
-    if (Number.isNaN(la) || Number.isNaN(lo) || !featureGroupRef.current || !mapRef.current) return;
+    if (!featureGroupRef.current || !mapRef.current) return;
+    if (!Number.isFinite(la) || !Number.isFinite(lo) || la < -90 || la > 90 || lo < -180 || lo > 180) {
+      toast({ variant: "destructive", title: t("common.error"), description: t("tool.map-editor.invalidLatLng") });
+      return;
+    }
     const marker = L.marker([la, lo]);
     tagLayer(marker);
     featureGroupRef.current.addLayer(marker);
@@ -279,13 +311,15 @@ export default function MapEditorPage() {
     refreshRows();
   };
 
-  /** Adds every feature in a GeoJSON payload to the map, replacing the current content first when `replace` is set (used by the JSON editor's "Apply"). */
+  /** Adds every feature in a GeoJSON payload to the map, replacing the current content first when `replace` is set (used by the JSON editor's "Apply").
+   * Throws on non-GeoJSON input before touching the existing features. */
   const loadGeoJson = useCallback(
     (data: unknown, { replace }: { replace?: boolean } = {}) => {
       const fg = featureGroupRef.current;
       if (!fg) return;
+      if (!isGeoJson(data)) throw new Error("not GeoJSON");
+      const imported = L.geoJSON(data); // throws on malformed geometry
       if (replace) fg.clearLayers();
-      const imported = L.geoJSON(data as GeoJSON.GeoJsonObject);
       imported.eachLayer((layer) => {
         tagLayer(layer);
         fg.addLayer(layer);
@@ -367,12 +401,16 @@ export default function MapEditorPage() {
     a.href = url;
     a.download = "map.geojson";
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   const addImageOverlay = (file: File) => {
     const map = mapRef.current;
     if (!map) return;
+    if (!file.type.startsWith("image/")) {
+      toast({ variant: "destructive", title: t("common.error"), description: t("toast.error.unsupported") });
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result as string;
@@ -385,6 +423,7 @@ export default function MapEditorPage() {
       handle.on("pm:markerdragend", sync);
       handle.on("pm:edit", sync);
       imageOverlaysRef.current.push({ overlay, handle });
+      setOverlayCount(imageOverlaysRef.current.length);
     };
     reader.readAsDataURL(file);
   };
@@ -395,6 +434,7 @@ export default function MapEditorPage() {
       mapRef.current?.removeLayer(handle);
     });
     imageOverlaysRef.current = [];
+    setOverlayCount(0);
   };
 
   return (
@@ -475,7 +515,7 @@ export default function MapEditorPage() {
                     }}
                   />
                 </label>
-                {imageOverlaysRef.current.length > 0 && (
+                {overlayCount > 0 && (
                   <Button type="button" variant="ghost" size="sm" className="w-full gap-2" onClick={clearImageOverlays}>
                     <Trash2 className="h-3.5 w-3.5" />
                     {t("tool.map-editor.clearImages")}
@@ -542,7 +582,7 @@ export default function MapEditorPage() {
         }
       >
         <div className="flex flex-col gap-4">
-          <div className="h-[520px] w-full overflow-hidden rounded-xl border print:h-screen print:w-screen print:rounded-none print:border-0">
+          <div className="h-[520px] w-full overflow-hidden rounded-xl border max-sm:[&_.leaflet-bar_a]:!h-10 max-sm:[&_.leaflet-bar_a]:!w-10 max-sm:[&_.leaflet-bar_a]:!leading-10 print:h-screen print:w-screen print:rounded-none print:border-0">
             <MapContainer center={[-6.2088, 106.8456]} zoom={12} className="h-full w-full">
               <TileLayer key={tile.id} url={tile.url} attribution={tile.attribution} maxZoom={tile.maxZoom} />
               {tile.overlayUrl && (
@@ -586,7 +626,7 @@ export default function MapEditorPage() {
                       <button
                         type="button"
                         onClick={() => focusFeature(row.id)}
-                        className="shrink-0 rounded bg-muted px-2 py-1 text-xs font-medium hover:bg-muted/70"
+                        className="min-h-10 shrink-0 rounded bg-muted px-2 py-1 text-xs sm:min-h-0 font-medium hover:bg-muted/70"
                       >
                         {row.type}
                       </button>
@@ -601,7 +641,13 @@ export default function MapEditorPage() {
                           <span className="mt-0.5 truncate text-[11px] text-muted-foreground">{row.measurement}</span>
                         )}
                       </div>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFeature(row.id)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10 shrink-0 sm:h-8 sm:w-8"
+                        aria-label={t("tool.map-editor.removeFeature")}
+                        onClick={() => removeFeature(row.id)}
+                      >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>

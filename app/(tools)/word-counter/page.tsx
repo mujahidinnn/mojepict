@@ -8,19 +8,30 @@ import { ToolActionBar } from "@/components/tools/ToolActionBar";
 import { Textarea } from "@/components/ui/textarea";
 import { Clock } from "lucide-react";
 
+const graphemes =
+  typeof Intl !== "undefined" && "Segmenter" in Intl
+    ? new Intl.Segmenter(undefined, { granularity: "grapheme" })
+    : null;
+
+/** Counts user-perceived characters (an emoji like 👍🏽 counts as 1). */
+function countChars(s: string) {
+  return graphemes ? Array.from(graphemes.segment(s)).length : Array.from(s).length;
+}
+
 function countStats(text: string) {
   const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-  const characters = text.length;
-  const charactersNoSpaces = text.replace(/\s/g, "").length;
+  const characters = countChars(text);
+  const charactersNoSpaces = countChars(text.replace(/\s/g, ""));
+  // Only end a sentence at punctuation followed by whitespace or end, so "3.14" stays intact.
   const sentences = text
-    .split(/[.!?]+/)
+    .split(/[.!?]+(?=\s|$)/)
     .map((s) => s.trim())
     .filter(Boolean).length;
   const paragraphs = text
-    .split(/\n+/)
+    .split(/\n\s*\n/)
     .map((p) => p.trim())
     .filter(Boolean).length;
-  const readingTime = Math.max(1, Math.ceil(words / 200));
+  const readingTime = words === 0 ? 0 : Math.ceil(words / 200);
 
   return { words, characters, charactersNoSpaces, sentences, paragraphs, readingTime };
 }

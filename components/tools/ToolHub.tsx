@@ -1,6 +1,6 @@
 "use client";
 
-import { ComponentType, Suspense } from "react";
+import { ComponentType, Suspense, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { EmbeddedProvider } from "@/components/tools/EmbeddedContext";
@@ -26,7 +26,19 @@ function Hub({ hubId, modes }: { hubId: string; modes: HubMode[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
-  const active = modes.find((m) => m.id === params.get("mode")) ?? modes[0];
+  const requested = params.get("mode");
+  const active = modes.find((m) => m.id === requested) ?? modes[0];
+  const hrefFor = (id: string) => {
+    const next = new URLSearchParams(params.toString());
+    next.set("mode", id);
+    return `${pathname}?${next.toString()}`;
+  };
+
+  // Unknown ?mode values are rewritten to the mode actually shown.
+  useEffect(() => {
+    if (requested && requested !== active.id) router.replace(hrefFor(active.id), { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requested, active.id]);
   const label = (m: HubMode) => t((m.labelKey ?? `tool.${m.id}.name`) as any);
 
   return (
@@ -38,7 +50,7 @@ function Hub({ hubId, modes }: { hubId: string; modes: HubMode[] }) {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
           <Select
             value={active.id}
-            onValueChange={(id) => router.replace(`${pathname}?mode=${id}`, { scroll: false })}
+            onValueChange={(id) => router.push(hrefFor(id), { scroll: false })}
           >
             <SelectTrigger className="w-full sm:w-72" aria-label={t("hub.mode")}>
               <SelectValue />

@@ -60,9 +60,13 @@ export default function TimestampConverterPage() {
     return isNaN(date.getTime()) ? null : date;
   }, [datePart, timePart]);
 
-  const copy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast({ description: t("toast.success.copied") });
+  const copy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({ description: t("toast.success.copied") });
+    } catch {
+      toast({ title: t("common.error"), variant: "destructive" });
+    }
   };
 
   return (
@@ -88,6 +92,7 @@ export default function TimestampConverterPage() {
             size="icon"
             className="h-9 w-9 shrink-0"
             onClick={() => now !== null && copy(String(Math.floor(now / 1000)))}
+            aria-label={t("action.copy")}
           >
             <Copy className="h-4 w-4" />
           </Button>
@@ -130,6 +135,7 @@ export default function TimestampConverterPage() {
                   size="icon"
                   className="h-9 w-9 shrink-0"
                   onClick={() => copy(parsedDate.toISOString())}
+                  aria-label={t("action.copy")}
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
@@ -162,6 +168,7 @@ export default function TimestampConverterPage() {
                 size="icon"
                 className="h-9 w-9 shrink-0"
                 onClick={() => copy(String(Math.floor(parsedTimestamp.getTime() / 1000)))}
+                aria-label={t("action.copy")}
               >
                 <Copy className="h-4 w-4" />
               </Button>

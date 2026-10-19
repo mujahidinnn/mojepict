@@ -4,6 +4,7 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import { Maximize, Trash2, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/context";
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
@@ -40,8 +41,9 @@ export function ImageZoomPreview({
   overlay,
   checkered,
   onRemove,
-  removeLabel = "Remove image",
+  removeLabel,
 }: ImageZoomPreviewProps) {
+  const { t } = useI18n();
   const viewportRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [fitScale, setFitScale] = useState(1);
@@ -108,7 +110,7 @@ export function ImageZoomPreview({
       )}
       tabIndex={0}
       role="group"
-      aria-label="Image preview. Use Ctrl or Cmd plus Plus, Minus, 0, or scroll to zoom."
+      aria-label={t("media.zoom.previewLabel")}
       onMouseEnter={() => {
         isActiveRef.current = true;
       }}
@@ -147,7 +149,7 @@ export function ImageZoomPreview({
           variant="destructive"
           className="absolute top-3 right-3 h-8 w-8 shadow-lg"
           onClick={onRemove}
-          aria-label={removeLabel}
+          aria-label={removeLabel ?? t("media.zoom.remove")}
         >
           <Trash2 className="h-4 w-4" />
         </Button>
@@ -163,8 +165,8 @@ export function ImageZoomPreview({
           className="h-7 w-7"
           onClick={() => setZoom((z) => Math.max(MIN_ZOOM, +(z - STEP).toFixed(2)))}
           disabled={zoom <= MIN_ZOOM}
-          aria-label="Zoom out"
-          title="Zoom out (Ctrl/Cmd + -)"
+          aria-label={t("media.zoom.out")}
+          title={`${t("media.zoom.out")} (Ctrl/Cmd + -)`}
         >
           <ZoomOut className="h-3.5 w-3.5" />
         </Button>
@@ -178,8 +180,8 @@ export function ImageZoomPreview({
           className="h-7 w-7"
           onClick={() => setZoom((z) => Math.min(MAX_ZOOM, +(z + STEP).toFixed(2)))}
           disabled={zoom >= MAX_ZOOM}
-          aria-label="Zoom in"
-          title="Zoom in (Ctrl/Cmd + +)"
+          aria-label={t("media.zoom.in")}
+          title={`${t("media.zoom.in")} (Ctrl/Cmd + +)`}
         >
           <ZoomIn className="h-3.5 w-3.5" />
         </Button>
@@ -190,8 +192,8 @@ export function ImageZoomPreview({
           className="h-7 w-7"
           onClick={() => setZoom(1)}
           disabled={zoom === 1}
-          aria-label="Reset zoom"
-          title="Reset zoom (Ctrl/Cmd + 0)"
+          aria-label={t("media.zoom.reset")}
+          title={`${t("media.zoom.reset")} (Ctrl/Cmd + 0)`}
         >
           <Maximize className="h-3.5 w-3.5" />
         </Button>

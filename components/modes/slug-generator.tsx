@@ -17,6 +17,7 @@ type Separator = "-" | "_";
 
 function slugify(text: string, separator: Separator, lowercase: boolean): string {
   let result = text
+    .replace(/ß/g, "ss")
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
     .replace(/[^a-zA-Z0-9\s-_]/g, "")
@@ -39,10 +40,14 @@ export default function SlugGeneratorPage() {
     [input, separator, lowercase],
   );
 
-  const copy = () => {
+  const copy = async () => {
     if (!slug) return;
-    navigator.clipboard.writeText(slug);
-    toast({ description: t("toast.success.copied") });
+    try {
+      await navigator.clipboard.writeText(slug);
+      toast({ description: t("toast.success.copied") });
+    } catch {
+      toast({ title: t("common.error"), variant: "destructive" });
+    }
   };
 
   return (
@@ -97,6 +102,7 @@ export default function SlugGeneratorPage() {
               className="h-9 w-9 shrink-0"
               onClick={copy}
               disabled={!slug}
+              aria-label={t("action.copy")}
             >
               <Copy className="h-4 w-4" />
             </Button>

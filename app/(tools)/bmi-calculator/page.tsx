@@ -12,9 +12,9 @@ import { cn } from "@/lib/utils";
 type UnitSystem = "metric" | "imperial";
 
 function bmiCategory(bmi: number): { key: string; color: string } {
-  if (bmi < 18.5) return { key: "underweight", color: "text-sky-500" };
-  if (bmi < 25) return { key: "normal", color: "text-emerald-500" };
-  if (bmi < 30) return { key: "overweight", color: "text-amber-500" };
+  if (bmi < 18.5) return { key: "underweight", color: "text-warning" };
+  if (bmi < 25) return { key: "normal", color: "text-success" };
+  if (bmi < 30) return { key: "overweight", color: "text-warning" };
   return { key: "obese", color: "text-destructive" };
 }
 
@@ -27,17 +27,24 @@ export default function BmiCalculatorPage() {
   const [heightIn, setHeightIn] = useState("7");
   const [weightLb, setWeightLb] = useState("143");
 
-  const bmi = useMemo(() => {
+  // Plausible human ranges (metric): 50-272 cm, 2-650 kg. Imperial inputs are converted first.
+  const { bmi, outOfRange } = useMemo(() => {
+    let hCm: number;
+    let wKg: number;
     if (unitSystem === "metric") {
-      const h = parseFloat(heightCm) / 100;
-      const w = parseFloat(weightKg);
-      if (!h || !w) return null;
-      return w / (h * h);
+      hCm = parseFloat(heightCm);
+      wKg = parseFloat(weightKg);
+    } else {
+      const ft = parseFloat(heightFt) || 0;
+      const inch = parseFloat(heightIn) || 0;
+      if (ft < 0 || inch < 0 || inch >= 12) return { bmi: null, outOfRange: true };
+      hCm = (ft * 12 + inch) * 2.54;
+      wKg = parseFloat(weightLb) * 0.45359237;
     }
-    const totalInches = (parseFloat(heightFt) || 0) * 12 + (parseFloat(heightIn) || 0);
-    const w = parseFloat(weightLb);
-    if (!totalInches || !w) return null;
-    return (w / (totalInches * totalInches)) * 703;
+    if (!hCm || !wKg) return { bmi: null, outOfRange: false };
+    if (hCm < 50 || hCm > 272 || wKg < 2 || wKg > 650) return { bmi: null, outOfRange: true };
+    const h = hCm / 100;
+    return { bmi: wKg / (h * h), outOfRange: false };
   }, [unitSystem, heightCm, weightKg, heightFt, heightIn, weightLb]);
 
   const category = bmi ? bmiCategory(bmi) : null;
@@ -60,6 +67,7 @@ export default function BmiCalculatorPage() {
               </Label>
               <Input
                 type="number"
+                min="0"
                 value={heightCm}
                 onChange={(e) => setHeightCm(e.target.value)}
                 className="h-11"
@@ -71,6 +79,7 @@ export default function BmiCalculatorPage() {
               </Label>
               <Input
                 type="number"
+                min="0"
                 value={weightKg}
                 onChange={(e) => setWeightKg(e.target.value)}
                 className="h-11"
@@ -85,6 +94,7 @@ export default function BmiCalculatorPage() {
               </Label>
               <Input
                 type="number"
+                min="0"
                 value={heightFt}
                 onChange={(e) => setHeightFt(e.target.value)}
                 className="h-11"
@@ -94,6 +104,7 @@ export default function BmiCalculatorPage() {
               <Label className="text-xs font-medium text-muted-foreground">(in)</Label>
               <Input
                 type="number"
+                min="0"
                 value={heightIn}
                 onChange={(e) => setHeightIn(e.target.value)}
                 className="h-11"
@@ -105,6 +116,7 @@ export default function BmiCalculatorPage() {
               </Label>
               <Input
                 type="number"
+                min="0"
                 value={weightLb}
                 onChange={(e) => setWeightLb(e.target.value)}
                 className="h-11"
@@ -125,7 +137,9 @@ export default function BmiCalculatorPage() {
           </div>
         ) : (
           <div className="flex min-h-[140px] items-center justify-center rounded-xl border bg-muted/10">
-            <p className="text-sm text-muted-foreground">{t("tool.bmi-calculator.placeholder")}</p>
+            <p className={cn("text-sm", outOfRange ? "text-destructive" : "text-muted-foreground")}>
+              {t(outOfRange ? "tool.bmi-calculator.outOfRange" : "tool.bmi-calculator.placeholder")}
+            </p>
           </div>
         )}
       </div>

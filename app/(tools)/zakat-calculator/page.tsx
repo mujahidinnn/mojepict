@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ChangeEvent } from "react";
 import { useI18n } from "@/lib/i18n/context";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { Input } from "@/components/ui/input";
@@ -43,7 +43,15 @@ export default function ZakatCalculatorPage() {
   // Zakat Emas & Perak
   const [metal, setMetal] = useState<Metal>("gold");
   const [metalWeight, setMetalWeight] = useState("100");
-  const [metalPricePerGram, setMetalPricePerGram] = useState("1200000");
+  const [goldPricePerGram, setGoldPricePerGram] = useState("1200000");
+  const [silverPricePerGram, setSilverPricePerGram] = useState("15000");
+  const metalPricePerGram = metal === "gold" ? goldPricePerGram : silverPricePerGram;
+  const setMetalPricePerGram = metal === "gold" ? setGoldPricePerGram : setSilverPricePerGram;
+
+  // Native number inputs still accept a typed "-": ignore negative values.
+  const nonNegative = (set: (v: string) => void) => (e: ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.value.includes("-")) set(e.target.value);
+  };
 
   const fitrah = useMemo(() => {
     const people = Math.max(0, parseFloat(peopleCount) || 0);
@@ -109,7 +117,7 @@ export default function ZakatCalculatorPage() {
                   type="number"
                   min="0"
                   value={peopleCount}
-                  onChange={(e) => setPeopleCount(e.target.value)}
+                  onChange={nonNegative(setPeopleCount)}
                   className="h-11"
                 />
               </div>
@@ -122,7 +130,7 @@ export default function ZakatCalculatorPage() {
                   min="0"
                   step="0.1"
                   value={ricePerPerson}
-                  onChange={(e) => setRicePerPerson(e.target.value)}
+                  onChange={nonNegative(setRicePerPerson)}
                   className="h-11"
                 />
               </div>
@@ -145,7 +153,7 @@ export default function ZakatCalculatorPage() {
               </div>
               <div className="flex flex-col">
                 <span className="text-xs text-muted-foreground">
-                  {t("tool.zakat-calculator.zakatAmount")}
+                  {t("tool.zakat-calculator.zakatAmountFitrah")}
                 </span>
                 <span className="text-3xl font-bold tracking-tight text-primary">
                   {formatNumber(fitrah.totalAmount)}
@@ -181,7 +189,7 @@ export default function ZakatCalculatorPage() {
                 <span
                   className={cn(
                     "text-xs font-semibold",
-                    maal.obligatory ? "text-emerald-500" : "text-muted-foreground",
+                    maal.obligatory ? "text-success" : "text-muted-foreground",
                   )}
                 >
                   {maal.obligatory
@@ -233,7 +241,7 @@ export default function ZakatCalculatorPage() {
                 <span
                   className={cn(
                     "text-xs font-semibold",
-                    income.obligatory ? "text-emerald-500" : "text-muted-foreground",
+                    income.obligatory ? "text-success" : "text-muted-foreground",
                   )}
                 >
                   {income.obligatory
@@ -292,7 +300,7 @@ export default function ZakatCalculatorPage() {
                   type="number"
                   min="0"
                   value={metalWeight}
-                  onChange={(e) => setMetalWeight(e.target.value)}
+                  onChange={nonNegative(setMetalWeight)}
                   className="h-11"
                 />
               </div>
@@ -313,7 +321,7 @@ export default function ZakatCalculatorPage() {
                 <span
                   className={cn(
                     "text-xs font-semibold",
-                    gold.obligatory ? "text-emerald-500" : "text-muted-foreground",
+                    gold.obligatory ? "text-success" : "text-muted-foreground",
                   )}
                 >
                   {gold.obligatory

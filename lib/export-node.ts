@@ -1,6 +1,3 @@
-import { toBlob, toPng } from "html-to-image";
-import { PDFDocument } from "pdf-lib";
-
 /**
  * Shared DOM-node-to-file export helpers. Rendering PNG/PDF from the exact
  * same styled DOM node (instead of re-laying-out data as raw text) is what
@@ -17,6 +14,7 @@ function triggerDownload(blob: Blob, filename: string) {
 }
 
 export async function nodeToPngBlob(node: HTMLElement, pixelRatio = 3): Promise<Blob> {
+  const { toBlob } = await import("html-to-image");
   const blob = await toBlob(node, { pixelRatio, cacheBust: true });
   if (!blob) throw new Error("Failed to render image.");
   return blob;
@@ -33,6 +31,7 @@ export async function downloadNodeAsPng(node: HTMLElement, filename: string, pix
  * the PDF page fits the content exactly instead of a fixed A4 frame.
  */
 export async function downloadNodeAsPdf(node: HTMLElement, filename: string, pixelRatio = 3) {
+  const [{ toPng }, { PDFDocument }] = await Promise.all([import("html-to-image"), import("pdf-lib")]);
   const dataUrl = await toPng(node, { pixelRatio, cacheBust: true });
   const pngBytes = await (await fetch(dataUrl)).arrayBuffer();
 

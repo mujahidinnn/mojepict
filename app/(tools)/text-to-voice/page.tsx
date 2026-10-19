@@ -75,13 +75,17 @@ export default function TextToVoicePage() {
 
   const handleFile = useCallback(
     (file: File) => {
+      if (!file.type.startsWith("text/") && !/\.(txt|md)$/i.test(file.name)) {
+        toast({ title: t("common.error"), description: t("media.tts.textOnly"), variant: "destructive" });
+        return;
+      }
       const reader = new FileReader();
       reader.onload = () => {
         setText(typeof reader.result === "string" ? reader.result : "");
-        toast({ title: t("common.success") || "Success", description: `Loaded "${file.name}".` });
+        toast({ title: t("common.success"), description: `${t("media.tts.loaded")} "${file.name}".` });
       };
       reader.onerror = () => {
-        toast({ title: "Failed", description: "Could not read the file.", variant: "destructive" });
+        toast({ title: t("common.error"), description: t("media.tts.readFailed"), variant: "destructive" });
       };
       reader.readAsText(file);
     },
@@ -150,9 +154,9 @@ export default function TextToVoicePage() {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(text);
-      toast({ title: t("common.success") || "Success", description: t("toast.success.copied") || "Copied!" });
+      toast({ title: t("common.success"), description: t("toast.success.copied") });
     } catch {
-      toast({ title: "Failed", description: "Could not copy text.", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("toast.error.generic"), variant: "destructive" });
     }
   };
 
@@ -180,8 +184,8 @@ export default function TextToVoicePage() {
           <div className="flex min-h-[360px] items-center justify-center rounded-xl border border-dashed">
             <ToolEmptyState
               icon={<VolumeX className="h-6 w-6" />}
-              title="Speech synthesis isn't supported in this browser"
-              hint="Try the latest Chrome, Edge, or Safari."
+              title={t("media.tts.unsupported")}
+              hint={t("media.tts.unsupportedHint")}
             />
           </div>
         </ToolWorkspace>
@@ -192,11 +196,11 @@ export default function TextToVoicePage() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Voice
+                    {t("media.tts.voice")}
                   </Label>
                   <Select value={voiceURI} onValueChange={setVoiceURI} disabled={voices.length === 0}>
                     <SelectTrigger className="h-10">
-                      <SelectValue placeholder="No voices found" />
+                      <SelectValue placeholder={t("media.tts.noVoices")} />
                     </SelectTrigger>
                     <SelectContent>
                       {groupedVoices.map(([lang, list]) => (
@@ -215,7 +219,7 @@ export default function TextToVoicePage() {
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs font-medium">Speed</Label>
+                    <Label className="text-xs font-medium">{t("media.tts.speed")}</Label>
                     <span className="text-xs font-mono">{rate.toFixed(1)}x</span>
                   </div>
                   <Slider value={[rate]} min={0.5} max={2} step={0.1} onValueChange={(v) => setRate(v[0])} />
@@ -223,7 +227,7 @@ export default function TextToVoicePage() {
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs font-medium">Pitch</Label>
+                    <Label className="text-xs font-medium">{t("media.tts.pitch")}</Label>
                     <span className="text-xs font-mono">{pitch.toFixed(1)}</span>
                   </div>
                   <Slider value={[pitch]} min={0} max={2} step={0.1} onValueChange={(v) => setPitch(v[0])} />
@@ -231,7 +235,7 @@ export default function TextToVoicePage() {
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs font-medium">Volume</Label>
+                    <Label className="text-xs font-medium">{t("media.tts.volume")}</Label>
                     <span className="text-xs font-mono">{Math.round(volume * 100)}%</span>
                   </div>
                   <Slider value={[volume]} min={0} max={1} step={0.05} onValueChange={(v) => setVolume(v[0])} />
@@ -239,7 +243,7 @@ export default function TextToVoicePage() {
               </div>
 
               <ToolActionBar
-                primaryLabel="Copy Text"
+                primaryLabel={t("media.copyText")}
                 primaryIcon={<Copy className="h-4 w-4" />}
                 onPrimary={handleCopy}
                 primaryDisabled={!text}
@@ -254,7 +258,7 @@ export default function TextToVoicePage() {
                   disabled={!text}
                 >
                   <Download className="h-4 w-4" />
-                  Download .txt
+                  {t("media.downloadTxt")}
                 </Button>
               </ToolActionBar>
             </>
@@ -268,8 +272,8 @@ export default function TextToVoicePage() {
                     type="button"
                     onClick={handlePlay}
                     disabled={!text.trim()}
-                    aria-label="Play"
-                    className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-colors disabled:opacity-40"
+                    aria-label={t("media.tts.play")}
+                    className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-colors disabled:opacity-40"
                   >
                     <Play className="h-7 w-7 translate-x-0.5" />
                   </button>
@@ -278,15 +282,15 @@ export default function TextToVoicePage() {
                     <button
                       type="button"
                       onClick={paused ? handleResume : handlePause}
-                      aria-label={paused ? "Resume" : "Pause"}
-                      className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-white shadow-lg"
+                      aria-label={paused ? t("media.tts.resume") : t("media.tts.pause")}
+                      className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg"
                     >
                       {paused ? <Play className="h-7 w-7 translate-x-0.5" /> : <Pause className="h-7 w-7" />}
                     </button>
                     <button
                       type="button"
                       onClick={handleStop}
-                      aria-label="Stop"
+                      aria-label={t("media.tts.stop")}
                       className="flex h-12 w-12 items-center justify-center rounded-full border border-input text-muted-foreground hover:bg-muted"
                     >
                       <Square className="h-5 w-5" />
@@ -296,7 +300,7 @@ export default function TextToVoicePage() {
               </div>
               <div className="flex flex-col items-center gap-1">
                 <span className="text-sm font-medium">
-                  {speaking ? (paused ? "Paused" : "Speaking…") : "Play"}
+                  {speaking ? (paused ? t("media.tts.paused") : t("media.tts.speaking")) : t("media.tts.play")}
                 </span>
                 {speaking && !paused && currentWord && (
                   <p className="max-w-md px-6 text-center text-sm italic text-muted-foreground">
@@ -309,11 +313,11 @@ export default function TextToVoicePage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Text
+                  {t("media.tts.text")}
                 </Label>
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] text-muted-foreground">
-                    {wordCount} words · {charCount} characters
+                    {wordCount} {t("media.tts.words")} · {charCount} {t("media.tts.chars")}
                   </span>
                   <input
                     ref={fileInputRef}
@@ -332,7 +336,7 @@ export default function TextToVoicePage() {
                     className="inline-flex items-center gap-1.5 rounded-md border border-input px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   >
                     <Upload className="h-3.5 w-3.5" />
-                    Upload .txt
+                    {t("media.tts.upload")}
                   </button>
                 </div>
               </div>
@@ -340,12 +344,12 @@ export default function TextToVoicePage() {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 rows={14}
-                placeholder="Type or paste text here, or upload a .txt file above. Then press play to hear it read aloud."
+                placeholder={t("media.tts.placeholder")}
                 className="resize-y text-sm"
               />
               {charCount > MAX_CHARS && (
-                <p className="text-[11px] text-amber-600">
-                  Only the first {MAX_CHARS.toLocaleString()} characters will be read aloud in one pass.
+                <p className="text-[11px] text-warning">
+                  {t("media.tts.maxChars").replace("{n}", MAX_CHARS.toLocaleString())}
                 </p>
               )}
             </div>

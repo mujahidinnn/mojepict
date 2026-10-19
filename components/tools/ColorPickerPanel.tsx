@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Pipette } from "lucide-react";
+import { useI18n } from "@/lib/i18n/context";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ const HUE_TRACK =
   "linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)";
 
 export function ColorPickerPanel({ value, onChange, className }: ColorPickerPanelProps) {
+  const { t } = useI18n();
   const [format, setFormat] = useState<"hex" | "rgb" | "hsl">("hex");
   const squareRef = useRef<HTMLDivElement>(null);
 
@@ -93,8 +95,8 @@ export function ColorPickerPanel({ value, onChange, className }: ColorPickerPane
           />
           <button
             type="button"
-            title="System color picker"
-            aria-label="Open system color picker"
+            title={t("media.colorPanel.system")}
+            aria-label={t("media.colorPanel.system")}
             className="relative h-9 w-9 shrink-0 rounded-md border overflow-hidden flex items-center justify-center"
           >
             <Pipette className="h-4 w-4 pointer-events-none" />
@@ -145,6 +147,7 @@ function HexField({ hex, onCommit }: { hex: string; onCommit: (hex: string) => v
       onBlur={commit}
       onKeyDown={(e) => e.key === "Enter" && commit()}
       className="font-mono"
+      aria-label="HEX"
       maxLength={7}
     />
   );
@@ -188,6 +191,7 @@ function RgbFields({
                 [key]: Math.max(0, Math.min(255, Math.round(draft[key] || 0))),
               })
             }
+            aria-label={key.toUpperCase()}
             className="font-mono text-center"
           />
         </div>
@@ -226,12 +230,15 @@ function HslFields({ hex, onCommit }: { hex: string; onCommit: (hex: string) => 
             onChange={(e) =>
               setDraft((prev) => ({ ...prev, [key]: Number(e.target.value) }))
             }
-            onBlur={() =>
+            onBlur={() => {
+              const v = Math.round(draft[key] || 0);
               commit({
                 ...draft,
-                [key]: Math.max(0, Math.min(max, Math.round(draft[key] || 0))),
-              })
-            }
+                // Hue is an angle: wrap (400 → 40) instead of clamping.
+                [key]: key === "h" ? ((v % 360) + 360) % 360 : Math.max(0, Math.min(max, v)),
+              });
+            }}
+            aria-label={key.toUpperCase()}
             className="font-mono text-center"
           />
         </div>

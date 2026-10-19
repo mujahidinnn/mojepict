@@ -11,7 +11,21 @@ import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
 import { Copy, Download, Info, RotateCcw } from "lucide-react";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+const pad = (n: number) => String(n).padStart(2, "0");
+/** EXIF times carry no zone; exifr revives them as local Dates, so print local wall-clock time, not UTC. */
+const formatLocal = (d: Date) =>
+  `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+const toJson = (data: unknown, space?: number) =>
+  JSON.stringify(
+    data,
+    function (this: Record<string, unknown>, key, value) {
+      const raw = this[key];
+      return raw instanceof Date ? formatLocal(raw) : value;
+    },
+    space,
+  );
 
 export default function MetadataViewerPage() {
   const { t } = useI18n();
@@ -21,10 +35,26 @@ export default function MetadataViewerPage() {
   const [metadata, setMetadata] = useState<Record<string, any> | null>(null);
   const [fileName, setFileName] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const previewRef = useRef<string | null>(null);
+
+  useEffect(() => () => {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+  }, []);
 
   const processFile = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast({
+        variant: "destructive",
+        title: t("common.error"),
+        description: file.type === "application/pdf" ? t("media.metadata.pdf") : t("toast.error.unsupported"),
+      });
+      return;
+    }
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    const url = URL.createObjectURL(file);
+    previewRef.current = url;
     setFileName(file.name);
-    setImageFile(URL.createObjectURL(file));
+    setImageFile(url);
     try {
       const exifr = await import("exifr");
       const result = await exifr.parse(file);
@@ -49,9 +79,12 @@ export default function MetadataViewerPage() {
   const handleSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) processFile(file);
+    e.target.value = "";
   };
 
   const handleReset = () => {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    previewRef.current = null;
     setImageFile(null);
     setMetadata(null);
     toast({ description: t("tool.image-draw.reset-msg") });
@@ -59,21 +92,23 @@ export default function MetadataViewerPage() {
 
   const handleCopy = () => {
     if (!metadata) return;
-    const text = JSON.stringify(metadata, null, 2);
-    navigator.clipboard.writeText(text).then(() => {
-      toast({ description: t("toast.success.copied") });
-    });
+    navigator.clipboard.writeText(toJson(metadata, 2)).then(
+      () => toast({ description: t("toast.success.copied") }),
+      () => toast({ variant: "destructive", title: t("common.error"), description: t("toast.error.generic") }),
+    );
   };
 
   const handleDownload = () => {
     if (!metadata) return;
-    const blob = new Blob([JSON.stringify(metadata, null, 2)], {
+    const blob = new Blob([toJson(metadata, 2)], {
       type: "application/json",
     });
     const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
+    link.href = url;
     link.download = `${fileName.split(".")[0]}-metadata.json`;
     link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
     toast({
       title: t("common.success"),
       description: t("toast.success.downloaded"),
@@ -164,9 +199,11 @@ export default function MetadataViewerPage() {
                         {key}
                       </span>
                       <span className="sm:w-2/3 break-all font-mono text-[13px]">
-                        {typeof value === "object"
-                          ? JSON.stringify(value)
-                          : String(value)}
+                        {value instanceof Date
+                          ? formatLocal(value)
+                          : typeof value === "object"
+                            ? toJson(value)
+                            : String(value)}
                       </span>
                     </div>
                   ))}

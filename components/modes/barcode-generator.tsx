@@ -45,7 +45,7 @@ export default function BarcodeGeneratorPage() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (!svgRef.current || !value) {
+    if (!svgRef.current || !value || !(width > 0) || !(height > 0)) {
       setError(true);
       return;
     }
@@ -74,7 +74,7 @@ export default function BarcodeGeneratorPage() {
     a.href = url;
     a.download = "barcode.svg";
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   const getPngBlob = (): Promise<Blob | null> => {
@@ -103,6 +103,10 @@ export default function BarcodeGeneratorPage() {
           resolve(blob);
         }, "image/png");
       };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(null);
+      };
       img.src = url;
     });
   };
@@ -115,7 +119,7 @@ export default function BarcodeGeneratorPage() {
     a.href = pngUrl;
     a.download = "barcode.png";
     a.click();
-    URL.revokeObjectURL(pngUrl);
+    setTimeout(() => URL.revokeObjectURL(pngUrl), 1000);
   };
 
   return (
@@ -216,13 +220,12 @@ export default function BarcodeGeneratorPage() {
           </FormGroup>
 
           <div className="flex min-h-[280px] items-center justify-center overflow-x-auto rounded-xl border bg-muted/10 p-6">
-            {error ? (
+            {error && (
               <p className="text-sm text-muted-foreground">
                 {t("tool.barcode-generator.invalid")}
               </p>
-            ) : (
-              <svg ref={svgRef} />
             )}
+            <svg ref={svgRef} className={error ? "hidden" : undefined} />
           </div>
         </div>
       </ToolWorkspace>

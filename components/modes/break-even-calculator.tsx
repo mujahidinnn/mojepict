@@ -25,7 +25,8 @@ export default function BreakEvenCalculatorPage() {
     const margin = price - variable;
     const valid = margin > 0;
     const units = valid ? fixed / margin : 0;
-    const revenue = units * price;
+    // Can't sell a fraction of a unit: revenue is for the rounded-up unit count shown.
+    const revenue = Math.ceil(units - 1e-9) * price;
 
     return { contributionMargin: margin, bepUnits: units, bepRevenue: revenue, isValid: valid };
   }, [fixedCost, variableCost, pricePerUnit]);
@@ -66,7 +67,7 @@ export default function BreakEvenCalculatorPage() {
                   </span>
                 </div>
                 <p className="text-2xl font-bold tracking-tight text-primary">
-                  {formatNumber(Math.ceil(bepUnits))}
+                  {formatNumber(Math.ceil(bepUnits - 1e-9))}
                 </p>
               </div>
               <div className="rounded-xl border bg-primary/5 border-primary/10 p-6 flex flex-col gap-2">

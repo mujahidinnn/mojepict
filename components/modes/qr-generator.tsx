@@ -39,7 +39,11 @@ export default function QrGeneratorPage() {
   const [logo, setLogo] = useState<string | null>(null);
   const [logoSize, setLogoSize] = useState(60);
 
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const qrWrapRef = useRef<HTMLDivElement>(null);
+  // Level H, byte mode, version 40 holds at most 1273 bytes; past that qrcode.react throws during render.
+  const QR_MAX_BYTES = 1273;
+  const tooLong = useMemo(() => new TextEncoder().encode(text).length > QR_MAX_BYTES, [text]);
+  const hasQr = !!text && !tooLong;
 
   const handleLogoUpload = (file: File) => {
     const reader = new FileReader();
@@ -48,7 +52,7 @@ export default function QrGeneratorPage() {
   };
 
   const handleDownload = () => {
-    const canvas = document.querySelector("canvas");
+    const canvas = qrWrapRef.current?.querySelector("canvas");
     if (!canvas) return;
 
     const url = canvas.toDataURL("image/png");
@@ -63,7 +67,7 @@ export default function QrGeneratorPage() {
   };
 
   const getQrBlob = (): Promise<Blob | null> => {
-    const canvas = document.querySelector("canvas");
+    const canvas = qrWrapRef.current?.querySelector("canvas");
     if (!canvas) return Promise.resolve(null);
     return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
   };
@@ -73,7 +77,7 @@ export default function QrGeneratorPage() {
   // tiny fixed pixel size regardless of the real QR's size setting.
   const LOUPE_QR_SIZE = 84;
   const loupePreview = useMemo(() => {
-    if (!text) return null;
+    if (!hasQr) return null;
     const loupeLogoSize = logo ? Math.max(8, Math.round(logoSize * (LOUPE_QR_SIZE / size))) : undefined;
     return (
       <div className="rounded-lg bg-white p-4 shadow-sm">
@@ -91,7 +95,7 @@ export default function QrGeneratorPage() {
         />
       </div>
     );
-  }, [text, qrColor, bgColor, logo, logoSize, size]);
+  }, [text, hasQr, qrColor, bgColor, logo, logoSize, size]);
 
   return (
     <ToolShell
@@ -112,6 +116,9 @@ export default function QrGeneratorPage() {
                   t("tool.qr-generator.placeholder") || "https://mojepict.com"
                 }
               />
+              {tooLong && (
+                <p className="text-xs text-destructive">{t("media.qr.tooLong")}</p>
+              )}
             </FormGroup>
 
             <div className="grid grid-cols-2 gap-4">
@@ -169,14 +176,14 @@ export default function QrGeneratorPage() {
               <div className="flex flex-col gap-3">
                 <Dropzone
                   onFile={handleLogoUpload}
-                  title={logo ? "Change Logo" : "Upload Logo"}
+                  title={logo ? t("media.qr.changeLogo") : t("media.qr.uploadLogo")}
                   className="min-h-[100px] p-4"
                 />
 
                 {logo && (
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <Label className="text-xs text-muted-foreground">Logo Size</Label>
+                      <Label className="text-xs text-muted-foreground">{t("media.qr.logoSize")}</Label>
                       <span className="text-xs font-mono text-muted-foreground">{logoSize}px</span>
                     </div>
                     <Slider
@@ -204,9 +211,9 @@ export default function QrGeneratorPage() {
               primaryLabel={t("action.download")}
               primaryIcon={<Download className="h-4 w-4" />}
               onPrimary={handleDownload}
-              primaryDisabled={!text}
+              primaryDisabled={!hasQr}
             >
-              <CopyImageButton getBlob={getQrBlob} disabled={!text} />
+              <CopyImageButton getBlob={getQrBlob} disabled={!hasQr} />
               <p className="text-[10px] text-center text-muted-foreground">
                 {t("tool.qr-generator.footer") ||
                   "High-quality PNG output with optional logo integration."}
@@ -216,8 +223,8 @@ export default function QrGeneratorPage() {
         }
       >
         <ImageZoomPreview>
-          {text ? (
-            <div className="p-4 border shadow-sm rounded-lg bg-white">
+          {hasQr ? (
+            <div ref={qrWrapRef} className="p-4 border shadow-sm rounded-lg bg-white">
               <QRCodeCanvas
                 value={text}
                 size={size}

@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element -- ImageResponse (Satori) only renders plain <img> */
 import { ImageResponse } from "next/og";
 import type { NextRequest } from "next/server";
 import { OgIcon } from "@/lib/og-icon";
@@ -169,7 +170,7 @@ export async function GET(req: NextRequest) {
                   color: "#0b0d12",
                 }}
               >
-                <img src={logoDataUri} width={52} height={52} />
+                <img src={logoDataUri} alt="" width={52} height={52} />
               </div>
             </div>
             <div
@@ -214,7 +215,7 @@ export async function GET(req: NextRequest) {
           {iconName ? (
             <OgIcon name={iconName} color="#ffffff" size={78} strokeWidth={2} />
           ) : (
-            <img src={logoDataUri} width={152} height={152} />
+            <img src={logoDataUri} alt="" width={152} height={152} />
           )}
         </div>
 

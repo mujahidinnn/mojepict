@@ -87,7 +87,8 @@ export function getToolMetadata(slug: string): Metadata {
   if (!name || !description) return {};
 
   const url = `${SITE_URL}/${slug}`;
-  const title = `${name} · Free Online Tool`;
+  // Root layout's title template appends "· Mojepict".
+  const title = name;
   const keywords = getToolKeywords(tool.id, name, tool.category);
   const ogImage = toolOgImage(name, tool.category, tool.icon);
 
@@ -113,6 +114,12 @@ export function getToolMetadata(slug: string): Metadata {
   };
 }
 
+const APP_CATEGORY: Partial<Record<keyof typeof CATEGORIES, string>> = {
+  image: "MultimediaApplication",
+  color: "MultimediaApplication",
+  dev: "DeveloperApplication",
+};
+
 export function getToolJsonLd(slug: string) {
   const tool = TOOLS.find((t) => t.slug === slug);
   if (!tool) return null;
@@ -122,14 +129,16 @@ export function getToolJsonLd(slug: string) {
 
   const features = hubFeatureNames(tool.id);
 
-  return {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
+  const url = `${SITE_URL}/${slug}`;
+
+  const app = {
+    "@type": "WebApplication",
     name,
     description,
-    url: `${SITE_URL}/${slug}`,
-    applicationCategory: "BrowserApplication",
-    operatingSystem: "Any (runs in browser)",
+    url,
+    applicationCategory: APP_CATEGORY[tool.category] ?? "UtilitiesApplication",
+    browserRequirements: "Requires JavaScript",
+    operatingSystem: "Any",
     keywords: getToolKeywords(tool.id, name, tool.category).join(", "),
     ...(features && { featureList: features.en }),
     isAccessibleForFree: true,
@@ -137,12 +146,37 @@ export function getToolJsonLd(slug: string) {
       "@type": "Offer",
       price: "0",
       priceCurrency: "USD",
+      availability: "https://schema.org/InStock",
     },
     publisher: {
       "@type": "Organization",
       name: SITE_NAME,
       url: SITE_URL,
     },
+  };
+
+  const breadcrumb = {
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: SITE_NAME, item: SITE_URL },
+      { "@type": "ListItem", position: 2, name, item: url },
+    ],
+  };
+
+  return { "@context": "https://schema.org", "@graph": [app, breadcrumb] };
+}
+
+export function getHomeJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: `${SITE_NAME} tools`,
+    itemListElement: TOOLS.map((tool, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: toolCopy(tool.id).name ?? tool.id,
+      url: `${SITE_URL}/${tool.slug}`,
+    })),
   };
 }
 

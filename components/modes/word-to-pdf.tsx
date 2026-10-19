@@ -15,6 +15,20 @@ const PRINT_CSS = `@page{size:A4;margin:20mm}body{font-family:Calibri,Arial,sans
 h1{font-size:20pt}h2{font-size:16pt}h3{font-size:13pt}p{margin:0 0 8pt}img{max-width:100%}
 table{border-collapse:collapse}td,th{border:1px solid #000;padding:4px}tr,img{page-break-inside:avoid}`;
 
+// mammoth output is untrusted: strip active content before it reaches innerHTML/srcdoc.
+function sanitizeHtml(html: string) {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  doc.querySelectorAll("script,iframe,object,embed").forEach((el) => el.remove());
+  doc.querySelectorAll("*").forEach((el) => {
+    for (const { name, value } of [...el.attributes]) {
+      const isUrlAttr = name === "href" || name === "src" || name === "xlink:href";
+      const safeUrl = /^(https?:|mailto:|#)/i.test(value.trim()) || (name === "src" && /^data:image\//i.test(value.trim()));
+      if (name.startsWith("on") || (isUrlAttr && !safeUrl)) el.removeAttribute(name);
+    }
+  });
+  return doc.body.innerHTML;
+}
+
 export default function WordToPdfPage({ initialFile }: { initialFile?: File } = {}) {
   const { t } = useI18n();
   const { toast } = useToast();
@@ -30,13 +44,14 @@ export default function WordToPdfPage({ initialFile }: { initialFile?: File } = 
       const mammoth = await import("mammoth");
       const { value } = await mammoth.convertToHtml({ arrayBuffer: await f.arrayBuffer() });
       setFile(f);
-      setHtml(value);
+      setHtml(sanitizeHtml(value));
     } catch {
       fail(t("tool.word-to-pdf.invalidFile"));
     }
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- load() only sets state after awaiting the file
     if (initialFile) load(initialFile);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialFile]);
@@ -45,6 +60,7 @@ export default function WordToPdfPage({ initialFile }: { initialFile?: File } = 
   const convert = () => {
     const iframe = document.createElement("iframe");
     iframe.style.cssText = "position:fixed;width:0;height:0;border:0";
+    iframe.sandbox.add("allow-same-origin", "allow-modals");
     iframe.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><title>${file?.name.replace(/\.docx$/i, "").replace(/[<>&]/g, "")}</title><style>${PRINT_CSS}</style></head><body>${html}</body></html>`;
     iframe.onload = () => {
       iframe.contentWindow?.focus();

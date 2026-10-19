@@ -14,6 +14,24 @@ import {
   ResultCard,
 } from "@/components/tools/ToolTemplates";
 
+/**
+ * Splits text into lowercase words on spaces/punctuation (-, _, etc.) and camel
+ * boundaries, after stripping diacritics: "Ápa kabar café" -> ["apa","kabar","cafe"].
+ */
+function toWords(s: string): string[] {
+  return s
+    .replace(/ß/g, "ss")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/(\p{Ll}|\p{N})(\p{Lu})/gu, "$1 $2")
+    .replace(/(\p{Lu}+)(\p{Lu}\p{Ll})/gu, "$1 $2")
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter(Boolean)
+    .map((w) => w.toLowerCase());
+}
+
+const capitalize = (w: string) => w.charAt(0).toUpperCase() + w.slice(1);
+
 export default function CaseConverterPage() {
   const { t } = useI18n();
   const { toast } = useToast();
@@ -24,45 +42,20 @@ export default function CaseConverterPage() {
     { name: "UPPERCASE", fn: (s: string) => s.toUpperCase() },
     {
       name: "camelCase",
-      fn: (s: string) =>
-        s
-          .replace(/(?:^\w|[A-Z]|\b\w)/g, (word, index) =>
-            index === 0 ? word.toLowerCase() : word.toUpperCase(),
-          )
-          .replace(/\s+/g, ""),
+      fn: (s: string) => toWords(s).map((w, i) => (i === 0 ? w : capitalize(w))).join(""),
     },
-    {
-      name: "PascalCase",
-      fn: (s: string) =>
-        s
-          .replace(/(?:^\w|[A-Z]|\b\w)/g, (word) => word.toUpperCase())
-          .replace(/\s+/g, ""),
-    },
-    {
-      name: "snake_case",
-      fn: (s: string) =>
-        s
-          .match(
-            /[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+/g,
-          )
-          ?.map((x) => x.toLowerCase())
-          .join("_") || "",
-    },
-    {
-      name: "kebab-case",
-      fn: (s: string) =>
-        s
-          .match(
-            /[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+/g,
-          )
-          ?.map((x) => x.toLowerCase())
-          .join("-") || "",
-    },
+    { name: "PascalCase", fn: (s: string) => toWords(s).map(capitalize).join("") },
+    { name: "snake_case", fn: (s: string) => toWords(s).join("_") },
+    { name: "kebab-case", fn: (s: string) => toWords(s).join("-") },
   ];
 
-  const copyResult = (content: string) => {
-    navigator.clipboard.writeText(content);
-    toast({ description: t("toast.success.copied") });
+  const copyResult = async (content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      toast({ description: t("toast.success.copied") });
+    } catch {
+      toast({ title: t("common.error"), variant: "destructive" });
+    }
   };
 
   return (

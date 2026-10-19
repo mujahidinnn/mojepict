@@ -40,8 +40,10 @@ export default function UrlEncoderPage() {
 
   const copyResult = (content: string) => {
     if (!content) return;
-    navigator.clipboard.writeText(content);
-    toast({ description: t("toast.success.copied") });
+    navigator.clipboard
+      .writeText(content)
+      .then(() => toast({ description: t("toast.success.copied") }))
+      .catch(() => toast({ variant: "destructive", description: t("toast.error.generic") }));
   };
 
   return (
@@ -51,7 +53,7 @@ export default function UrlEncoderPage() {
     >
       <TwoColumnLayout>
         <InputSection
-          label={t("tool.url-encoder.input-label")}
+          label={t(mode === "encode" ? "tool.url-encoder.input-label" : "tool.url-encoder.output-label")}
           action={
             <div className="flex items-center gap-2">
               <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)}>
@@ -87,7 +89,7 @@ export default function UrlEncoderPage() {
           />
         </InputSection>
 
-        <OutputSection label={t("tool.url-encoder.output-label")}>
+        <OutputSection label={t(mode === "encode" ? "tool.url-encoder.output-label" : "tool.url-encoder.input-label")}>
           <ResultCard
             content={isInvalid ? t("tool.url-encoder.invalid") : output || "..."}
             onCopy={copyResult}

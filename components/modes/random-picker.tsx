@@ -148,13 +148,20 @@ function CoinTab() {
 
 function NumberTab() {
   const { t } = useI18n();
-  const [min, setMin] = useState(1);
-  const [max, setMax] = useState(100);
+  const [min, setMin] = useState("1");
+  const [max, setMax] = useState("100");
   const [result, setResult] = useState<number | null>(null);
 
+  const minN = Number(min);
+  const maxN = Number(max);
+  // Bounds must be whole numbers (decimals are rejected, not silently rounded).
+  const invalid =
+    min.trim() === "" || max.trim() === "" || !Number.isSafeInteger(minN) || !Number.isSafeInteger(maxN);
+
   const generate = () => {
-    const lo = Math.min(min, max);
-    const hi = Math.max(min, max);
+    if (invalid) return;
+    const lo = Math.min(minN, maxN);
+    const hi = Math.max(minN, maxN);
     setResult(lo + Math.floor(Math.random() * (hi - lo + 1)));
   };
 
@@ -167,8 +174,9 @@ function NumberTab() {
           </Label>
           <Input
             type="number"
+            step={1}
             value={min}
-            onChange={(e) => setMin(Number(e.target.value))}
+            onChange={(e) => setMin(e.target.value)}
             className="h-11"
           />
         </div>
@@ -178,8 +186,9 @@ function NumberTab() {
           </Label>
           <Input
             type="number"
+            step={1}
             value={max}
-            onChange={(e) => setMax(Number(e.target.value))}
+            onChange={(e) => setMax(e.target.value)}
             className="h-11"
           />
         </div>
@@ -189,7 +198,11 @@ function NumberTab() {
         {result ?? "?"}
       </div>
 
-      <Button className="gap-2" onClick={generate}>
+      {invalid && (
+        <p className="text-sm text-destructive">{t("tool.random-picker.integerOnly")}</p>
+      )}
+
+      <Button className="gap-2" onClick={generate} disabled={invalid}>
         <Hash className="h-4 w-4" /> {t("tool.random-picker.generate")}
       </Button>
     </div>

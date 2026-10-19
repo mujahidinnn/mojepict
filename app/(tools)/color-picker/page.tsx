@@ -18,9 +18,13 @@ export default function ColorPickerPage() {
   const { r, g, b } = hexToRgb(color);
   const { h, s, l } = rgbToHsl(r, g, b);
 
-  const copy = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    toast({ title: t("action.copied"), description: label });
+  const copy = async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({ title: t("action.copied"), description: label });
+    } catch {
+      toast({ variant: "destructive", title: t("common.error"), description: t("toast.error.generic") });
+    }
   };
 
   const formats = [
@@ -52,7 +56,8 @@ export default function ColorPickerPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => copy(value, `${label} copied`)}
+                aria-label={`${t("action.copy")} ${label}`}
+                onClick={() => copy(value, label)}
               >
                 <Copy className="h-4 w-4" />
               </Button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n/context";
 import { useToast } from "@/hooks/use-toast";
 import { ToolShell } from "@/components/tools/ToolShell";
@@ -25,7 +25,8 @@ import { Copy, Pilcrow, Wand2 } from "lucide-react";
 type Unit = "paragraphs" | "sentences" | "words";
 
 const MIN_COUNT = 1;
-const MAX_COUNT = 50;
+// Batas per unit: cukup untuk pemakaian normal tanpa membuat tab lag saat dibuat ulang.
+const MAX_COUNT: Record<Unit, number> = { paragraphs: 100, sentences: 500, words: 5000 };
 
 const WORDS = [
   "lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing", "elit",
@@ -35,46 +36,80 @@ const WORDS = [
   "consequat", "duis", "aute", "irure", "in", "reprehenderit", "voluptate",
   "velit", "esse", "cillum", "eu", "fugiat", "nulla", "pariatur", "excepteur",
   "sint", "occaecat", "cupidatat", "non", "proident", "sunt", "culpa", "qui",
-  "officia", "deserunt", "mollit", "anim", "id", "est", "laborum",
+  "officia", "deserunt", "mollit", "anim", "id", "est", "laborum", "a", "ac",
+  "accumsan", "aenean", "aliquam", "ante", "arcu", "at", "auctor", "augue",
+  "bibendum", "blandit", "condimentum", "congue", "cras", "curabitur", "dapibus",
+  "diam", "dictum", "dignissim", "donec", "egestas", "eget", "eleifend",
+  "elementum", "erat", "eros", "etiam", "facilisis", "fames", "faucibus", "felis",
+  "fermentum", "feugiat", "finibus", "gravida", "habitant", "hendrerit", "iaculis",
+  "imperdiet", "integer", "interdum", "justo", "lacinia", "lacus", "laoreet",
+  "lectus", "leo", "libero", "ligula", "lobortis", "luctus", "maecenas", "massa",
+  "mattis", "mauris", "maximus", "metus", "mi", "molestie", "morbi", "nam", "nec",
+  "neque", "nibh", "nisl", "nunc", "odio", "orci", "ornare", "pellentesque",
+  "pharetra", "placerat", "porta", "porttitor", "posuere", "praesent", "pretium",
+  "purus", "quam", "quisque", "rhoncus", "risus", "rutrum", "sagittis", "sapien",
+  "scelerisque", "semper", "sodales", "sollicitudin", "suscipit", "suspendisse",
+  "tellus", "tincidunt", "tortor", "tristique", "turpis", "ullamcorper", "ultrices",
+  "ultricies", "urna", "varius", "vehicula", "vel", "vestibulum", "vitae", "vivamus",
+  "viverra", "volutpat", "vulputate",
 ];
+
+const LOREM_START = ["lorem", "ipsum", "dolor", "sit", "amet"];
 
 function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function randomWord() {
-  return WORDS[Math.floor(Math.random() * WORDS.length)];
+function randInt(min: number, max: number) {
+  return min + Math.floor(Math.random() * (max - min + 1));
 }
 
+function randomWords(n: number, prev?: string) {
+  const out: string[] = [];
+  for (let i = 0; i < n; i++) {
+    let w: string;
+    do w = WORDS[Math.floor(Math.random() * WORDS.length)];
+    while (w === (out[i - 1] ?? prev));
+    out.push(w);
+  }
+  return out;
+}
+
+// Panjang kalimat & koma acak supaya ritmenya tidak seragam.
 function generateSentence(startWithLorem = false) {
-  const length = 6 + Math.floor(Math.random() * 10);
+  const length = randInt(startWithLorem ? 8 : 5, 18);
   const words = startWithLorem
-    ? ["lorem", "ipsum", "dolor", "sit", "amet", ...Array.from({ length: Math.max(0, length - 5) }, randomWord)]
-    : Array.from({ length }, randomWord);
-  return capitalize(words.join(" ")) + ".";
+    ? [...LOREM_START, ...randomWords(Math.max(0, length - 5), "amet")]
+    : randomWords(length);
+  if (startWithLorem) words[4] += ",";
+  let sinceComma = 0;
+  for (let i = startWithLorem ? 5 : 0; i < words.length - 2; i++) {
+    if (++sinceComma >= 3 && Math.random() < 0.15) {
+      words[i] += ",";
+      sinceComma = 0;
+    }
+  }
+  return capitalize(words.join(" ")) + (Math.random() < 0.06 ? "?" : ".");
 }
 
-function generateParagraph(sentenceCount: number, startWithLorem = false) {
-  return Array.from({ length: sentenceCount }, (_, i) =>
+function generateParagraph(startWithLorem = false) {
+  return Array.from({ length: randInt(3, 7) }, (_, i) =>
     generateSentence(startWithLorem && i === 0),
   ).join(" ");
 }
 
 function generate(unit: Unit, count: number, startWithLorem: boolean): string {
-  const n = Math.max(MIN_COUNT, Math.min(MAX_COUNT, count));
+  const n = Math.max(MIN_COUNT, Math.min(MAX_COUNT[unit], count));
   if (unit === "words") {
     const words = startWithLorem
-      ? ["Lorem", "ipsum", "dolor", "sit", "amet", ...Array.from({ length: Math.max(0, n - 5) }, randomWord)]
-      : [capitalize(randomWord()), ...Array.from({ length: Math.max(0, n - 1) }, randomWord)];
-    return words.slice(0, n).join(" ") + ".";
+      ? [...LOREM_START, ...randomWords(Math.max(0, n - 5), "amet")].slice(0, n)
+      : randomWords(n);
+    return capitalize(words.join(" ")) + ".";
   }
   if (unit === "sentences") {
     return Array.from({ length: n }, (_, i) => generateSentence(startWithLorem && i === 0)).join(" ");
   }
-  const sentencesPerParagraph = 4;
-  return Array.from({ length: n }, (_, i) =>
-    generateParagraph(sentencesPerParagraph, startWithLorem && i === 0),
-  ).join("\n\n");
+  return Array.from({ length: n }, (_, i) => generateParagraph(startWithLorem && i === 0)).join("\n\n");
 }
 
 export default function LoremIpsumPage() {
@@ -84,16 +119,27 @@ export default function LoremIpsumPage() {
   const [unit, setUnit] = useState<Unit>("paragraphs");
   const [count, setCount] = useState(3);
   const [startWithLorem, setStartWithLorem] = useState(true);
+  const [asHtml, setAsHtml] = useState(false);
   const [output, setOutput] = useState("");
 
   const handleGenerate = () => {
     setOutput(generate(unit, count, startWithLorem));
   };
 
-  const copyResult = () => {
-    if (!output) return;
-    navigator.clipboard.writeText(output);
-    toast({ description: t("toast.success.copied") });
+  useEffect(handleGenerate, [unit, count, startWithLorem]);
+
+  const result = asHtml
+    ? output.split("\n\n").map((p) => `<p>${p}</p>`).join("\n")
+    : output;
+
+  const copyResult = async () => {
+    if (!result) return;
+    try {
+      await navigator.clipboard.writeText(result);
+      toast({ description: t("toast.success.copied") });
+    } catch {
+      toast({ title: t("common.error"), variant: "destructive" });
+    }
   };
 
   return (
@@ -105,7 +151,10 @@ export default function LoremIpsumPage() {
         sidebar={
           <>
             <FormGroup label={t("tool.lorem-ipsum.unit")}>
-              <Select value={unit} onValueChange={(v) => setUnit(v as Unit)}>
+              <Select value={unit} onValueChange={(v) => {
+                  setUnit(v as Unit);
+                  setCount((c) => Math.min(c, MAX_COUNT[v as Unit]));
+                }}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -121,16 +170,16 @@ export default function LoremIpsumPage() {
               </Select>
             </FormGroup>
 
-            <FormGroup label={`${t("tool.lorem-ipsum.count")} (${MIN_COUNT}-${MAX_COUNT})`}>
+            <FormGroup label={`${t("tool.lorem-ipsum.count")} (${MIN_COUNT}-${MAX_COUNT[unit]})`}>
               <Input
                 type="number"
                 min={MIN_COUNT}
-                max={MAX_COUNT}
+                max={MAX_COUNT[unit]}
                 value={count}
                 onChange={(e) => {
                   const raw = Number(e.target.value);
                   const clamped = Number.isFinite(raw)
-                    ? Math.max(MIN_COUNT, Math.min(MAX_COUNT, Math.trunc(raw)))
+                    ? Math.max(MIN_COUNT, Math.min(MAX_COUNT[unit], Math.trunc(raw)))
                     : MIN_COUNT;
                   setCount(clamped);
                 }}
@@ -146,6 +195,13 @@ export default function LoremIpsumPage() {
                 checked={startWithLorem}
                 onCheckedChange={setStartWithLorem}
               />
+            </div>
+
+            <div className="flex items-center justify-between py-2">
+              <Label htmlFor="as-html" className="text-sm font-normal cursor-pointer">
+                {t("tool.lorem-ipsum.asHtml")}
+              </Label>
+              <Switch id="as-html" checked={asHtml} onCheckedChange={setAsHtml} />
             </div>
 
             <ToolActionBar
@@ -169,7 +225,7 @@ export default function LoremIpsumPage() {
         {output ? (
           <Textarea
             readOnly
-            value={output}
+            value={result}
             className="min-h-96 p-4 resize-none"
           />
         ) : (

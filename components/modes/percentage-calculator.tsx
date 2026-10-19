@@ -32,16 +32,21 @@ export default function PercentageCalculatorPage() {
     if (isNaN(numX) || isNaN(numY)) return null;
     if (mode === "of") return (numX / 100) * numY;
     if (mode === "isWhatPercent") return numY === 0 ? null : (numX / numY) * 100;
-    if (mode === "change") return numX === 0 ? null : ((numY - numX) / numX) * 100;
+    // Divide by |X| so the sign follows the direction (Y - X) even from a negative base.
+    if (mode === "change") return numX === 0 ? null : ((numY - numX) / Math.abs(numX)) * 100;
     return null;
   }, [mode, numX, numY]);
 
-  const isIncrease = mode === "change" && result !== null && result >= 0;
+  const isIncrease = mode === "change" && result !== null && numY - numX >= 0;
 
-  const copyResult = () => {
+  const copyResult = async () => {
     if (result === null) return;
-    navigator.clipboard.writeText(formatNumber(result));
-    toast({ description: t("toast.success.copied") });
+    try {
+      await navigator.clipboard.writeText(formatNumber(result));
+      toast({ description: t("toast.success.copied") });
+    } catch {
+      toast({ title: t("common.error"), variant: "destructive" });
+    }
   };
 
   return (
@@ -90,7 +95,7 @@ export default function PercentageCalculatorPage() {
                 "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-white",
                 mode === "change"
                   ? isIncrease
-                    ? "bg-emerald-500"
+                    ? "bg-success"
                     : "bg-destructive"
                   : "bg-gradient-to-br from-emerald-500 to-teal-600",
               )}
@@ -128,6 +133,7 @@ export default function PercentageCalculatorPage() {
             onClick={copyResult}
             disabled={result === null}
             className="h-9 w-9"
+            aria-label={t("action.copy")}
           >
             <Copy className="h-4 w-4" />
           </Button>

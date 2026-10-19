@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseKeyPool, withKeyRotation } from "@/lib/api-key-pool";
+import { readImageUpload } from "../guard";
 
 export const runtime = "nodejs";
 
@@ -18,23 +19,16 @@ const ROTATE_ON_STATUS = new Set([401, 429]);
 export async function POST(req: NextRequest) {
   const keys = parseKeyPool(process.env.TINIFY_API_KEY);
   if (keys.length === 0) {
+    console.error("[compress] TINIFY_API_KEY is not set");
     return NextResponse.json(
-      {
-        error: "not_configured",
-        message: "TINIFY_API_KEY is not set on the server.",
-      },
+      { error: "not_configured", message: "This feature is not available right now." },
       { status: 503 },
     );
   }
 
-  const incoming = await req.formData();
-  const file = incoming.get("image");
-  if (!(file instanceof File)) {
-    return NextResponse.json(
-      { error: "bad_request", message: "Missing 'image' file in form data." },
-      { status: 400 },
-    );
-  }
+  const upload = await readImageUpload(req, "compress");
+  if (upload instanceof NextResponse) return upload;
+  const { form: incoming, file } = upload;
   const format = incoming.get("format");
   const convertTo =
     typeof format === "string" && ALLOWED_FORMATS.has(format) ? format : null;
@@ -58,16 +52,18 @@ export async function POST(req: NextRequest) {
       },
       (res) => ROTATE_ON_STATUS.has(res.status),
     );
-  } catch {
+  } catch (err) {
+    console.error("[compress] upstream unreachable", err);
     return NextResponse.json(
-      { error: "upstream_unreachable", message: "Could not reach Tinify." },
+      { error: "upstream_unreachable", message: "Compression service is unreachable." },
       { status: 502 },
     );
   }
 
   if (!shrinkRes.ok) {
     const body = await shrinkRes.json().catch(() => null);
-    const message = body?.message ?? "Compression failed upstream.";
+    console.error("[compress] upstream error", shrinkRes.status, body?.message);
+    const message = "Compression failed.";
     const status =
       shrinkRes.status === 429
         ? 429 // all keys' quota exhausted
@@ -79,9 +75,10 @@ export async function POST(req: NextRequest) {
 
   const shrinkJson = await shrinkRes.json();
   const outputUrl: string | undefined = shrinkJson?.output?.url;
-  if (!outputUrl) {
+  if (!outputUrl || !URL.canParse(outputUrl) || new URL(outputUrl).hostname !== "api.tinify.com") {
+    console.error("[compress] unexpected output url", outputUrl);
     return NextResponse.json(
-      { error: "upstream_error", message: "Tinify returned no output." },
+      { error: "upstream_error", message: "Compression failed." },
       { status: 502 },
     );
   }

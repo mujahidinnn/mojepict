@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Copy } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/context";
 
 /**
  * Template: Two-column tool layout (input | output)
@@ -88,6 +89,7 @@ export function ResultCard({
   className,
   icon,
 }: ResultCardProps) {
+  const { t } = useI18n();
   return (
     <Card className={cn("p-6 flex items-center justify-between bg-muted/10", className)}>
       <div className="flex-1 overflow-hidden pr-4">
@@ -102,6 +104,7 @@ export function ResultCard({
           onClick={() => onCopy(content)}
           disabled={disabled || !content}
           className="h-9 w-9"
+          aria-label={t("action.copy")}
         >
           <Copy className="h-4 w-4" />
         </Button>

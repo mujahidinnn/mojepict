@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
 import { cn } from "@/lib/utils";
 import { Download } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export default function ImageResizerPage() {
   const { t } = useI18n();
@@ -24,18 +24,28 @@ export default function ImageResizerPage() {
   const [origW, setOrigW] = useState(0);
   const [origH, setOrigH] = useState(0);
   const [keepRatio, setKeepRatio] = useState(true);
+  const previewRef = useRef<string | null>(null);
+  const w = Number(width);
+  const h = Number(height);
+  const validSize = Number.isFinite(w) && Number.isFinite(h) && w >= 1 && h >= 1;
+
+  useEffect(() => () => {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+  }, []);
 
   const handleFile = useCallback(
     (f: File) => {
       if (!f.type.startsWith("image/")) {
         toast({
-          title: "Unsupported",
+          title: t("common.error"),
           description: t("toast.error.unsupported"),
           variant: "destructive",
         });
         return;
       }
+      if (previewRef.current) URL.revokeObjectURL(previewRef.current);
       const url = URL.createObjectURL(f);
+      previewRef.current = url;
       const img = new Image();
       img.onload = () => {
         setOrigW(img.naturalWidth);
@@ -52,28 +62,29 @@ export default function ImageResizerPage() {
 
   const onWidthChange = (v: string) => {
     setWidth(v);
-    if (keepRatio && origW && origH)
-      setHeight(String(Math.round((parseInt(v) * origH) / origW)));
+    if (keepRatio && origW && origH && Number(v) > 0)
+      setHeight(String(Math.round((Number(v) * origH) / origW)));
   };
   const onHeightChange = (v: string) => {
     setHeight(v);
-    if (keepRatio && origW && origH)
-      setWidth(String(Math.round((parseInt(v) * origW) / origH)));
+    if (keepRatio && origW && origH && Number(v) > 0)
+      setWidth(String(Math.round((Number(v) * origW) / origH)));
   };
 
   const buildResizedBlob = (mimeType: string): Promise<Blob | null> => {
-    if (!file || !preview) return Promise.resolve(null);
+    if (!file || !preview || !validSize) return Promise.resolve(null);
     return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement("canvas");
-        canvas.width = parseInt(width) || origW;
-        canvas.height = parseInt(height) || origH;
+        canvas.width = Math.round(w);
+        canvas.height = Math.round(h);
         canvas
           .getContext("2d")!
           .drawImage(img, 0, 0, canvas.width, canvas.height);
         canvas.toBlob(resolve, mimeType);
       };
+      img.onerror = () => resolve(null);
       img.src = preview;
     });
   };
@@ -83,15 +94,19 @@ export default function ImageResizerPage() {
     const blob = await buildResizedBlob(file.type);
     if (!blob) return;
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
+    a.href = url;
     a.download = `resized-${file.name}`;
     a.click();
-    toast({ title: "Done!", description: t("toast.success.downloaded") });
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast({ title: t("common.success"), description: t("toast.success.downloaded") });
   };
 
   const getResizedPngBlob = () => buildResizedBlob("image/png");
 
   const clearFile = () => {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    previewRef.current = null;
     setFile(null);
     setPreview(null);
   };
@@ -105,11 +120,11 @@ export default function ImageResizerPage() {
         sidebar={
           <>
             <p className="text-xs text-muted-foreground">
-              {file ? `Original: ${origW} × ${origH}px` : t("action.dropzone")}
+              {file ? `${t("media.compress.original")}: ${origW} × ${origH}px` : t("action.dropzone")}
             </p>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
-                <Label>Width (px)</Label>
+                <Label>{t("media.widthPx")}</Label>
                 <Input
                   type="number"
                   value={width}
@@ -118,7 +133,7 @@ export default function ImageResizerPage() {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label>Height (px)</Label>
+                <Label>{t("media.heightPx")}</Label>
                 <Input
                   type="number"
                   value={height}
@@ -127,6 +142,9 @@ export default function ImageResizerPage() {
                 />
               </div>
             </div>
+            {file && !validSize && (
+              <p className="text-xs text-destructive">{t("media.invalidSize")}</p>
+            )}
             <label className="flex items-center gap-2 text-sm cursor-pointer select-none aria-disabled:cursor-not-allowed aria-disabled:opacity-50">
               <input
                 type="checkbox"
@@ -135,16 +153,16 @@ export default function ImageResizerPage() {
                 onChange={(e) => setKeepRatio(e.target.checked)}
                 className={cn("h-4 w-4 rounded border-input accent-primary")}
               />
-              Keep aspect ratio
+              {t("media.keepRatio")}
             </label>
             <ToolActionBar
               primaryLabel={t("action.download")}
               primaryIcon={<Download className="h-4 w-4" />}
               onPrimary={resize}
-              primaryDisabled={!file}
+              primaryDisabled={!file || !validSize}
               onReset={file ? clearFile : undefined}
             >
-              <CopyImageButton getBlob={getResizedPngBlob} disabled={!file} />
+              <CopyImageButton getBlob={getResizedPngBlob} disabled={!file || !validSize} />
             </ToolActionBar>
           </>
         }

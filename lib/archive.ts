@@ -7,6 +7,34 @@ export interface ArchiveEntry {
 
 export type ArchiveFormat = "zip" | "tar" | "tar.gz";
 
+/** Zip-bomb guard: refuse archives whose declared uncompressed size exceeds this. */
+export const MAX_EXTRACTED_BYTES = 500 * 1024 * 1024;
+
+export class ArchiveTooLargeError extends Error {
+  constructor() {
+    super("Archive expands beyond the size limit");
+    this.name = "ArchiveTooLargeError";
+  }
+}
+
+/** "a/b.txt" -> "a/b (1).txt" when the path is already taken. */
+export function uniqueName(path: string, used: Set<string>): string {
+  let candidate = path;
+  const slash = path.lastIndexOf("/") + 1;
+  const dot = path.lastIndexOf(".");
+  const hasExt = dot > slash;
+  const stem = hasExt ? path.slice(0, dot) : path;
+  const ext = hasExt ? path.slice(dot) : "";
+  for (let i = 1; used.has(candidate); i++) candidate = `${stem} (${i})${ext}`;
+  used.add(candidate);
+  return candidate;
+}
+
+function dedupePaths(entries: ArchiveEntry[]): ArchiveEntry[] {
+  const used = new Set<string>();
+  return entries.map((e) => ({ ...e, path: uniqueName(e.path, used) }));
+}
+
 export function createZip(entries: ArchiveEntry[]): Uint8Array {
   const tree: Zippable = {};
   for (const { path, data } of entries) tree[path] = data;
@@ -14,7 +42,14 @@ export function createZip(entries: ArchiveEntry[]): Uint8Array {
 }
 
 export function extractZip(data: Uint8Array): ArchiveEntry[] {
-  return Object.entries(unzipSync(data))
+  let total = 0;
+  // fflate calls filter per entry before inflating it, and inflates into a buffer of the declared size.
+  const filter = (file: { originalSize: number }) => {
+    total += file.originalSize;
+    if (total > MAX_EXTRACTED_BYTES) throw new ArchiveTooLargeError();
+    return true;
+  };
+  return Object.entries(unzipSync(data, { filter }))
     .filter(([path]) => !path.endsWith("/"))
     .map(([path, data]) => ({ path, data }));
 }
@@ -137,10 +172,15 @@ export function extractTar(data: Uint8Array): ArchiveEntry[] {
 }
 
 export function extractTarGz(data: Uint8Array): ArchiveEntry[] {
+  // gzip trailer ISIZE = uncompressed size mod 2^32 (exact for anything under 4 GB).
+  const n = data.length;
+  const isize = n >= 4 ? (data[n - 4] | (data[n - 3] << 8) | (data[n - 2] << 16) | (data[n - 1] << 24)) >>> 0 : 0;
+  if (isize > MAX_EXTRACTED_BYTES) throw new ArchiveTooLargeError();
   return extractTar(gunzipSync(data));
 }
 
 export function createArchive(format: ArchiveFormat, entries: ArchiveEntry[]): Uint8Array {
+  entries = dedupePaths(entries);
   if (format === "zip") return createZip(entries);
   if (format === "tar") return createTar(entries);
   return createTarGz(entries);
@@ -148,7 +188,7 @@ export function createArchive(format: ArchiveFormat, entries: ArchiveEntry[]): U
 
 /** Picks the extraction routine by file signature rather than extension, since gzip has no reliable magic-byte-free alternative. */
 export function extractArchive(data: Uint8Array): ArchiveEntry[] {
-  if (data[0] === 0x50 && data[1] === 0x4b) return extractZip(data); // "PK"
-  if (data[0] === 0x1f && data[1] === 0x8b) return extractTarGz(data); // gzip magic
-  return extractTar(data);
+  if (data[0] === 0x50 && data[1] === 0x4b) return dedupePaths(extractZip(data)); // "PK"
+  if (data[0] === 0x1f && data[1] === 0x8b) return dedupePaths(extractTarGz(data)); // gzip magic
+  return dedupePaths(extractTar(data));
 }

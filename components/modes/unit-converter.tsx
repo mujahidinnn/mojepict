@@ -193,10 +193,9 @@ function convertTemp(value: number, from: TempUnit, to: TempUnit): number {
 
 function formatResult(value: number): string {
   if (!isFinite(value)) return "";
-  return value
-    .toPrecision(8)
-    .replace(/\.?0+$/, "")
-    .replace(/\.$/, "");
+  const [m, e] = value.toPrecision(8).split("e");
+  const trimmed = m.includes(".") ? m.replace(/0+$/, "").replace(/\.$/, "") : m;
+  return e ? `${trimmed}e${e}` : trimmed;
 }
 
 function LadderStairs({
@@ -350,7 +349,9 @@ export default function UnitConverterPage() {
   const isLadder = category !== "temperature";
   const numericInput = parseFloat(inputVal);
 
-  const result = isNaN(numericInput)
+  const belowAbsoluteZero =
+    !isLadder && !isNaN(numericInput) && convertTemp(numericInput, tempFrom, "kelvin") < 0;
+  const result = isNaN(numericInput) || belowAbsoluteZero
     ? ""
     : formatResult(
         isLadder
@@ -377,9 +378,13 @@ export default function UnitConverterPage() {
     }
   };
 
-  const copyResult = () => {
-    navigator.clipboard.writeText(result);
-    toast({ title: t("action.copied"), description: result });
+  const copyResult = async () => {
+    try {
+      await navigator.clipboard.writeText(result);
+      toast({ title: t("action.copied"), description: result });
+    } catch {
+      toast({ title: t("common.error"), variant: "destructive" });
+    }
   };
 
   const activeUnitLabel = isLadder ? displaySymbol(toUnit) : TEMP_SYMBOL[tempTo];
@@ -439,7 +444,7 @@ export default function UnitConverterPage() {
           </FormGroup>
           <div className="flex flex-col gap-2">
             <span className="invisible text-sm font-medium">&nbsp;</span>
-            <Button variant="ghost" size="icon" onClick={swap} className="h-9 w-9">
+            <Button variant="ghost" size="icon" onClick={swap} className="h-9 w-9" aria-label={t("common.swap")}>
               <ArrowLeftRight className="h-4 w-4" />
             </Button>
           </div>
@@ -467,6 +472,10 @@ export default function UnitConverterPage() {
           />
         </FormGroup>
 
+        {belowAbsoluteZero && (
+          <p className="text-sm text-destructive">{t("tool.unit-converter.belowAbsoluteZero")}</p>
+        )}
+
         {result && (
           <div className="flex items-center justify-between rounded-xl border bg-muted/40 p-6">
             <div className="flex flex-col gap-2">
@@ -480,7 +489,7 @@ export default function UnitConverterPage() {
                 </span>
               </p>
             </div>
-            <Button variant="ghost" size="icon" onClick={copyResult} className="h-9 w-9">
+            <Button variant="ghost" size="icon" onClick={copyResult} className="h-9 w-9" aria-label={t("action.copy")}>
               <Copy className="h-4 w-4" />
             </Button>
           </div>

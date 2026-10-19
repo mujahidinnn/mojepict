@@ -20,8 +20,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
 import { Download } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toPngBlob } from "@/lib/copy-image";
+import { buildIco, resizeToPngBytes } from "@/lib/ico";
 
 type OutputFormat =
   | "image/jpeg"
@@ -67,6 +68,11 @@ export default function ImageConverterPage({
   const [converting, setConverting] = useState(false);
   const [progress, setProgress] = useState(0);
   const [resultBlob, setResultBlob] = useState<Blob | null>(null);
+  const previewRef = useRef<string | null>(null);
+
+  useEffect(() => () => {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+  }, []);
 
   const fileToDataUri = (f: File): Promise<string> =>
     new Promise((resolve) => {
@@ -76,14 +82,13 @@ export default function ImageConverterPage({
     });
 
   const downloadBlob = useCallback(
-    (blob: Blob, ext: string, objectUrlToRevoke: string) => {
+    (blob: Blob, ext: string) => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `${file?.name.split(".")[0] || "image"}.${ext}`;
       a.click();
-      URL.revokeObjectURL(url);
-      URL.revokeObjectURL(objectUrlToRevoke);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
 
       setResultBlob(blob);
       setProgress(100);
@@ -103,7 +108,7 @@ export default function ImageConverterPage({
     (f: File) => {
       if (!f.type.startsWith("image/")) {
         toast({
-          title: "Unsupported file",
+          title: t("common.error"),
           description: t("toast.error.unsupported"),
           variant: "destructive",
         });
@@ -111,14 +116,17 @@ export default function ImageConverterPage({
       }
       if (f.size > 10 * 1024 * 1024) {
         toast({
-          title: "File too large",
+          title: t("common.error"),
           description: t("toast.error.tooLarge"),
           variant: "destructive",
         });
         return;
       }
+      if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+      const url = URL.createObjectURL(f);
+      previewRef.current = url;
       setFile(f);
-      setPreview(URL.createObjectURL(f));
+      setPreview(url);
       setResultBlob(null);
     },
     [toast, t],
@@ -134,9 +142,9 @@ export default function ImageConverterPage({
     setConverting(true);
     setProgress(10);
 
+    const objectUrl = URL.createObjectURL(file);
     try {
       const img = new window.Image();
-      const objectUrl = URL.createObjectURL(file);
       await new Promise<void>((resolve, reject) => {
         img.onload = () => resolve();
         img.onerror = reject;
@@ -151,22 +159,28 @@ export default function ImageConverterPage({
           <image width="${img.naturalWidth}" height="${img.naturalHeight}" xlink:href="${dataUri}"/>
         </svg>`;
         const blob = new Blob([svgString], { type: "image/svg+xml" });
-        downloadBlob(blob, "svg", objectUrl);
+        downloadBlob(blob, "svg");
+        return;
+      }
+
+      // ICO: one 256×256 PNG frame, letterboxed so the aspect ratio survives.
+      if (outputFormat === "image/x-icon") {
+        const png = await resizeToPngBytes(img, 256);
+        const ico = buildIco([{ size: 256, data: png }]);
+        downloadBlob(new Blob([new Uint8Array(ico) as BlobPart], { type: "image/x-icon" }), "ico");
         return;
       }
 
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d")!;
-
-      if (outputFormat === "image/x-icon") {
-        canvas.width = 256;
-        canvas.height = 256;
-        ctx.drawImage(img, 0, 0, 256, 256);
-      } else {
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        ctx.drawImage(img, 0, 0);
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      // JPEG has no alpha; transparent pixels would otherwise turn black.
+      if (outputFormat === "image/jpeg") {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
+      ctx.drawImage(img, 0, 0);
 
       setProgress(70);
 
@@ -175,26 +189,16 @@ export default function ImageConverterPage({
         const { encodeAvif } = await import("@/lib/avif-encode");
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const buffer = await encodeAvif(imageData);
-        downloadBlob(new Blob([buffer], { type: "image/avif" }), "avif", objectUrl);
+        downloadBlob(new Blob([buffer], { type: "image/avif" }), "avif");
         return;
       }
 
-      const mimeType =
-        outputFormat === "image/x-icon" ? "image/png" : outputFormat;
-
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) throw new Error("Conversion failed");
-          const ext =
-            outputFormat === "image/x-icon"
-              ? "ico"
-              : FORMAT_LABELS[outputFormat].toLowerCase();
-          downloadBlob(blob, ext, objectUrl);
-        },
-        mimeType,
-        0.92,
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, outputFormat, 0.92),
       );
-    } catch (err) {
+      if (!blob) throw new Error("Conversion failed");
+      downloadBlob(blob, FORMAT_LABELS[outputFormat].toLowerCase());
+    } catch {
       toast({
         title: t("common.error"),
         description: t("toast.error.generic"),
@@ -202,11 +206,14 @@ export default function ImageConverterPage({
       });
       setConverting(false);
       setProgress(0);
+    } finally {
+      URL.revokeObjectURL(objectUrl);
     }
   }, [file, outputFormat, toast, t, downloadBlob]);
 
   const clearFile = () => {
-    if (preview) URL.revokeObjectURL(preview);
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    previewRef.current = null;
     setFile(null);
     setPreview(null);
     setResultBlob(null);
@@ -222,7 +229,7 @@ export default function ImageConverterPage({
           <>
             <div className={`flex flex-col gap-2 text-left${to ? " hidden" : ""}`}>
               <Label htmlFor="format-select" className="text-sm font-medium">
-                Output Format
+                {t("media.outputFormat")}
               </Label>
               <Select
                 value={outputFormat}
@@ -284,7 +291,7 @@ export default function ImageConverterPage({
           <Dropzone
             onFile={handleFile}
             title={t("action.dropzone")}
-            subtitle="JPG, PNG, WebP, GIF, ICO, SVG · Max 10 MB"
+            subtitle={t("media.converter.subtitle")}
           />
         )}
       </ToolWorkspace>

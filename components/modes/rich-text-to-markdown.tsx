@@ -74,19 +74,24 @@ export default function RichTextToMarkdownPage() {
     onUpdate: ({ editor }) => setMarkdown(htmlToMarkdown(editor.view.dom as HTMLElement)),
   });
 
-  const copy = () => {
+  const copy = async () => {
     if (!markdown) return;
-    navigator.clipboard.writeText(markdown);
-    toast({ description: t("toast.success.copied") });
+    try {
+      await navigator.clipboard.writeText(markdown);
+      toast({ description: t("toast.success.copied") });
+    } catch {
+      toast({ variant: "destructive", title: t("common.error"), description: t("toast.error.generic") });
+    }
   };
 
   const download = () => {
     if (!markdown) return;
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([markdown], { type: "text/markdown" }));
+    const url = URL.createObjectURL(new Blob([markdown], { type: "text/markdown" }));
+    a.href = url;
     a.download = "document.md";
     a.click();
-    URL.revokeObjectURL(a.href);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   return (

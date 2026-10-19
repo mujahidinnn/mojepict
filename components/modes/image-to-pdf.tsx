@@ -66,13 +66,15 @@ export default function ImageToPdfPage({ initialFile }: { initialFile?: File } =
   const [progress, setProgress] = useState(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  // Revoke the generated preview's object URL when the component unmounts.
+  // Revoke every object URL (thumbnails + generated PDF) when the component unmounts.
+  const urlsRef = useRef<{ entries: ImgEntry[]; preview: string | null }>({ entries: [], preview: null });
+  useEffect(() => {
+    urlsRef.current = { entries, preview: previewUrl };
+  }, [entries, previewUrl]);
   useEffect(() => {
     return () => {
-      setPreviewUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return prev;
-      });
+      urlsRef.current.entries.forEach((e) => URL.revokeObjectURL(e.preview));
+      if (urlsRef.current.preview) URL.revokeObjectURL(urlsRef.current.preview);
     };
   }, []);
 
@@ -110,6 +112,8 @@ export default function ImageToPdfPage({ initialFile }: { initialFile?: File } =
   };
 
   const remove = (id: string) => {
+    const gone = entries.find((e) => e.id === id);
+    if (gone) URL.revokeObjectURL(gone.preview);
     setEntries((prev) => prev.filter((e) => e.id !== id));
   };
 

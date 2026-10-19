@@ -36,14 +36,14 @@ interface SecurityResult {
 const PSI_KEY_STORAGE = "mojepict:psi-api-key";
 
 function scoreTone(score: number) {
-  if (score >= 90) return "text-emerald-500 bg-emerald-500/10";
-  if (score >= 50) return "text-amber-500 bg-amber-500/10";
+  if (score >= 90) return "text-success bg-success/10";
+  if (score >= 50) return "text-warning bg-warning/10";
   return "text-destructive bg-destructive/10";
 }
 
 function gradeTone(grade: string) {
-  if (grade.startsWith("A")) return "text-emerald-500 bg-emerald-500/10";
-  if (grade.startsWith("B") || grade.startsWith("C")) return "text-amber-500 bg-amber-500/10";
+  if (grade.startsWith("A")) return "text-success bg-success/10";
+  if (grade.startsWith("B") || grade.startsWith("C")) return "text-warning bg-warning/10";
   return "text-destructive bg-destructive/10";
 }
 
@@ -99,73 +99,93 @@ export default function WebsiteScoreCheckerPage() {
   };
 
   const runCheck = async () => {
-    if (!url.trim()) return;
+    if (!url.trim() || loading) return;
     const target = normalizeUrl(url);
     let hostname: string;
     try {
-      hostname = new URL(target).hostname;
+      const parsed = new URL(target);
+      if (!/^https?:$/.test(parsed.protocol) || !parsed.hostname.includes(".")) throw new Error();
+      hostname = parsed.hostname;
     } catch {
       toast({ variant: "destructive", title: t("common.error"), description: t("tool.website-score-checker.invalidUrl") });
       return;
     }
+
+    const errorMessage = (reason: unknown) => {
+      if (reason instanceof DOMException && (reason.name === "TimeoutError" || reason.name === "AbortError")) {
+        return t("tool.website-score-checker.timeout");
+      }
+      return reason instanceof Error ? reason.message : String(reason);
+    };
 
     setLoading(true);
     setLighthouse(null);
     setLighthouseError(null);
     setSecurity(null);
     setSecurityError(null);
+    try {
+      const psiParams = new URLSearchParams({ url: target, strategy: "mobile" });
+      ["performance", "accessibility", "best-practices", "seo"].forEach((c) => psiParams.append("category", c));
+      if (apiKey) psiParams.set("key", apiKey);
 
-    const psiParams = new URLSearchParams({ url: target, strategy: "mobile" });
-    ["performance", "accessibility", "best-practices", "seo"].forEach((c) => psiParams.append("category", c));
-    if (apiKey) psiParams.set("key", apiKey);
+      const signal = AbortSignal.timeout(45000);
+      const [psiResult, obsResult] = await Promise.allSettled([
+        fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?${psiParams}`, { signal }).then(async (r) => {
+          const data = await r.json().catch(() => null);
+          if (r.status === 429 || /quota/i.test(data?.error?.message ?? "")) {
+            throw new Error(t("tool.website-score-checker.psiQuota"));
+          }
+          if (!r.ok) throw new Error(data?.error?.message || t("tool.website-score-checker.psiFailed"));
+          return data;
+        }),
+        fetch(`https://observatory-api.mdn.mozilla.net/api/v2/analyze?host=${encodeURIComponent(hostname)}`, { signal }).then(async (r) => {
+          const data = await r.json().catch(() => null);
+          if (!r.ok) throw new Error(data?.error || t("tool.website-score-checker.observatoryFailed"));
+          return data;
+        }),
+      ]);
 
-    const [psiResult, obsResult] = await Promise.allSettled([
-      fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?${psiParams}`).then(async (r) => {
-        const data = await r.json();
-        if (!r.ok) throw new Error(data?.error?.message || "PageSpeed Insights request failed.");
-        return data;
-      }),
-      fetch(`https://observatory-api.mdn.mozilla.net/api/v2/analyze?host=${encodeURIComponent(hostname)}`).then(async (r) => {
-        const data = await r.json();
-        if (!r.ok) throw new Error(data?.error || "HTTP Observatory request failed.");
-        return data;
-      }),
-    ]);
-
-    if (psiResult.status === "fulfilled") {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const cats = (psiResult.value as any)?.lighthouseResult?.categories ?? {};
-      const pct = (c: { score?: number } | undefined) => (c?.score != null ? Math.round(c.score * 100) : null);
-      setLighthouse({
-        performance: pct(cats.performance),
-        accessibility: pct(cats.accessibility),
-        bestPractices: pct(cats["best-practices"]),
-        seo: pct(cats.seo),
-      });
-    } else {
-      setLighthouseError(psiResult.reason instanceof Error ? psiResult.reason.message : String(psiResult.reason));
+      if (psiResult.status === "fulfilled" && !(psiResult.value as any)?.lighthouseResult?.categories) {
+        setLighthouseError(t("tool.website-score-checker.psiFailed"));
+      } else if (psiResult.status === "fulfilled") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const cats = (psiResult.value as any).lighthouseResult.categories;
+        const pct = (c: { score?: number } | undefined) => (c?.score != null ? Math.round(c.score * 100) : null);
+        setLighthouse({
+          performance: pct(cats.performance),
+          accessibility: pct(cats.accessibility),
+          bestPractices: pct(cats["best-practices"]),
+          seo: pct(cats.seo),
+        });
+      } else {
+        setLighthouseError(errorMessage(psiResult.reason));
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (obsResult.status === "fulfilled" && !(obsResult.value as any)?.scan) {
+        setSecurityError(t("tool.website-score-checker.observatoryFailed"));
+      } else if (obsResult.status === "fulfilled") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const value = obsResult.value as any;
+        const scan = value?.scan;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const tests = Object.values(value?.tests ?? {}) as any[];
+        setSecurity({
+          grade: scan?.grade ?? "?",
+          score: scan?.score ?? 0,
+          testsPassed: scan?.tests_passed ?? 0,
+          testsFailed: scan?.tests_failed ?? 0,
+          tests: tests
+            .filter((test) => test.pass !== null && test.pass !== undefined)
+            .map((test) => ({ title: test.title as string, pass: !!test.pass, description: (test.score_description as string)?.replace(/<[^>]+>/g, "").trim() })),
+        });
+      } else {
+        setSecurityError(errorMessage(obsResult.reason));
+      }
+    } finally {
+      setLoading(false);
     }
-
-    if (obsResult.status === "fulfilled") {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const value = obsResult.value as any;
-      const scan = value.scan;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const tests = Object.values(value.tests ?? {}) as any[];
-      setSecurity({
-        grade: scan.grade,
-        score: scan.score,
-        testsPassed: scan.tests_passed,
-        testsFailed: scan.tests_failed,
-        tests: tests
-          .filter((test) => test.pass !== null && test.pass !== undefined)
-          .map((test) => ({ title: test.title as string, pass: !!test.pass, description: (test.score_description as string)?.replace(/<[^>]+>/g, "").trim() })),
-      });
-    } else {
-      setSecurityError(obsResult.reason instanceof Error ? obsResult.reason.message : String(obsResult.reason));
-    }
-
-    setLoading(false);
   };
 
   return (
@@ -175,13 +195,13 @@ export default function WebsiteScoreCheckerPage() {
           <Input
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && runCheck()}
+            onKeyDown={(e) => e.key === "Enter" && !loading && runCheck()}
             placeholder="example.com"
             className="flex-1"
           />
           <Button onClick={runCheck} disabled={!url.trim() || loading} className="gap-2 sm:w-auto">
             <Search className="h-4 w-4" />
-            {loading ? t("state.converting") : t("tool.website-score-checker.check")}
+            {loading ? t("tool.website-score-checker.checking") : t("tool.website-score-checker.check")}
           </Button>
         </div>
 
@@ -261,7 +281,7 @@ export default function WebsiteScoreCheckerPage() {
                     {security.tests.map((test) => (
                       <div key={test.title} className="flex items-start gap-2 rounded-lg border bg-muted/10 p-2.5 text-sm">
                         {test.pass ? (
-                          <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                          <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                         ) : (
                           <X className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
                         )}

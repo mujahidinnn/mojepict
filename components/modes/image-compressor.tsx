@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n/context";
 import { useToast } from "@/hooks/use-toast";
 import { ToolShell } from "@/components/tools/ToolShell";
@@ -42,6 +42,11 @@ export default function ImageCompressorPage() {
   const [compressedSize, setCompressedSize] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [resultBlob, setResultBlob] = useState<Blob | null>(null);
+  const previewRef = useRef<string | null>(null);
+
+  useEffect(() => () => {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+  }, []);
 
   const handleFile = useCallback(
     (f: File) => {
@@ -53,9 +58,13 @@ export default function ImageCompressorPage() {
         });
         return;
       }
+      if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+      const url = URL.createObjectURL(f);
+      previewRef.current = url;
+      if (["image/jpeg", "image/png", "image/webp"].includes(f.type)) setFormat(f.type as Format);
       setFile(f);
       setOrigSize(f.size);
-      setPreview(URL.createObjectURL(f));
+      setPreview(url);
       setCompressedSize(null);
       setResultBlob(null);
     },
@@ -64,38 +73,58 @@ export default function ImageCompressorPage() {
 
   const downloadBlob = (blob: Blob, name: string) => {
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
+    a.href = url;
     a.download = name;
     a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const outName = (f: File, fmt: string) =>
+    `compressed-${f.name.replace(/\.[^.]+$/, "")}.${fmt.split("/")[1] === "jpeg" ? "jpg" : fmt.split("/")[1]}`;
+
+  /** Never hand back a bigger file: fall back to the original and say so. */
+  const deliver = (blob: Blob, f: File, fmt: string) => {
+    setCompressedSize(blob.size);
+    if (blob.size >= f.size) {
+      setResultBlob(f);
+      downloadBlob(f, f.name);
+      return false;
+    }
+    setResultBlob(blob);
+    downloadBlob(blob, outName(f, fmt));
+    return true;
   };
 
   const compressLocal = () =>
-    new Promise<void>((resolve, reject) => {
-      if (!file || !preview) return resolve();
+    new Promise<boolean>((resolve, reject) => {
+      if (!file || !preview) return resolve(true);
       const img = new window.Image();
       img.onload = () => {
         const canvas = document.createElement("canvas");
         canvas.width = img.naturalWidth;
         canvas.height = img.naturalHeight;
-        canvas.getContext("2d")!.drawImage(img, 0, 0);
+        const ctx = canvas.getContext("2d")!;
+        if (format === "image/jpeg") {
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        ctx.drawImage(img, 0, 0);
         canvas.toBlob(
           (blob) => {
-            if (!blob) return reject(new Error("Compression failed."));
-            setCompressedSize(blob.size);
-            setResultBlob(blob);
-            downloadBlob(blob, `compressed-${file.name}`);
-            resolve();
+            if (!blob) return reject(new Error(t("toast.error.failed")));
+            resolve(deliver(blob, file, format));
           },
-          "image/jpeg",
+          format,
           quality / 100,
         );
       };
-      img.onerror = () => reject(new Error("Failed to load image."));
+      img.onerror = () => reject(new Error(t("toast.error.unsupported")));
       img.src = preview;
     });
 
-  const compressAi = async () => {
-    if (!file) return;
+  const compressAi = async (): Promise<boolean> => {
+    if (!file) return true;
     const form = new FormData();
     form.append("image", file);
     form.append("format", format);
@@ -116,28 +145,25 @@ export default function ImageCompressorPage() {
       throw new Error(body?.message ?? t("toast.error.failed"));
     }
 
-    const compressedBytes = Number(res.headers.get("X-Compressed-Size") ?? 0);
     const blob = await res.blob();
-    setCompressedSize(compressedBytes || blob.size);
-    setResultBlob(blob);
-    const ext = format.split("/")[1];
-    downloadBlob(blob, `compressed-${file.name.split(".")[0]}.${ext}`);
+    return deliver(blob, file, format);
   };
 
   const compress = async () => {
     setIsProcessing(true);
     try {
-      await (mode === "ai" ? compressAi() : compressLocal());
-      toast({
-        title: t("common.success"),
-        description: t("toast.success.downloaded"),
-      });
+      const smaller = await (mode === "ai" ? compressAi() : compressLocal());
+      toast(
+        smaller
+          ? { title: t("common.success"), description: t("toast.success.downloaded") }
+          : { title: t("media.compress.notSmaller"), description: t("media.compress.notSmallerHint") },
+      );
     } catch (error) {
       console.error("Compress error:", error);
       toast({
         variant: "destructive",
         title: t("common.error"),
-        description: t("toast.error.failed"),
+        description: error instanceof Error && error.message ? error.message : t("toast.error.failed"),
       });
     } finally {
       setIsProcessing(false);
@@ -145,7 +171,8 @@ export default function ImageCompressorPage() {
   };
 
   const handleReset = () => {
-    if (preview) URL.revokeObjectURL(preview);
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    previewRef.current = null;
     setFile(null);
     setPreview(null);
     setCompressedSize(null);
@@ -164,7 +191,7 @@ export default function ImageCompressorPage() {
 
             <div className="space-y-3">
               <div className="flex justify-between">
-                <Label className="text-sm font-medium">Quality</Label>
+                <Label className="text-sm font-medium">{t("media.compress.quality")}</Label>
                 <span className="text-sm font-mono text-muted-foreground">{quality}%</span>
               </div>
               <Slider
@@ -176,38 +203,39 @@ export default function ImageCompressorPage() {
               />
             </div>
 
-            {mode === "ai" && (
-              <FormGroup label="Output format">
-                <Select
-                  value={format}
-                  onValueChange={(v) => setFormat(v as Format)}
-                >
-                  <SelectTrigger className="h-9 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="image/jpeg">JPEG</SelectItem>
-                    <SelectItem value="image/png">PNG</SelectItem>
-                    <SelectItem value="image/webp">WebP</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormGroup>
-            )}
+            <FormGroup label={t("media.outputFormat")}>
+              <Select
+                value={format}
+                onValueChange={(v) => setFormat(v as Format)}
+              >
+                <SelectTrigger className="h-9 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="image/jpeg">JPEG</SelectItem>
+                  <SelectItem value="image/png">PNG</SelectItem>
+                  <SelectItem value="image/webp">WebP</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormGroup>
 
             {file && (
               <div className="flex flex-col gap-2 text-xs text-muted-foreground">
-                <span>Original: {(origSize / 1024).toFixed(1)} KB</span>
-                {compressedSize && (
-                  <span className="text-green-600">
-                    Compressed: {(compressedSize / 1024).toFixed(1)} KB (
-                    {Math.round((1 - compressedSize / origSize) * 100)}% smaller)
-                  </span>
-                )}
+                <span>{t("media.compress.original")}: {(origSize / 1024).toFixed(1)} KB</span>
+                {compressedSize !== null &&
+                  (compressedSize < origSize ? (
+                    <span className="text-success">
+                      {t("media.compress.compressed")}: {(compressedSize / 1024).toFixed(1)} KB (
+                      {Math.round((1 - compressedSize / origSize) * 100)}% {t("media.compress.smaller")})
+                    </span>
+                  ) : (
+                    <span className="text-warning">{t("media.compress.notSmallerHint")}</span>
+                  ))}
               </div>
             )}
 
             <ToolActionBar
-              primaryLabel="Compress & Download"
+              primaryLabel={t("media.compress.action")}
               primaryIcon={<Download className="h-4 w-4" />}
               onPrimary={compress}
               primaryDisabled={!file || isProcessing}

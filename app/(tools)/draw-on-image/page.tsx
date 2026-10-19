@@ -99,13 +99,24 @@ export default function DrawOnImagePage() {
     }
   };
 
+  const bgUrlRef = useRef<string | null>(null);
+  useEffect(() => () => {
+    if (bgUrlRef.current) URL.revokeObjectURL(bgUrlRef.current);
+  }, []);
+
   const processFile = (file: File) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
+      if (bgUrlRef.current) URL.revokeObjectURL(bgUrlRef.current);
+      bgUrlRef.current = url;
       setImageSize({ width: img.width, height: img.height });
       setBgImage(url);
       setZoom(1);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      toast({ variant: "destructive", title: t("common.error"), description: t("toast.error.unsupported") });
     };
     img.src = url;
   };
@@ -162,6 +173,8 @@ export default function DrawOnImagePage() {
   };
 
   const handleReset = () => {
+    if (bgUrlRef.current) URL.revokeObjectURL(bgUrlRef.current);
+    bgUrlRef.current = null;
     setBgImage(null);
     toast({
       description: t("tool.image-draw.reset-msg") || "Canvas has been reset.",
@@ -307,8 +320,8 @@ export default function DrawOnImagePage() {
                 className="h-7 w-7"
                 onClick={() => setZoom((z) => Math.max(MIN_ZOOM, +(z - ZOOM_STEP).toFixed(2)))}
                 disabled={zoom <= MIN_ZOOM}
-                aria-label="Zoom out"
-                title="Zoom out (Ctrl/Cmd + scroll)"
+                aria-label={t("media.zoom.out")}
+                title={`${t("media.zoom.out")} (Ctrl/Cmd + scroll)`}
               >
                 <ZoomOut className="h-3.5 w-3.5" />
               </Button>
@@ -322,8 +335,8 @@ export default function DrawOnImagePage() {
                 className="h-7 w-7"
                 onClick={() => setZoom((z) => Math.min(MAX_ZOOM, +(z + ZOOM_STEP).toFixed(2)))}
                 disabled={zoom >= MAX_ZOOM}
-                aria-label="Zoom in"
-                title="Zoom in (Ctrl/Cmd + scroll)"
+                aria-label={t("media.zoom.in")}
+                title={`${t("media.zoom.in")} (Ctrl/Cmd + scroll)`}
               >
                 <ZoomIn className="h-3.5 w-3.5" />
               </Button>
@@ -334,8 +347,8 @@ export default function DrawOnImagePage() {
                 className="h-7 w-7"
                 onClick={() => setZoom(1)}
                 disabled={zoom === 1}
-                aria-label="Reset zoom"
-                title="Reset zoom"
+                aria-label={t("media.zoom.reset")}
+                title={t("media.zoom.reset")}
               >
                 <Maximize className="h-3.5 w-3.5" />
               </Button>

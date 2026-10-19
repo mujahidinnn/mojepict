@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PDFDocument } from "pdf-lib";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
@@ -39,14 +39,21 @@ export default function MergePdfPage() {
   const [resultUrl, setResultUrl] = useState<string | null>(null);
 
   // Revoke the generated result's object URL when the component unmounts.
+  const resultUrlRef = useRef<string | null>(null);
   useEffect(() => {
-    return () => {
-      setResultUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return prev;
-      });
-    };
+    resultUrlRef.current = resultUrl;
+  }, [resultUrl]);
+  useEffect(() => () => {
+    if (resultUrlRef.current) URL.revokeObjectURL(resultUrlRef.current);
   }, []);
+
+  // Any change to the file list or its order makes the previous result stale.
+  useEffect(() => {
+    setResultUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+  }, [entries]);
 
   const addFiles = useCallback(
     (files: File[]) => {
@@ -138,7 +145,7 @@ export default function MergePdfPage() {
     <ToolShell title={t("tool.merge-pdf.name")} description={t("tool.merge-pdf.description")}>
       <div className="max-w-screen-lg flex flex-col gap-8">
         <TwoColumnLayout>
-          <InputSection label="Files">
+          <InputSection label={t("tool.merge-pdf.files")}>
             <Dropzone
               accept="application/pdf"
               multiple
@@ -160,7 +167,7 @@ export default function MergePdfPage() {
                       key={entry.id}
                       className="flex items-center gap-3 rounded-lg border bg-muted/10 p-4"
                     >
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-red-500 to-rose-600 text-white">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-destructive/10 text-destructive">
                         <FileText className="h-4 w-4" />
                       </div>
                       <div className="flex min-w-0 flex-1 flex-col">
@@ -175,6 +182,7 @@ export default function MergePdfPage() {
                           size="icon"
                           className="h-9 w-9"
                           disabled={index === 0}
+                          aria-label={t("tool.merge-pdf.moveUp")}
                           onClick={() => move(index, -1)}
                         >
                           <ArrowUp className="h-3.5 w-3.5" />
@@ -184,6 +192,7 @@ export default function MergePdfPage() {
                           size="icon"
                           className="h-9 w-9"
                           disabled={index === entries.length - 1}
+                          aria-label={t("tool.merge-pdf.moveDown")}
                           onClick={() => move(index, 1)}
                         >
                           <ArrowDown className="h-3.5 w-3.5" />
@@ -193,6 +202,7 @@ export default function MergePdfPage() {
                           size="icon"
                           className="h-9 w-9 text-destructive hover:text-destructive"
                           onClick={() => remove(entry.id)}
+                          aria-label={t("tool.merge-pdf.remove")}
                         >
                           <X className="h-3.5 w-3.5" />
                         </Button>
@@ -204,7 +214,7 @@ export default function MergePdfPage() {
             )}
           </InputSection>
 
-          <OutputSection label="Result">
+          <OutputSection label={t("common.result")}>
             {merging && <Progress value={progress} className="h-1.5" />}
             {resultUrl ? (
               <>
@@ -216,6 +226,7 @@ export default function MergePdfPage() {
                     size="icon"
                     variant="ghost"
                     onClick={downloadMerged}
+                    aria-label={t("action.download")}
                     className="h-9 w-9 shrink-0"
                   >
                     <Download className="h-4 w-4" />

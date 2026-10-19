@@ -7,7 +7,9 @@ import { ContentWidthProvider } from "@/components/layout/ContentWidth";
 import { Toaster } from "@/components/ui/toaster";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Navbar } from "@/components/layout/Navbar";
-import { CommandPalette } from "@/components/layout/CommandPalette";
+import { CommandPaletteLoader } from "@/components/layout/CommandPaletteLoader";
+import { PwaRegister } from "@/components/layout/InstallPwaButton";
+import { ToolAbout } from "@/components/tools/ToolAbout";
 import { JsonLd } from "@/components/seo/JsonLd";
 import {
   SITE_DESCRIPTION,
@@ -36,7 +38,6 @@ export const metadata: Metadata = {
     SITE_NAME,
   ],
   metadataBase: new URL(SITE_URL),
-  alternates: { canonical: SITE_URL },
   verification: {
     google: "fvXDeFrH7oYYPdVM9Ry106WpY1edT4s5D0ZfuljevJo",
   },
@@ -47,7 +48,7 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",
-    apple: "/mojepict-logo.png",
+    apple: { url: "/apple-touch-icon.png", sizes: "180x180" },
   },
   robots: {
     index: true,
@@ -100,6 +101,12 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <I18nProvider>
+            <a
+              href="#main"
+              className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+            >
+              Skip to content
+            </a>
             <div className="flex h-screen overflow-hidden bg-background">
               <div className="hidden lg:block">
                 <Sidebar />
@@ -108,13 +115,17 @@ export default function RootLayout({
               <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
                 <Navbar />
 
-                <main className="relative flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
-                  <ContentWidthProvider>{children}</ContentWidthProvider>
+                <main id="main" tabIndex={-1} className="relative flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
+                  <ContentWidthProvider>
+                    {children}
+                    <ToolAbout />
+                  </ContentWidthProvider>
                 </main>
               </div>
             </div>
 
-            <CommandPalette />
+            <CommandPaletteLoader />
+            <PwaRegister />
             <Toaster />
           </I18nProvider>
         </ThemeProvider>
