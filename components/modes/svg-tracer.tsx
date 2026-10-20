@@ -1,5 +1,6 @@
 "use client";
 
+import { convertedName } from "@/lib/converter-formats";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolWorkspace } from "@/components/tools/ToolWorkspace";
 import { Dropzone } from "@/components/tools/Dropzone";
@@ -21,12 +22,14 @@ export default function SvgTracerPage({ initialFile }: { initialFile?: File } = 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [svgOutput, setSvgOutput] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [fileName, setFileName] = useState<string>();
 
   const handleFile = (file: File) => {
     if (!file.type.startsWith("image/")) {
       toast({ variant: "destructive", title: t("common.error"), description: t("toast.error.unsupported") });
       return;
     }
+    setFileName(file.name);
     setIsProcessing(true);
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -61,7 +64,7 @@ export default function SvgTracerPage({ initialFile }: { initialFile?: File } = 
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "mojepict-vector.svg";
+    link.download = convertedName(fileName, "svg");
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     toast({ description: t("toast.success.downloaded") });

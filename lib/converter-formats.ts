@@ -94,3 +94,21 @@ export function detectFormat(file: File): FormatId | null {
   );
   return hit && ALL_FROM.includes(hit) ? hit : null;
 }
+
+const NAME_LABELS: Record<string, string> = {
+  md: "Markdown", markdown: "Markdown", docx: "Word", xlsx: "Excel", xls: "Excel",
+  pptx: "PowerPoint", ppt: "PowerPoint", jpeg: "JPG", richtext: "RichText", images: "Image",
+};
+const nameLabel = (ext: string) => NAME_LABELS[ext.toLowerCase()] ?? ext.toUpperCase();
+
+/**
+ * Download name for a conversion:
+ * `laporan.pdf` + "md" → `laporan_PDF-to-Markdown_Universal-Converter_mojepict.md`.
+ * `from` overrides the source label when there is no file (e.g. pasted text).
+ */
+export function convertedName(src: string | undefined, toExt: string, from?: string) {
+  const m = src?.match(/^(.*?)(?:\.([^.]+))?$/);
+  const fromLabel = nameLabel(from ?? m?.[2] ?? "file");
+  const parts = [m?.[1], `${fromLabel}-to-${nameLabel(toExt)}`, "Universal-Converter", "mojepict"];
+  return `${parts.filter(Boolean).join("_")}.${toExt}`;
+}

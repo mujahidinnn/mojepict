@@ -1,5 +1,6 @@
 "use client";
 
+import { convertedName } from "@/lib/converter-formats";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PDFDocument } from "pdf-lib";
 import { ToolShell } from "@/components/tools/ToolShell";
@@ -130,7 +131,7 @@ export default function ImageToPdfPage({ initialFile }: { initialFile?: File } =
     if (!previewUrl) return;
     const a = document.createElement("a");
     a.href = previewUrl;
-    a.download = "images.pdf";
+    a.download = convertedName(entries.length === 1 ? entries[0].file.name : undefined, "pdf", entries.length === 1 ? undefined : "images");
     a.click();
   };
 

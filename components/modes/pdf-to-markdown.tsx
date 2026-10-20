@@ -1,5 +1,6 @@
 "use client";
 
+import { convertedName } from "@/lib/converter-formats";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PDFDocumentProxy, RenderTask } from "pdfjs-dist";
 import { ToolShell } from "@/components/tools/ToolShell";
@@ -24,10 +25,6 @@ import {
   FileType,
   Wand2,
 } from "lucide-react";
-
-function baseName(name: string) {
-  return name.replace(/\.pdf$/i, "");
-}
 
 export default function PdfToMarkdownPage({ initialFile }: { initialFile?: File } = {}) {
   const { t } = useI18n();
@@ -217,7 +214,7 @@ export default function PdfToMarkdownPage({ initialFile }: { initialFile?: File 
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${baseName(file.name)}.md`;
+    a.download = convertedName(file.name, "md");
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };

@@ -1,5 +1,6 @@
 "use client";
 
+import { convertedName } from "@/lib/converter-formats";
 import { useState } from "react";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -89,7 +90,7 @@ export default function RichTextToMarkdownPage() {
     const a = document.createElement("a");
     const url = URL.createObjectURL(new Blob([markdown], { type: "text/markdown" }));
     a.href = url;
-    a.download = "document.md";
+    a.download = convertedName(undefined, "md", "richtext");
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };

@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
 import { Download, FileSpreadsheet } from "lucide-react";
-import type { FormatId } from "@/lib/converter-formats";
+import { convertedName, type FormatId } from "@/lib/converter-formats";
 
 /** `to`, `onSwap` and `initialFile` are supplied by the Universal Converter hub. */
 export default function ExcelCsvConverterPage({
@@ -49,7 +49,6 @@ export default function ExcelCsvConverterPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialFile]);
 
-  const baseName = file?.name.replace(/\.(xlsx|xls|csv)$/i, "") ?? "converted";
 
   const download = async () => {
     if (!sheet) return;
@@ -60,7 +59,7 @@ export default function ExcelCsvConverterPage({
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${baseName}.csv`;
+      a.download = convertedName(file?.name, "csv");
       a.click();
       URL.revokeObjectURL(url);
     } else {
@@ -71,7 +70,7 @@ export default function ExcelCsvConverterPage({
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${baseName}.xlsx`;
+      a.download = convertedName(file?.name, "xlsx");
       a.click();
       URL.revokeObjectURL(url);
     }

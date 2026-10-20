@@ -1,5 +1,6 @@
 "use client";
 
+import { convertedName } from "@/lib/converter-formats";
 import { useEffect, useState } from "react";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { Button } from "@/components/ui/button";
@@ -165,7 +166,7 @@ export default function CsvJsonConverterPage({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `converted.${ext}`;
+    a.download = convertedName(initialFile?.name, ext, initialFile ? undefined : ext === "json" ? "csv" : "json");
     a.click();
     URL.revokeObjectURL(url);
   };

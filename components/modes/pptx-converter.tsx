@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
 import { parsePpt, parsePptx, slidesToMarkdown, markdownToSlides, type Slide } from "@/lib/pptx";
-import type { FormatId } from "@/lib/converter-formats";
+import { convertedName, type FormatId } from "@/lib/converter-formats";
 import { Download, Presentation } from "lucide-react";
 
 type Source = "pptx" | "pdf" | "md";
@@ -103,7 +103,6 @@ export default function PptxConverterPage({ to, initialFile }: { to?: FormatId; 
     setPdfPages([]);
   };
 
-  const baseName = file?.name.replace(/\.[^.]+$/, "") ?? "presentation";
 
   const buildPptx = async () => {
     const PptxGenJS = (await import("pptxgenjs")).default;
@@ -126,14 +125,14 @@ export default function PptxConverterPage({ to, initialFile }: { to?: FormatId; 
           );
       }
     }
-    await pptx.writeFile({ fileName: `${baseName}.pptx` });
+    await pptx.writeFile({ fileName: convertedName(file?.name, "pptx") });
   };
 
   // Prints the preview from an iframe so the PDF keeps real, selectable text.
   const printPdf = () => {
     const iframe = document.createElement("iframe");
     iframe.style.cssText = "position:fixed;width:0;height:0;border:0";
-    iframe.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><title>${baseName.replace(/[<>&]/g, "")}</title><style>@page{size:10in 5.625in;margin:0}body{margin:0;font-family:Calibri,Arial,sans-serif}section{break-after:page}</style></head><body>${previewRef.current?.innerHTML ?? ""}</body></html>`;
+    iframe.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><title>${convertedName(file?.name, "pdf").replace(/\.pdf$/, "").replace(/[<>&]/g, "")}</title><style>@page{size:10in 5.625in;margin:0}body{margin:0;font-family:Calibri,Arial,sans-serif}section{break-after:page}</style></head><body>${previewRef.current?.innerHTML ?? ""}</body></html>`;
     iframe.onload = () => {
       iframe.contentWindow?.focus();
       iframe.contentWindow?.print();
@@ -147,7 +146,7 @@ export default function PptxConverterPage({ to, initialFile }: { to?: FormatId; 
     target === "pdf"
       ? printPdf()
       : target === "md"
-        ? save(new Blob([markdown], { type: "text/markdown" }), `${baseName}.md`)
+        ? save(new Blob([markdown], { type: "text/markdown" }), convertedName(file?.name, "md"))
         : buildPptx().catch(fail);
 
   return (

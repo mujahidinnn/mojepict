@@ -1,5 +1,6 @@
 "use client";
 
+import { convertedName } from "@/lib/converter-formats";
 import { Dropzone } from "@/components/tools/Dropzone";
 import { ImageZoomPreview } from "@/components/tools/ImageZoomPreview";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
@@ -86,7 +87,7 @@ export default function ImageConverterPage({
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${file?.name.split(".")[0] || "image"}.${ext}`;
+      a.download = convertedName(file?.name, ext);
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { convertedName } from "@/lib/converter-formats";
 import { useEffect, useState } from "react";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 import { ToolShell } from "@/components/tools/ToolShell";
@@ -12,10 +13,6 @@ import { useI18n } from "@/lib/i18n/context";
 import { convertPagesToMarkdown } from "@/lib/pdf-to-markdown";
 import { markdownToDocxBlob } from "@/lib/markdown-to-docx";
 import { Download, FileType } from "lucide-react";
-
-function baseName(name: string) {
-  return name.replace(/\.pdf$/i, "");
-}
 
 export default function PdfToWordPage({ initialFile }: { initialFile?: File } = {}) {
   const { t } = useI18n();
@@ -67,7 +64,7 @@ export default function PdfToWordPage({ initialFile }: { initialFile?: File } = 
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${baseName(file.name)}.docx`;
+    a.download = convertedName(file.name, "docx");
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };

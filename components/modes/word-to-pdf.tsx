@@ -1,5 +1,6 @@
 "use client";
 
+import { convertedName } from "@/lib/converter-formats";
 import { useEffect, useState } from "react";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
@@ -61,7 +62,7 @@ export default function WordToPdfPage({ initialFile }: { initialFile?: File } = 
     const iframe = document.createElement("iframe");
     iframe.style.cssText = "position:fixed;width:0;height:0;border:0";
     iframe.sandbox.add("allow-same-origin", "allow-modals");
-    iframe.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><title>${file?.name.replace(/\.docx$/i, "").replace(/[<>&]/g, "")}</title><style>${PRINT_CSS}</style></head><body>${html}</body></html>`;
+    iframe.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><title>${convertedName(file?.name, "pdf").replace(/\.pdf$/, "").replace(/[<>&]/g, "")}</title><style>${PRINT_CSS}</style></head><body>${html}</body></html>`;
     iframe.onload = () => {
       iframe.contentWindow?.focus();
       iframe.contentWindow?.print();
