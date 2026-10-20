@@ -1200,6 +1200,8 @@ export const id = {
   "tool.doc-scanner.adjustLabel": "Luruskan",
   "tool.doc-scanner.adjustHint": "Geser sudut-sudutnya biar pas sama tepi halaman. Sudutnya sudah ditebak otomatis - perbaiki kalau kurang pas.",
   "tool.doc-scanner.autoDetect": "Deteksi ulang otomatis",
+  "tool.doc-scanner.preview": "Hasil",
+  "tool.doc-scanner.rotate": "Putar 90°",
   "tool.doc-scanner.noPageSelected": "Pilih halaman untuk mengatur sudutnya",
   "tool.doc-scanner.mode.image": "Apa adanya (foto)",
   "tool.doc-scanner.mode.ocr": "Ubah ke teks (OCR)",

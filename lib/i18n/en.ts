@@ -1208,6 +1208,8 @@ export const en = {
   "tool.doc-scanner.adjustLabel": "Straighten",
   "tool.doc-scanner.adjustHint": "Drag the corners to match the page's edges. Corners are auto-guessed first - fix them if they're off.",
   "tool.doc-scanner.autoDetect": "Re-run auto-detect",
+  "tool.doc-scanner.preview": "Result",
+  "tool.doc-scanner.rotate": "Rotate 90°",
   "tool.doc-scanner.noPageSelected": "Select a page to adjust its corners",
   "tool.doc-scanner.mode.image": "As photo",
   "tool.doc-scanner.mode.ocr": "Convert to text (OCR)",

@@ -24,6 +24,8 @@ import {
   Fullscreen,
   Grid3X3,
   Palette,
+  Pin,
+  PinOff,
   RefreshCcw,
   RotateCcw,
   Settings2,
@@ -934,6 +936,7 @@ export default function PhotoBoothPage() {
   const [colorTemp, setColorTemp] = useState(0);
   const [blur, setBlur] = useState(0);
   const [mirror, setMirror] = useState(true);
+  const [camPinned, setCamPinned] = useState(true);
   const [filter, setFilter] = useState("none");
   const [layoutId, setLayoutId] = useState("strip4");
   const layout = LAYOUTS.find((l) => l.id === layoutId) ?? LAYOUTS[0];
@@ -1754,11 +1757,13 @@ export default function PhotoBoothPage() {
       description={t("tool.photobooth.description")}
       fullWidth
     >
+      {/* Mobile: flatten the panes so the camera sticks on top while scrolling controls, and the strip drops to the end. */}
       <ToolWorkspace
+        className="max-lg:[&>div:first-child]:contents"
         sidebar={
           <>
             <Tabs defaultValue="adjust" className="w-full">
-              <TabsList className="sticky top-0 z-10 w-full ring-4 ring-background">
+              <TabsList className="z-10 w-full ring-4 ring-background lg:sticky lg:top-0">
                 <TabsTrigger value="adjust" className="flex-1 gap-1 text-[11px]">
                   <Settings2 className="h-3 w-3" /> Adjust
                 </TabsTrigger>
@@ -2300,20 +2305,26 @@ export default function PhotoBoothPage() {
                 </Button>
               )}
               <CopyImageButton getBlob={() => getGridBlob()} disabled={photos.length === 0} />
-              <p className="text-center text-[10px] text-muted-foreground">
+              <p className="hidden text-center lg:block text-[10px] text-muted-foreground">
                 Press <kbd className="rounded border px-1 font-mono">Space</kbd> to shoot
               </p>
             </ToolActionBar>
           </>
         }
       >
-        <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
-          <div className="space-y-3">
+        <div className="grid items-start gap-6 max-lg:contents xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
+          <div
+            className={cn(
+              "space-y-3 [--cam-h:40svh] lg:[--cam-h:70vh]",
+              camPinned &&
+                "max-lg:sticky max-lg:-top-6 max-lg:z-20 max-lg:-mx-4 max-lg:bg-background max-lg:px-4 max-lg:pb-3 max-lg:pt-3 max-lg:shadow-sm sm:max-lg:-mx-6 sm:max-lg:px-6",
+            )}
+          >
             <div
               className="relative mx-auto overflow-hidden rounded-xl bg-black shadow-2xl"
               style={{
                 aspectRatio: `${cellW} / ${cellH}`,
-                width: `min(100%, calc(70vh * ${cellW / cellH}))`,
+                width: `min(100%, calc(var(--cam-h) * ${cellW / cellH}))`,
                 borderRadius: `${radius}px`,
               }}
             >
@@ -2363,6 +2374,16 @@ export default function PhotoBoothPage() {
                     <X className="h-4 w-4" />
                   </Button>
                 )}
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="h-8 w-8 lg:hidden"
+                  onClick={() => setCamPinned(!camPinned)}
+                  aria-label={camPinned ? "Unpin camera" : "Pin camera"}
+                  aria-pressed={camPinned}
+                >
+                  {camPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
+                </Button>
                 <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => setSoundOn(!soundOn)} aria-label="Toggle sound">
                   {soundOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
                 </Button>
@@ -2412,7 +2433,7 @@ export default function PhotoBoothPage() {
             </div>
           </div>
 
-          <div className="mx-auto w-fit max-w-full">
+          <div className="mx-auto w-fit max-w-full max-lg:order-last">
             <div className="relative inline-block rounded-md shadow-xl ring-1 ring-black/5">
               <canvas
                 ref={stripRef}

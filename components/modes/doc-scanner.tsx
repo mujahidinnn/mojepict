@@ -19,7 +19,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
 import { warpToRect, type Quad } from "@/lib/perspective";
-import { ArrowDown, ArrowUp, Camera, Download, ScanLine, Wand2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Camera, Download, RotateCw, ScanLine, Wand2, X } from "lucide-react";
 import { TwoColumnLayout, InputSection, OutputSection } from "@/components/tools/ToolTemplates";
 
 interface ScanPage {
@@ -33,6 +33,62 @@ type OutputMode = "image" | "ocr";
 
 function uid() {
   return Math.random().toString(36).slice(2, 9);
+}
+
+/** Live camera for webcam/phone capture; each shot is handed over as a JPEG File and the camera stays open for the next page. */
+function CameraCapture({ onCapture, onClose }: { onCapture: (file: File) => void; onClose: () => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [error, setError] = useState<string | null>(() =>
+    navigator.mediaDevices ? null : "Camera needs HTTPS and a supported browser.",
+  );
+
+  useEffect(() => {
+    if (!navigator.mediaDevices) return;
+    let stream: MediaStream | undefined;
+    let cancelled = false;
+    navigator.mediaDevices
+      .getUserMedia({ video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } } })
+      .then((s) => {
+        if (cancelled) return s.getTracks().forEach((t) => t.stop());
+        stream = s;
+        if (videoRef.current) videoRef.current.srcObject = s;
+      })
+      .catch((e) => setError(e instanceof Error ? e.message : String(e)));
+    return () => {
+      cancelled = true;
+      stream?.getTracks().forEach((t) => t.stop());
+    };
+  }, []);
+
+  const shoot = () => {
+    const v = videoRef.current;
+    if (!v?.videoWidth) return;
+    const c = document.createElement("canvas");
+    c.width = v.videoWidth;
+    c.height = v.videoHeight;
+    c.getContext("2d")!.drawImage(v, 0, 0);
+    c.toBlob((b) => b && onCapture(new File([b], `scan-${Date.now()}.jpg`, { type: "image/jpeg" })), "image/jpeg", 0.92);
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="relative overflow-hidden rounded-lg bg-black">
+        {error ? (
+          <p className="p-6 text-center text-sm text-white">{error}</p>
+        ) : (
+          <video ref={videoRef} autoPlay playsInline muted className="max-h-[60vh] w-full object-contain" />
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <Button type="button" onClick={shoot} disabled={!!error} className="gap-2">
+          <Camera className="h-4 w-4" /> Capture
+        </Button>
+        <Button type="button" variant="outline" onClick={onClose} className="gap-2">
+          <X className="h-4 w-4" /> Close camera
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 function loadImage(file: File): Promise<HTMLImageElement> {
@@ -147,6 +203,34 @@ function fullQuad(img: HTMLImageElement): Quad {
 const CORNER_LABELS = ["TL", "TR", "BR", "BL"] as const;
 const DISPLAY_W = 420;
 
+/** Output height for a given width, from the quad's own edges (not the photo) so a tilted page keeps its real proportions. */
+function quadHeightFor([a, b, c, d]: Quad, width: number) {
+  const dist = (p: Quad[number], q: Quad[number]) => Math.hypot(p.x - q.x, p.y - q.y);
+  return Math.max(1, Math.round((width * (dist(a, d) + dist(b, c))) / (dist(a, b) + dist(d, c) || 1)));
+}
+
+/** Small live render of the straightened page, so corner/rotate edits are visible before export. */
+function WarpPreview({ page }: { page: ScanPage }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    // Debounced: warpToRect reads the full-size photo, too heavy for every pointer move.
+    const id = setTimeout(() => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const w = 240;
+      const h = quadHeightFor(page.quad, w);
+      const warped = warpToRect(page.img, page.quad, w, h);
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext("2d")!.drawImage(warped, 0, 0);
+    }, 150);
+    return () => clearTimeout(id);
+  }, [page.img, page.quad]);
+
+  return <canvas ref={canvasRef} className="mx-auto block max-h-64 w-auto max-w-[50%] rounded border shadow-sm" />;
+}
+
 function CornerEditor({ page, onChange }: { page: ScanPage; onChange: (quad: Quad) => void }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const dragging = useRef<number | null>(null);
@@ -171,14 +255,13 @@ function CornerEditor({ page, onChange }: { page: ScanPage; onChange: (quad: Qua
   const points = page.quad.map((p) => `${p.x * scale},${p.y * scale}`).join(" ");
 
   return (
-    <div className="relative mx-auto" style={{ width: DISPLAY_W, height: displayH }}>
+    <div className="relative mx-auto w-full" style={{ maxWidth: DISPLAY_W, aspectRatio: `${DISPLAY_W} / ${displayH}` }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={page.img.src} alt="" className="absolute inset-0 h-full w-full select-none rounded-lg" draggable={false} />
       <svg
         ref={svgRef}
-        className="absolute inset-0 touch-none"
-        width={DISPLAY_W}
-        height={displayH}
+        className="absolute inset-0 h-full w-full touch-none overflow-visible"
+        viewBox={`0 0 ${DISPLAY_W} ${displayH}`}
         onPointerMove={onPointerMove}
         onPointerUp={() => (dragging.current = null)}
         onPointerLeave={() => (dragging.current = null)}
@@ -189,7 +272,7 @@ function CornerEditor({ page, onChange }: { page: ScanPage; onChange: (quad: Qua
             key={CORNER_LABELS[i]}
             cx={p.x * scale}
             cy={p.y * scale}
-            r={9}
+            r={12}
             className="cursor-grab fill-primary stroke-background active:cursor-grabbing"
             strokeWidth={2}
             onPointerDown={(e) => {
@@ -228,6 +311,8 @@ export default function DocScannerPage() {
     },
     [],
   );
+
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   const addFiles = useCallback(
     async (files: File[]) => {
@@ -321,8 +406,8 @@ export default function DocScannerPage() {
 
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i];
-        const outW = Math.round(1240); // ~150dpi for a portrait A4-ish page
-        const outH = Math.round((outW * page.img.naturalHeight) / page.img.naturalWidth);
+        const outW = 1240; // ~150dpi for a portrait A4-ish page
+        const outH = quadHeightFor(page.quad, outW);
         const warped = warpToRect(page.img, page.quad, outW, outH);
 
         if (outputMode === "image") {
@@ -421,6 +506,14 @@ export default function DocScannerPage() {
               className="min-h-[160px]"
             />
 
+            {cameraOpen ? (
+              <CameraCapture onCapture={(f) => addFiles([f])} onClose={() => setCameraOpen(false)} />
+            ) : (
+              <Button type="button" variant="outline" className="w-full gap-2" onClick={() => setCameraOpen(true)}>
+                <Camera className="h-4 w-4" /> Use camera
+              </Button>
+            )}
+
             {pages.length > 0 && (
               <div className="space-y-2">
                 <p className="text-xs font-medium text-muted-foreground">
@@ -495,10 +588,27 @@ export default function DocScannerPage() {
               <>
                 <p className="text-xs text-muted-foreground">{t("tool.doc-scanner.adjustHint")}</p>
                 <CornerEditor page={active} onChange={(q) => updateQuad(active.id, q)} />
-                <Button variant="outline" size="sm" className="mx-auto gap-2" onClick={() => resetQuad(active.id)}>
-                  <Wand2 className="h-3.5 w-3.5" />
-                  {t("tool.doc-scanner.autoDetect")}
-                </Button>
+                <p className="text-center text-xs text-muted-foreground">{t("tool.doc-scanner.preview")}</p>
+                <WarpPreview page={active} />
+                <div className="flex flex-wrap justify-center gap-2">
+                  <Button variant="outline" size="sm" className="gap-2" onClick={() => resetQuad(active.id)}>
+                    <Wand2 className="h-3.5 w-3.5" />
+                    {t("tool.doc-scanner.autoDetect")}
+                  </Button>
+                  {/* Shifting the corner order turns the output 90° clockwise. */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => {
+                      const q = active.quad;
+                      updateQuad(active.id, [q[3], q[0], q[1], q[2]]);
+                    }}
+                  >
+                    <RotateCw className="h-3.5 w-3.5" />
+                    {t("tool.doc-scanner.rotate")}
+                  </Button>
+                </div>
               </>
             ) : (
               <div className="flex min-h-[200px] items-center justify-center rounded-xl border bg-muted/10">
