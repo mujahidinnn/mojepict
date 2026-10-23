@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
@@ -19,7 +20,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n/context";
 import { warpToRect, type Quad } from "@/lib/perspective";
-import { ArrowDown, ArrowUp, Camera, Download, RotateCw, ScanLine, Wand2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Camera, Download, ImagePlus, RotateCw, ScanLine, Wand2, X } from "lucide-react";
 import { TwoColumnLayout, InputSection, OutputSection } from "@/components/tools/ToolTemplates";
 
 interface ScanPage {
@@ -35,11 +36,15 @@ function uid() {
   return Math.random().toString(36).slice(2, 9);
 }
 
-/** Live camera for webcam/phone capture; each shot is handed over as a JPEG File and the camera stays open for the next page. */
-function CameraCapture({ onCapture, onClose }: { onCapture: (file: File) => void; onClose: () => void }) {
+/** Live camera for webcam/phone capture; each shot is handed over as a JPEG File and the camera stays open for the next page.
+ * Fullscreen on mobile (portaled, so no transformed ancestor clips it) with the shutter under the thumb; inline on lg+. */
+function CameraCapture({ count, onCapture, onClose }: { count: number; onCapture: (file: File) => void; onClose: () => void }) {
+  const { t } = useI18n();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [flash, setFlash] = useState(false);
+  const [fullscreen] = useState(() => !window.matchMedia("(min-width: 1024px)").matches);
   const [error, setError] = useState<string | null>(() =>
-    navigator.mediaDevices ? null : "Camera needs HTTPS and a supported browser.",
+    navigator.mediaDevices ? null : t("tool.doc-scanner.cameraUnsupported"),
   );
 
   useEffect(() => {
@@ -68,27 +73,46 @@ function CameraCapture({ onCapture, onClose }: { onCapture: (file: File) => void
     c.height = v.videoHeight;
     c.getContext("2d")!.drawImage(v, 0, 0);
     c.toBlob((b) => b && onCapture(new File([b], `scan-${Date.now()}.jpg`, { type: "image/jpeg" })), "image/jpeg", 0.92);
+    setFlash(true);
+    setTimeout(() => setFlash(false), 150);
+    navigator.vibrate?.(30);
   };
 
-  return (
-    <div className="space-y-2">
-      <div className="relative overflow-hidden rounded-lg bg-black">
+  const view = (
+    <div className="fixed inset-0 z-50 flex flex-col bg-black lg:static lg:z-auto lg:overflow-hidden lg:rounded-lg">
+      <div className="relative min-h-0 flex-1">
         {error ? (
           <p className="p-6 text-center text-sm text-white">{error}</p>
         ) : (
-          <video ref={videoRef} autoPlay playsInline muted className="max-h-[60vh] w-full object-contain" />
+          <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-contain lg:h-auto lg:max-h-[60vh]" />
         )}
+        {flash && <div className="pointer-events-none absolute inset-0 bg-white/70" />}
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        <Button type="button" onClick={shoot} disabled={!!error} className="gap-2">
-          <Camera className="h-4 w-4" /> Capture
-        </Button>
-        <Button type="button" variant="outline" onClick={onClose} className="gap-2">
-          <X className="h-4 w-4" /> Close camera
+      <div className="grid grid-cols-3 items-center p-4 pb-[max(1rem,env(safe-area-inset-bottom))] lg:p-2">
+        <span className="text-sm text-white" aria-live="polite">
+          {t("tool.doc-scanner.pageCount").replace("{{count}}", String(count))}
+        </span>
+        <button
+          type="button"
+          onClick={shoot}
+          disabled={!!error}
+          aria-label={t("tool.doc-scanner.capture")}
+          className="mx-auto h-16 w-16 rounded-full border-4 border-white bg-white/80 transition-transform active:scale-90 disabled:opacity-40 lg:h-12 lg:w-12"
+        />
+        <Button type="button" variant="secondary" onClick={onClose} className="gap-2 justify-self-end">
+          <X className="h-4 w-4" /> {t("tool.doc-scanner.closeCamera")}
         </Button>
       </div>
     </div>
   );
+  return fullscreen ? createPortal(view, document.body) : view;
+}
+
+function downloadUrl(url: string) {
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "scan.pdf";
+  a.click();
 }
 
 function loadImage(file: File): Promise<HTMLImageElement> {
@@ -255,7 +279,7 @@ function CornerEditor({ page, onChange }: { page: ScanPage; onChange: (quad: Qua
   const points = page.quad.map((p) => `${p.x * scale},${p.y * scale}`).join(" ");
 
   return (
-    <div className="relative mx-auto w-full" style={{ maxWidth: DISPLAY_W, aspectRatio: `${DISPLAY_W} / ${displayH}` }}>
+    <div className="relative mx-auto w-full" style={{ maxWidth: `min(${DISPLAY_W}px, calc(55vh * ${DISPLAY_W / displayH}))`, aspectRatio: `${DISPLAY_W} / ${displayH}` }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={page.img.src} alt="" className="absolute inset-0 h-full w-full select-none rounded-lg" draggable={false} />
       <svg
@@ -272,7 +296,7 @@ function CornerEditor({ page, onChange }: { page: ScanPage; onChange: (quad: Qua
             key={CORNER_LABELS[i]}
             cx={p.x * scale}
             cy={p.y * scale}
-            r={12}
+            r={16}
             className="cursor-grab fill-primary stroke-background active:cursor-grabbing"
             strokeWidth={2}
             onPointerDown={(e) => {
@@ -314,8 +338,15 @@ export default function DocScannerPage() {
 
   const [cameraOpen, setCameraOpen] = useState(false);
 
+  // Mobile strip scrolls sideways; keep the selected page in view (scrollLeft only, so the page itself never jumps).
+  const stripRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = stripRef.current?.querySelector<HTMLElement>(`[data-id="${activeId}"]`);
+    if (el) stripRef.current!.scrollTo({ left: el.offsetLeft - 8, behavior: "smooth" });
+  }, [activeId]);
+
   const addFiles = useCallback(
-    async (files: File[]) => {
+    async (files: File[], quiet = false) => {
       const rejected = files.filter((f) => !f.type.startsWith("image/"));
       if (rejected.length) {
         const isPdf = rejected.some((f) => f.type === "application/pdf" || /\.pdf$/i.test(f.name));
@@ -327,6 +358,7 @@ export default function DocScannerPage() {
       }
       const images = files.filter((f) => f.type.startsWith("image/"));
       let undetected = 0;
+      let first = true;
       for (const file of images) {
         try {
           const img = await loadImage(file);
@@ -334,12 +366,13 @@ export default function DocScannerPage() {
           if (!detected) undetected++;
           const page: ScanPage = { id: uid(), file, img, quad };
           setPages((prev) => [...prev, page]);
-          setActiveId((prev) => prev ?? page.id);
+          if (first) setActiveId(page.id);
+          first = false;
         } catch {
           toast({ variant: "destructive", title: t("common.error"), description: t("toast.error.unsupported") });
         }
       }
-      if (undetected) toast({ title: t("tool.doc-scanner.detectFailedTitle"), description: t("tool.doc-scanner.detectFailed") });
+      if (undetected && !quiet) toast({ title: t("tool.doc-scanner.detectFailedTitle"), description: t("tool.doc-scanner.detectFailed") });
     },
     [t, toast],
   );
@@ -471,6 +504,7 @@ export default function DocScannerPage() {
         return url;
       });
       setProgress(100);
+      downloadUrl(url);
       toast({ title: t("common.success"), description: t("toast.success.downloaded") });
     } catch {
       toast({ variant: "destructive", title: t("common.error"), description: t("toast.error.generic") });
@@ -483,13 +517,7 @@ export default function DocScannerPage() {
     }
   }, [pages, outputMode, ocrLang, t, toast]);
 
-  const download = () => {
-    if (!resultUrl) return;
-    const a = document.createElement("a");
-    a.href = resultUrl;
-    a.download = "scan.pdf";
-    a.click();
-  };
+  const download = () => resultUrl && downloadUrl(resultUrl);
 
   return (
     <ToolShell title={t("tool.doc-scanner.name")} description={t("tool.doc-scanner.description")}>
@@ -503,15 +531,35 @@ export default function DocScannerPage() {
               title={t("tool.doc-scanner.dropzone.title")}
               subtitle={t("tool.doc-scanner.dropzone.subtitle")}
               icon={<Camera className="h-6 w-6 text-primary" />}
-              className="min-h-[160px]"
+              className="hidden min-h-[160px] lg:flex"
             />
 
             {cameraOpen ? (
-              <CameraCapture onCapture={(f) => addFiles([f])} onClose={() => setCameraOpen(false)} />
+              <CameraCapture count={pages.length} onCapture={(f) => addFiles([f], true)} onClose={() => setCameraOpen(false)} />
             ) : (
-              <Button type="button" variant="outline" className="w-full gap-2" onClick={() => setCameraOpen(true)}>
-                <Camera className="h-4 w-4" /> Use camera
-              </Button>
+              <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
+                <Button type="button" className="gap-2 lg:hidden" onClick={() => setCameraOpen(true)}>
+                  <Camera className="h-4 w-4" /> {t("tool.doc-scanner.useCamera")}
+                </Button>
+                <Button type="button" variant="outline" className="hidden gap-2 lg:flex" onClick={() => setCameraOpen(true)}>
+                  <Camera className="h-4 w-4" /> {t("tool.doc-scanner.useCamera")}
+                </Button>
+                <Button type="button" variant="outline" className="gap-2 lg:hidden" asChild>
+                  <label>
+                    <ImagePlus className="h-4 w-4" /> {t("tool.doc-scanner.gallery")}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => {
+                        addFiles(Array.from(e.target.files ?? []));
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                </Button>
+              </div>
             )}
 
             {pages.length > 0 && (
@@ -519,28 +567,29 @@ export default function DocScannerPage() {
                 <p className="text-xs font-medium text-muted-foreground">
                   {t("tool.doc-scanner.pageCount").replace("{{count}}", String(pages.length))}
                 </p>
-                <div className="max-h-72 space-y-2 overflow-y-auto">
+                <div ref={stripRef} className="relative -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 lg:mx-0 lg:block lg:max-h-72 lg:space-y-2 lg:overflow-y-auto lg:px-0 lg:pb-0">
                   {pages.map((p, index) => (
                     <div
                       key={p.id}
+                      data-id={p.id}
                       role="button"
                       tabIndex={0}
                       onClick={() => setActiveId(p.id)}
                       onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setActiveId(p.id)}
-                      className={`flex w-full cursor-pointer items-center gap-3 rounded-lg border p-3 text-left transition-colors ${
+                      className={`flex w-36 shrink-0 cursor-pointer flex-col gap-2 rounded-lg border p-2 text-left transition-colors lg:w-full lg:flex-row lg:items-center lg:gap-3 lg:p-3 ${
                         p.id === activeId ? "border-primary bg-primary/5" : "bg-muted/10"
                       }`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={p.img.src} alt="" className="h-10 w-10 shrink-0 rounded object-cover" />
-                      <span className="flex-1 truncate text-sm font-medium">
+                      <img src={p.img.src} alt="" className="h-24 w-full shrink-0 rounded object-cover lg:h-10 lg:w-10" />
+                      <span className="truncate text-center text-xs font-medium lg:flex-1 lg:text-left lg:text-sm">
                         {t("tool.doc-scanner.page")} {index + 1}
                       </span>
-                      <span className="flex shrink-0 items-center gap-1">
+                      <span className="flex shrink-0 items-center justify-between gap-1 lg:justify-start">
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7"
+                          className="h-9 w-9 lg:h-7 lg:w-7"
                           disabled={index === 0}
                           aria-label={t("tool.merge-pdf.moveUp")}
                           onClick={(e) => {
@@ -548,12 +597,12 @@ export default function DocScannerPage() {
                             move(index, -1);
                           }}
                         >
-                          <ArrowUp className="h-3.5 w-3.5" />
+                          <ArrowUp className="h-4 w-4 -rotate-90 lg:h-3.5 lg:w-3.5 lg:rotate-0" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7"
+                          className="h-9 w-9 lg:h-7 lg:w-7"
                           disabled={index === pages.length - 1}
                           aria-label={t("tool.merge-pdf.moveDown")}
                           onClick={(e) => {
@@ -561,12 +610,12 @@ export default function DocScannerPage() {
                             move(index, 1);
                           }}
                         >
-                          <ArrowDown className="h-3.5 w-3.5" />
+                          <ArrowDown className="h-4 w-4 -rotate-90 lg:h-3.5 lg:w-3.5 lg:rotate-0" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 text-destructive hover:text-destructive"
+                          className="h-9 w-9 text-destructive hover:text-destructive lg:h-7 lg:w-7"
                           aria-label={t("tool.pdf-editor.remove")}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -618,7 +667,7 @@ export default function DocScannerPage() {
           </OutputSection>
         </TwoColumnLayout>
 
-        <div className="space-y-4">
+        <div className="sticky bottom-0 z-10 space-y-3 border-t bg-background/95 py-3 backdrop-blur lg:static lg:space-y-4 lg:border-0 lg:bg-transparent lg:py-0 lg:backdrop-blur-none">
           <Tabs value={outputMode} onValueChange={(v) => setOutputMode(v as OutputMode)}>
             <TabsList className="grid w-full max-w-sm grid-cols-2">
               <TabsTrigger value="image">{t("tool.doc-scanner.mode.image")}</TabsTrigger>
@@ -650,6 +699,7 @@ export default function DocScannerPage() {
             primaryDisabled={!pages.length || processing}
             resetLabel={t("action.clearAll")}
             onReset={pages.length ? clearAll : undefined}
+            className="flex-row [&>button]:min-w-0 [&>button]:flex-1 [&>button]:px-2 lg:flex-col lg:[&>button]:px-4"
           >
             {resultUrl && (
               <Button variant="outline" className="gap-2" onClick={download}>
