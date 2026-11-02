@@ -29,7 +29,7 @@ const ACCEPTED_TYPES = ".txt,.md,text/plain";
 const MAX_CHARS = 20000;
 
 export default function TextToVoicePage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { toast } = useToast();
 
   const [supported, setSupported] = useState(true);
@@ -51,9 +51,8 @@ export default function TextToVoicePage() {
       return;
     }
     const loadVoices = () => {
-      const list = window.speechSynthesis.getVoices();
-      setVoices(list);
-      setVoiceURI((prev) => prev || list[0]?.voiceURI || "");
+      // speech-dispatcher lists every espeak-ng language x variant (13k+), which freezes the Select.
+      setVoices(window.speechSynthesis.getVoices().filter((v) => !/\+.*espeak/.test(v.name)));
     };
     loadVoices();
     window.speechSynthesis.onvoiceschanged = loadVoices;
@@ -62,6 +61,12 @@ export default function TextToVoicePage() {
       window.speechSynthesis.cancel();
     };
   }, []);
+
+  const activeVoiceURI =
+    voiceURI ||
+    (voices.find((v) => v.lang.toLowerCase().startsWith(locale)) ?? voices.find((v) => v.default) ?? voices[0])
+      ?.voiceURI ||
+    "";
 
   const groupedVoices = useMemo(() => {
     const groups = new Map<string, SpeechSynthesisVoice[]>();
@@ -102,7 +107,7 @@ export default function TextToVoicePage() {
       window.speechSynthesis.cancel();
     }
     const utter = new SpeechSynthesisUtterance(text.slice(0, MAX_CHARS));
-    const voice = voices.find((v) => v.voiceURI === voiceURI);
+    const voice = voices.find((v) => v.voiceURI === activeVoiceURI);
     if (voice) {
       utter.voice = voice;
       utter.lang = voice.lang;
@@ -123,7 +128,13 @@ export default function TextToVoicePage() {
       setSpeaking(false);
       setPaused(false);
       if (e.error === "canceled" || e.error === "interrupted") return;
-      toast({ title: "Failed", description: `Speech error: ${e.error}`, variant: "destructive" });
+      // Chrome on Linux exposes no engine unless started with --enable-speech-dispatcher.
+      const noEngine = e.error === "synthesis-failed" && window.speechSynthesis.getVoices().length === 0;
+      toast({
+        title: t("common.error"),
+        description: noEngine ? t("media.tts.noEngine") : `${t("media.tts.speechError")}: ${e.error}`,
+        variant: "destructive",
+      });
     };
     utter.onboundary = (e) => {
       if (e.name === "word" || e.name === undefined) setSpokenAt(e.charIndex);
@@ -198,7 +209,7 @@ export default function TextToVoicePage() {
                   <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {t("media.tts.voice")}
                   </Label>
-                  <Select value={voiceURI} onValueChange={setVoiceURI} disabled={voices.length === 0}>
+                  <Select value={activeVoiceURI} onValueChange={setVoiceURI} disabled={voices.length === 0}>
                     <SelectTrigger className="h-10">
                       <SelectValue placeholder={t("media.tts.noVoices")} />
                     </SelectTrigger>
