@@ -800,6 +800,31 @@ export const TOOL_KEYWORDS: Record<string, ToolKeywordSet> = {
     ],
   },
 
+  "terbilang": {
+    en: ["number to words indonesian", "terbilang generator", "rupiah in words", "spell out number in indonesian"],
+    id: ["terbilang online", "ubah angka jadi huruf", "terbilang rupiah", "kalimat terbilang kuitansi"],
+  },
+  "signature-maker": {
+    en: ["signature maker online", "draw signature png transparent", "digital signature generator", "e-signature image"],
+    id: ["buat tanda tangan online", "tanda tangan digital png transparan", "gambar tanda tangan", "ttd digital"],
+  },
+  "hijri-converter": {
+    en: ["hijri date converter", "gregorian to hijri", "islamic calendar converter", "today hijri date"],
+    id: ["konversi tanggal hijriah", "masehi ke hijriah", "kalender hijriah online", "tanggal hijriah hari ini"],
+  },
+  "timezone-converter": {
+    en: ["time zone converter", "wib wita wit converter", "world time converter", "convert time between zones"],
+    id: ["konversi zona waktu", "wib ke wita wit", "ubah jam wib ke london", "konverter waktu dunia"],
+  },
+  "invoice-maker": {
+    en: ["invoice maker pdf free", "receipt generator", "free invoice generator no watermark", "indonesian invoice template"],
+    id: ["buat invoice online gratis", "pembuat kuitansi pdf", "template invoice indonesia", "buat faktur pdf gratis"],
+  },
+  "cv-maker": {
+    en: ["cv maker pdf free", "indonesian cover letter generator", "resume builder no watermark", "job application letter maker"],
+    id: ["buat cv online gratis", "pembuat surat lamaran kerja", "contoh surat lamaran pdf", "buat cv tanpa watermark"],
+  },
+
   // --- MATH ---
   "percentage-calculator": {
     en: [

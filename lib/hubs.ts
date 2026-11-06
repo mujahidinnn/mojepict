@@ -13,11 +13,11 @@ export const HUB_MODES: Record<string, string[]> = {
     "timestamp-converter",
   ],
   "encoder-decoder": ["base64-encoder", "url-encoder", "jwt-decoder", "hash-generator"],
-  "text-tools": ["case-converter", "slug-generator"],
+  "text-tools": ["case-converter", "slug-generator", "terbilang"],
   "code-generator": ["qr-generator", "barcode-generator", "qr-scanner"],
   "random-generator": ["password-generator", "uuid-generator", "lorem-ipsum", "random-picker"],
-  "pdf-toolkit": ["merge-pdf", "split-pdf", "pdf-editor"],
-  "image-toolkit": ["image-resizer", "image-cropper", "image-compressor", "image-splitter"],
+  "pdf-toolkit": ["merge-pdf", "split-pdf", "pdf-editor", "invoice-maker", "cv-maker"],
+  "image-toolkit": ["image-resizer", "image-cropper", "image-compressor", "image-splitter", "signature-maker"],
   "finance-calculator": [
     "percentage-calculator",
     "discount-calculator",
@@ -28,5 +28,5 @@ export const HUB_MODES: Record<string, string[]> = {
     "profit-margin-calculator",
     "break-even-calculator",
   ],
-  "date-calculator": ["age-calculator", "date-difference-calculator"],
+  "date-calculator": ["age-calculator", "date-difference-calculator", "hijri-converter", "timezone-converter"],
 };

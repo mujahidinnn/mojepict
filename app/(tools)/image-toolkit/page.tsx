@@ -8,6 +8,7 @@ const MODES: HubMode[] = [
   { id: "image-cropper", Component: dynamic(() => import("@/components/modes/image-cropper")) },
   { id: "image-compressor", Component: dynamic(() => import("@/components/modes/image-compressor")) },
   { id: "image-splitter", Component: dynamic(() => import("@/components/modes/image-splitter")) },
+  { id: "signature-maker", Component: dynamic(() => import("@/components/modes/signature-maker")) },
 ];
 
 export default function Page() {

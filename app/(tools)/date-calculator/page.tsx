@@ -6,6 +6,8 @@ import { ToolHub, type HubMode } from "@/components/tools/ToolHub";
 const MODES: HubMode[] = [
   { id: "age-calculator", Component: dynamic(() => import("@/components/modes/age-calculator")) },
   { id: "date-difference-calculator", Component: dynamic(() => import("@/components/modes/date-difference-calculator")) },
+  { id: "hijri-converter", Component: dynamic(() => import("@/components/modes/hijri-converter")) },
+  { id: "timezone-converter", Component: dynamic(() => import("@/components/modes/timezone-converter")) },
 ];
 
 export default function Page() {

@@ -401,7 +401,7 @@ export function getToolFeatureCount(tool: Tool): number {
 export const FEATURE_COUNT = TOOLS.reduce((n, tool) => n + getToolFeatureCount(tool), 0);
 
 /** A tool is "new" for this many days after its createdAt date. */
-export const NEW_WINDOW_DAYS = 90;
+export const NEW_WINDOW_DAYS = 60;
 
 // Age is measured from the newest tool's ship date, not Date.now(): pages are
 // prerendered at build time, and a clock-based badge flips between build and

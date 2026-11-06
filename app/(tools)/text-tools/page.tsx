@@ -6,6 +6,7 @@ import { ToolHub, type HubMode } from "@/components/tools/ToolHub";
 const MODES: HubMode[] = [
   { id: "case-converter", Component: dynamic(() => import("@/components/modes/case-converter")) },
   { id: "slug-generator", Component: dynamic(() => import("@/components/modes/slug-generator")) },
+  { id: "terbilang", Component: dynamic(() => import("@/components/modes/terbilang")) },
 ];
 
 export default function Page() {
