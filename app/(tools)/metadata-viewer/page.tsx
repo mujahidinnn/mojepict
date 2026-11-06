@@ -57,12 +57,11 @@ export default function MetadataViewerPage() {
     setImageFile(url);
     try {
       const exifr = await import("exifr");
-      const result = await exifr.parse(file);
+      const result = await exifr.parse(file, { tiff: true, xmp: true, iptc: true, jfif: true, ihdr: true });
       setMetadata(result || null);
       if (!result) {
         toast({
-          variant: "destructive",
-          description: t("state.empty") || "No metadata found.",
+          description: t("media.metadata.none"),
         });
       }
     } catch (err) {

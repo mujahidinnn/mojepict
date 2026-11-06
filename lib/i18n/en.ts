@@ -985,6 +985,7 @@ export const en = {
   "media.invalidSize": "Width and height must be numbers greater than 0.",
   "media.keepRatio": "Keep aspect ratio",
   "media.metadata.pdf": "PDF files aren't supported. Upload an image (JPG, PNG, HEIC, TIFF, WebP).",
+  "media.metadata.none": "No EXIF/IPTC/XMP metadata found in this image (common for screenshots and web images).",
   "media.mockup.customColor": "Custom frame color",
   "media.outputFormat": "Output format",
   "media.palette.invalidHex": "Enter a valid hex color, e.g. #6366F1.",

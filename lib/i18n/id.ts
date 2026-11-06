@@ -981,6 +981,7 @@ export const id = {
   "media.invalidSize": "Lebar dan tinggi harus berupa angka lebih dari 0.",
   "media.keepRatio": "Pertahankan rasio aspek",
   "media.metadata.pdf": "File PDF tidak didukung. Unggah gambar (JPG, PNG, HEIC, TIFF, WebP).",
+  "media.metadata.none": "Tidak ada metadata EXIF/IPTC/XMP di gambar ini (umum untuk screenshot dan gambar dari web).",
   "media.mockup.customColor": "Warna bingkai kustom",
   "media.outputFormat": "Format output",
   "media.palette.invalidHex": "Masukkan warna hex yang valid, mis. #6366F1.",
